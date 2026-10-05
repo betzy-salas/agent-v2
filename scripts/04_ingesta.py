@@ -6,7 +6,7 @@ Uso: python scripts/04_ingesta.py <vendor> [--forzar]
 """
 import re, sys, subprocess, hashlib, datetime, zipfile
 from pathlib import Path
-from _comun import arg_vendor, vendor_dir, RAIZ
+from _comun import arg_vendor, vendor_dir, RAIZ, archivos_raw, slug_de
 
 v = arg_vendor(); d = vendor_dir(v); extra = [a for a in sys.argv[2:] if a.startswith('--')]
 py = sys.executable
@@ -14,7 +14,7 @@ def run(script, *args):
     print(f"\n▶ {script} {v} {' '.join(args)}"); r = subprocess.run([py, str(RAIZ / 'scripts' / script), v, *args]); 
     if r.returncode: print(f"  ⚠ {script} terminó con código {r.returncode}")
 raw = d / 'docs' / 'raw'
-archivos = [p for p in sorted(raw.iterdir()) if p.is_file() and not p.name.startswith('.')]
+archivos = archivos_raw(raw)
 if not archivos: sys.exit(f"vendors/{v}/docs/raw está vacío: copia ahí los documentos del vendor.")
 if any(p.suffix.lower() == '.pdf' for p in archivos): run('01_pdf_a_texto.py', *extra); run('01a_toc_pdf.py', *extra)
 if any(p.suffix.lower() in ('.xlsx', '.xlsm', '.pptx') for p in archivos): run('01b_anexos_a_texto.py', *[a for a in extra if a != '--forzar'])
@@ -30,15 +30,15 @@ def fecha_meta(p):
         mm = re.search(r'<dcterms:modified[^>]*>(\d{4}-\d{2}-\d{2})', core); return mm.group(1) if mm else '—'
     except Exception: return '—'
 def unidades(p):
-    t = d / 'docs' / 'txt' / f'{p.stem}.txt'
+    t = d / 'docs' / 'txt' / f'{slug_de(p, raw)}.txt'
     if not t.exists(): return '—'
     s = t.read_text(encoding='utf-8', errors='replace')
     n = len(re.findall(r'^===== (PAGE|SHEET|SLIDE)', s, re.M)); return f"{n} {'pp.' if 'PAGE' in s else 'hojas' if 'SHEET' in s else 'slides'}"
 filas = []
 for p in archivos:
     tipo = {'.pdf': 'PDF', '.xlsx': 'Excel', '.xlsm': 'Excel', '.pptx': 'PPTX', '.docx': 'Word'}.get(p.suffix.lower(), p.suffix)
-    txt_ok = (d / 'docs' / 'txt' / f'{p.stem}.txt').exists(); toc_ok = (d / 'docs' / 'txt' / f'{p.stem}.toc.md').exists()
-    filas.append(f"| {p.name} | {tipo} | {fecha_meta(p)} | _(completar)_ | {unidades(p)} · {p.stat().st_size // 1024} KB · txt {'✓' if txt_ok else '—'} · toc {'✓' if toc_ok else '—'} |")
+    sl = slug_de(p, raw); txt_ok = (d / 'docs' / 'txt' / f'{sl}.txt').exists(); toc_ok = (d / 'docs' / 'txt' / f'{sl}.toc.md').exists()
+    filas.append(f"| {p.relative_to(raw)} | {tipo} | {fecha_meta(p)} | _(completar)_ | {unidades(p)} · {p.stat().st_size // 1024} KB · txt {'✓' if txt_ok else '—'} · toc {'✓' if toc_ok else '—'} |")
 inv = d / 'INVENTARIO.md'; s = inv.read_text(encoding='utf-8') if inv.exists() else f"# INVENTARIO — {v}\n\n"
 tabla = "| Archivo (docs/raw) | Tipo | Fecha/versión | Dimensiones que toca | Notas |\n|---|---|---|---|---|\n" + "\n".join(filas)
 if re.search(r'\| Archivo \(docs/raw\) \|.*?(?=\n## |\Z)', s, re.S):

@@ -16,7 +16,7 @@ import re, sys, zipfile, pathlib, warnings
 warnings.filterwarnings("ignore")
 from openpyxl import load_workbook
 
-from _comun import arg_vendor, vendor_dir, escribir_nombres, es_matriz_evaluacion
+from _comun import arg_vendor, vendor_dir, escribir_nombres, es_matriz_evaluacion, archivos_raw, slug_de
 v = arg_vendor(); d = vendor_dir(v)
 raw, out = d / 'docs' / 'raw', d / 'docs' / 'txt'
 out.mkdir(parents=True, exist_ok=True)
@@ -62,7 +62,7 @@ def pptx(path):
     return bloques, toc
 
 def escribir(path, bloques, toc, unidad):
-    stem = path.stem
+    stem = slug_de(path, raw)
     (out / f'{stem}.txt').write_text('\n\n'.join(bloques) + '\n', encoding='utf-8')
     lineas = [f'# Mapa de secciones — {stem}', '',
               f'Archivo texto: `docs/txt/{stem}.txt`. Origen: `docs/raw/{path.name}`.',
@@ -71,17 +71,16 @@ def escribir(path, bloques, toc, unidad):
               f'| {unidad.lower()} | filas/párrafos con datos | primer contenido |', '|---|---|---|']
     lineas += [f'| {t} | {n} | {p} |' for t, n, p in toc]
     (out / f'{stem}.toc.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
-    print(f'{path.name}: {len(bloques)} {unidad.lower()}(s) → {stem}.txt / .toc.md')
+    print(f'{path.relative_to(raw)}: {len(bloques)} {unidad.lower()}(s) → {stem}.txt / .toc.md')
 
-for p in sorted(raw.iterdir()):
-    if p.name.startswith('.'): continue
+for p in archivos_raw(raw):
     if p.suffix.lower() in ('.xlsx', '.xlsm'):
         if not INCLUIR_MATRIZ and es_matriz_evaluacion(p):
-            print(f'{p.name}: es la matriz de evaluación del Banco, omitida (ya está en matriz/)'); continue
+            print(f'{p.relative_to(raw)}: es la matriz de evaluación del Banco, omitida (ya está en matriz/)'); continue
         escribir(p, *xlsx(p), 'SHEET')
     elif p.suffix.lower() == '.pptx':
         escribir(p, *pptx(p), 'SLIDE')
     elif p.suffix.lower() != '.pdf':
-        print(f'{p.name}: formato no soportado, omitido', file=sys.stderr)
+        print(f'{p.relative_to(raw)}: formato no soportado, omitido', file=sys.stderr)
 
 print('NOMBRES.md actualizado:', escribir_nombres(d).relative_to(d.parent.parent))

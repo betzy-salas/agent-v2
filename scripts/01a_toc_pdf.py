@@ -9,7 +9,7 @@ las dimensiones T1–T8 por palabras clave, que la persona debe revisar.
 Uso: python scripts/01a_toc_pdf.py <vendor> [--forzar]
 """
 import re, sys, collections
-from _comun import arg_vendor, vendor_dir
+from _comun import arg_vendor, vendor_dir, archivos_raw, slug_de
 
 v = arg_vendor(); d = vendor_dir(v); forzar = '--forzar' in sys.argv
 txtdir = d / 'docs' / 'txt'
@@ -52,8 +52,8 @@ def desfase(pages, entries):
                 votos[dlt] += 1; break
     return (votos.most_common(1)[0] if votos else (None, 0)), votos
 for f in sorted(txtdir.glob('*.txt')):
-    raw = (d / 'docs' / 'raw' / f'{f.stem}.pdf')
-    if not raw.exists() and not (d / 'docs' / 'raw' / f'{f.stem}.PDF').exists(): continue  # solo PDFs
+    rawdir = d / 'docs' / 'raw'
+    if not any(p.suffix.lower() == '.pdf' and slug_de(p, rawdir) == f.stem for p in archivos_raw(rawdir)): continue  # solo PDFs
     toc_path = txtdir / f'{f.stem}.toc.md'
     if toc_path.exists() and not forzar: print(f'· {f.stem}: ya existe .toc.md (usa --forzar)'); continue
     pages = paginas_de(f.read_text(encoding='utf-8', errors='replace'))

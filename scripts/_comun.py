@@ -41,6 +41,19 @@ def arg_vendor() -> str:
         sys.exit(f"Uso: python {pathlib.Path(sys.argv[0]).name} <vendor> [opciones]")
     return sys.argv[1]
 
+def archivos_raw(raw: pathlib.Path) -> list:
+    """Todos los documentos de docs/raw, incluidas subcarpetas (se ignoran ocultos y .gitkeep), ordenados."""
+    if not raw.exists(): return []
+    return sorted(p for p in raw.rglob('*') if p.is_file() and not p.name.startswith('.')
+                  and not any(part.startswith('.') for part in p.relative_to(raw).parts))
+
+def slug_de(p: pathlib.Path, raw: pathlib.Path) -> str:
+    """Nombre base del txt/toc en docs/txt: el stem si está en la raíz de docs/raw; si está en una
+    subcarpeta, «<subcarpetas> - <stem>» para que no choquen archivos homónimos de carpetas distintas."""
+    rel = p.relative_to(raw)
+    if len(rel.parts) == 1: return p.stem
+    return ' - '.join(list(rel.parts[:-1]) + [p.stem])
+
 def nombre_oficial(stem: str) -> str:
     """Nombre legible y estable para citar un documento, derivado del nombre de archivo."""
     s = stem.strip()
@@ -58,7 +71,7 @@ def escribir_nombres(vdir: pathlib.Path) -> pathlib.Path:
         for l in destino.read_text(encoding='utf-8').splitlines():
             m = re.match(r'^\|\s*`([^`]+)`\s*\|\s*([^|]+?)\s*\|', l)
             if m: previos[m.group(1)] = m.group(2)
-    origen = {p.stem: p for p in raw.iterdir() if p.is_file() and not p.name.startswith('.')} if raw.exists() else {}
+    origen = {slug_de(p, raw): p for p in archivos_raw(raw)}
     filas = []
     for t in sorted(txt.glob('*.txt')):
         stem = t.stem
@@ -67,7 +80,7 @@ def escribir_nombres(vdir: pathlib.Path) -> pathlib.Path:
         unidad = ('p.<n> (página PDF del marcador PAGE; impresa = n-1)' if ext == '.pdf'
                   else 'hoja <nombre>, f.<fila>' if ext in ('.xlsx', '.xlsm') else 'slide <n>' if ext == '.pptx' else 'p.<n>')
         oficial = previos.get(stem) or nombre_oficial(stem)
-        filas.append(f"| `{stem}` | {oficial} | {src.name if src else '—'} | {unidad} |")
+        filas.append(f"| `{stem}` | {oficial} | {src.relative_to(raw) if src else '—'} | {unidad} |")
     cuerpo = ["# Nombres oficiales de documento — " + vdir.name, "",
               "Toda cita en verif/ e informes/ usa EXACTAMENTE el texto de la columna «Nombre oficial», seguido de la unidad.",
               "Puedes editar a mano la columna «Nombre oficial» (por ejemplo acortarla); el script la conserva al regenerar.",
@@ -94,7 +107,7 @@ def es_matriz_evaluacion(xlsx: pathlib.Path) -> bool:
         return False
 
 def buscar_matriz_evaluacion(raw: pathlib.Path) -> pathlib.Path:
-    cands = [p for p in sorted(raw.glob('*.xls[xm]')) if es_matriz_evaluacion(p)]
+    cands = [p for p in archivos_raw(raw) if p.suffix.lower() in ('.xlsx', '.xlsm') and es_matriz_evaluacion(p)]
     if not cands:
         sys.exit(f"No encontré la matriz de evaluación del Banco en {raw} (xlsx con la hoja de método o T1–T8 con columna VA). Pásala como segundo argumento.")
     if len(cands) > 1:
