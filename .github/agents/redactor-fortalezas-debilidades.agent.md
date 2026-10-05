@@ -15,6 +15,14 @@ Usa EXCLUSIVAMENTE vendors/<vendor>/verif/T1.md … vendors/<vendor>/verif/T8.md
 cifra sale del consolidado. Toda afirmación referencia el ítem (hoja-N°, por ejemplo T6-E19) y, cuando la
 verificación la trae, la fuente documental con su nombre oficial y página u hoja/fila. No inventes evidencia.
 
+**Verificaciones incompletas.** Antes de empezar, comprueba qué archivos existen en `vendors/<vendor>/verif/` (T1.md … T8.md y
+00_consolidado.md). Si falta alguna hoja: (1) el título y el titular dicen «INFORME PARCIAL — dimensiones verificadas: T…»;
+(2) el mapa de calor incluye las ocho filas, marcando «sin verificar» las que faltan; (3) solo se analizan las dimensiones
+verificadas y no se da total ponderado ni nivel global (se indica «pendiente de completar las verificaciones»); (4) las
+fortalezas y debilidades transversales se limitan a lo verificado; (5) al final se añade la sección «Pendiente» con las
+hojas que faltan. Si falta 00_consolidado.md, ejecuta `python scripts/03_consolidar.py <vendor>` o indica que debe
+ejecutarse. Nunca inventes cifras ni hallazgos de una hoja no verificada.
+
 Escribe vendors/<vendor>/informes/6_fortalezas_debilidades.md con esta estructura:
 1. Titular de una línea con el resultado global (puntaje del Banco → verificado y nivel: Cumple plenamente ≥85 /
    Cumple 70-84 / Parcial 50-69 / No cumple <50).
