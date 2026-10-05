@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.DS_Store
+# Documentos originales de cada vendor: confidenciales, no versionar
+vendors/*/docs/raw/*
+!vendors/*/docs/raw/.gitkeep
