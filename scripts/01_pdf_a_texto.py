@@ -4,8 +4,12 @@
 Uso: python scripts/01_pdf_a_texto.py <vendor> [--forzar]
 """
 from _comun import arg_vendor, vendor_dir, escribir_nombres, archivos_raw, slug_de, requiere
-requiere('fitz')
-import sys, fitz
+requiere('pymupdf')
+import sys
+try:
+    import pymupdf as fitz  # nombre actual de PyMuPDF
+except ImportError:
+    import fitz  # versiones antiguas de PyMuPDF
 
 v = arg_vendor(); d = vendor_dir(v); forzar = '--forzar' in sys.argv
 raw, out = d / 'docs' / 'raw', d / 'docs' / 'txt'

@@ -7,7 +7,11 @@ import re, sys, pathlib, unicodedata, importlib.util
 
 def requiere(*modulos):
     """Comprueba que las librerías del proyecto están disponibles y, si no, explica cómo activarlas."""
-    faltan = [m for m in modulos if importlib.util.find_spec(m) is None]
+    def falta(m):
+        if m in ('fitz', 'pymupdf'):
+            return importlib.util.find_spec('pymupdf') is None and importlib.util.find_spec('fitz') is None
+        return importlib.util.find_spec(m) is None
+    faltan = [m for m in modulos if falta(m)]
     if faltan:
         nombres = {'fitz': 'pymupdf', 'openpyxl': 'openpyxl', 'pandas': 'pandas'}
         win = sys.platform.startswith('win')

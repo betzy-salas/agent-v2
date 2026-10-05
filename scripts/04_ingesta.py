@@ -7,7 +7,7 @@ Uso: python scripts/04_ingesta.py <vendor> [--forzar]
 import re, sys, subprocess, hashlib, datetime, zipfile
 from pathlib import Path
 from _comun import arg_vendor, vendor_dir, RAIZ, archivos_raw, slug_de, requiere
-requiere('fitz', 'openpyxl')
+requiere('pymupdf', 'openpyxl')
 
 v = arg_vendor(); d = vendor_dir(v); extra = [a for a in sys.argv[2:] if a.startswith('--')]
 py = sys.executable
@@ -25,7 +25,11 @@ run('02_matriz_a_texto.py')
 def fecha_meta(p):
     try:
         if p.suffix.lower() == '.pdf':
-            import fitz; m = fitz.open(p).metadata.get('modDate', '') or ''
+            try:
+                import pymupdf as fitz
+            except ImportError:
+                import fitz
+            m = fitz.open(p).metadata.get('modDate', '') or ''
             mm = re.search(r'D:(\d{4})(\d{2})(\d{2})', m); return f"{mm.group(1)}-{mm.group(2)}-{mm.group(3)}" if mm else '—'
         core = zipfile.ZipFile(p).read('docProps/core.xml').decode('utf8')
         mm = re.search(r'<dcterms:modified[^>]*>(\d{4}-\d{2}-\d{2})', core); return mm.group(1) if mm else '—'
