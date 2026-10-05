@@ -3,7 +3,19 @@
 Estructura: vendors/<vendor>/{docs/raw, docs/txt, matriz, verif, informes, INVENTARIO.md, NOMBRES.md}
 Todos los scripts reciben el vendor como primer argumento posicional.
 """
-import re, sys, pathlib, unicodedata
+import re, sys, pathlib, unicodedata, importlib.util
+
+def requiere(*modulos):
+    """Comprueba que las librerías del proyecto están disponibles y, si no, explica cómo activarlas."""
+    faltan = [m for m in modulos if importlib.util.find_spec(m) is None]
+    if faltan:
+        nombres = {'fitz': 'pymupdf', 'openpyxl': 'openpyxl', 'pandas': 'pandas'}
+        sys.exit("Faltan librerías: " + ", ".join(nombres.get(m, m) for m in faltan) + ".\n"
+                 "Estás usando el Python del sistema. Activa el entorno del proyecto:\n"
+                 "    source .venv/bin/activate\n"
+                 "o, si aún no existe:\n"
+                 "    python3 -m venv .venv && .venv/bin/pip install -r requirements.txt\n"
+                 "También puedes ejecutar directamente:  .venv/bin/python scripts/<script>.py <vendor>")
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 

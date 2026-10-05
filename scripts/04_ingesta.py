@@ -6,7 +6,8 @@ Uso: python scripts/04_ingesta.py <vendor> [--forzar]
 """
 import re, sys, subprocess, hashlib, datetime, zipfile
 from pathlib import Path
-from _comun import arg_vendor, vendor_dir, RAIZ, archivos_raw, slug_de
+from _comun import arg_vendor, vendor_dir, RAIZ, archivos_raw, slug_de, requiere
+requiere('fitz', 'openpyxl')
 
 v = arg_vendor(); d = vendor_dir(v); extra = [a for a in sys.argv[2:] if a.startswith('--')]
 py = sys.executable

@@ -5,8 +5,9 @@ Uso: python scripts/02_matriz_a_texto.py <vendor> [ruta_al_xlsx]
 Si no se da la ruta, busca en vendors/<vendor>/docs/raw el xlsx que tenga la hoja de método o hojas T1–T8 con columna VA
 (cabeceras configurables en scripts/_comun.py, COLUMNAS).
 """
+from _comun import arg_vendor, vendor_dir, buscar_matriz_evaluacion, COLUMNAS as K, requiere
+requiere('openpyxl')
 import openpyxl, pathlib, sys
-from _comun import arg_vendor, vendor_dir, buscar_matriz_evaluacion, COLUMNAS as K
 v = arg_vendor(); d = vendor_dir(v)
 xlsx = sys.argv[2] if len(sys.argv) > 2 else buscar_matriz_evaluacion(d / 'docs' / 'raw')
 print('Matriz:', xlsx)

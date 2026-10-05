@@ -16,7 +16,8 @@ import re, sys, zipfile, pathlib, warnings
 warnings.filterwarnings("ignore")
 from openpyxl import load_workbook
 
-from _comun import arg_vendor, vendor_dir, escribir_nombres, es_matriz_evaluacion, archivos_raw, slug_de
+from _comun import arg_vendor, vendor_dir, escribir_nombres, es_matriz_evaluacion, archivos_raw, slug_de, requiere
+requiere('openpyxl')
 v = arg_vendor(); d = vendor_dir(v)
 raw, out = d / 'docs' / 'raw', d / 'docs' / 'txt'
 out.mkdir(parents=True, exist_ok=True)
