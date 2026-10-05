@@ -4,6 +4,7 @@
 Uso: python scripts/03_consolidar.py <vendor>
 """
 import re, glob
+from pathlib import Path
 from _comun import arg_vendor, vendor_dir
 v = arg_vendor(); d = vendor_dir(v)
 W = {'T1':.11,'T2':.11,'T3':.12,'T4':.11,'T5':.12,'T6':.14,'T7':.15,'T8':.14}
@@ -11,7 +12,9 @@ num = lambda s: (lambda m: int(m.group()) if m else None)(re.search(r'\d', s))
 out = [f'# Consolidado — {v}\n', '| Hoja | n | Calif Banco | Calif sugerida | Δ | Confirma | Completa | Contradice | Sin evid. | Killers suben | Killers bajan |', '|---|---|---|---|---|---|---|---|---|---|---|']
 tb = ts = 0; wsum = 0; hojas = []
 for f in sorted(glob.glob(str(d / 'verif' / 'T*.md'))):
-    h = f.split('/')[-1][:-3]; it = []; vistos = set(); en_tabla = True
+    h = Path(f).stem  # nombre de hoja; Path funciona con / y con \
+    if h not in W: continue  # ignora archivos que no sean T1..T8
+    it = []; vistos = set(); en_tabla = True
     # Solo la tabla principal: antes de la primera sección "## (" y, si existe, después de "## Tabla de verificación".
     for line in open(f, encoding='utf-8'):
         if line.startswith('## Tabla'): en_tabla = True; continue
