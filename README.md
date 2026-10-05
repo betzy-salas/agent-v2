@@ -43,6 +43,20 @@ copilot/
    escribir `/` se ofrecen los prompts.
 4. Los vendors ya verificados con Claude Code (por ejemplo `vendors/sunline/`) se pueden copiar tal cual a `vendors/`; los formatos son idénticos.
 
+## Instalación en Windows (entorno corporativo)
+
+En Windows el lanzador es `py` y el entorno se activa de otra forma. Desde la carpeta del repositorio, en PowerShell:
+```powershell
+py -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python scripts\04_ingesta.py <vendor>
+```
+Llamar al intérprete por su ruta (`.venv\Scripts\python`) evita depender de qué Python abre `py`. Para activar el
+entorno y escribir solo `python`: `.venv\Scripts\Activate.ps1` (si PowerShell lo bloquea, ejecutar una vez
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, o usar `.venv\Scripts\activate.bat` desde cmd).
+Detrás de un proxy corporativo: añadir `--proxy http://usuario:clave@proxy:puerto` al `pip install`, o usar el índice
+interno de paquetes que indique TI. Las rutas de los scripts aceptan `/` o `\` indistintamente.
+
 ## Uso por vendor
 
 Terminal:

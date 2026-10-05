@@ -10,12 +10,16 @@ def requiere(*modulos):
     faltan = [m for m in modulos if importlib.util.find_spec(m) is None]
     if faltan:
         nombres = {'fitz': 'pymupdf', 'openpyxl': 'openpyxl', 'pandas': 'pandas'}
+        win = sys.platform.startswith('win')
+        act = r".venv\Scripts\Activate.ps1  (PowerShell)  o  .venv\Scripts\activate.bat  (cmd)" if win else "source .venv/bin/activate"
+        crear = r"py -m venv .venv && .venv\Scripts\python -m pip install -r requirements.txt" if win else "python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
+        directo = r".venv\Scripts\python scripts\<script>.py <vendor>" if win else ".venv/bin/python scripts/<script>.py <vendor>"
         sys.exit("Faltan librerías: " + ", ".join(nombres.get(m, m) for m in faltan) + ".\n"
-                 "Estás usando el Python del sistema. Activa el entorno del proyecto:\n"
-                 "    source .venv/bin/activate\n"
-                 "o, si aún no existe:\n"
-                 "    python3 -m venv .venv && .venv/bin/pip install -r requirements.txt\n"
-                 "También puedes ejecutar directamente:  .venv/bin/python scripts/<script>.py <vendor>")
+                 "Estás usando un Python distinto del entorno del proyecto. Activa el entorno:\n"
+                 f"    {act}\n"
+                 "o, si aún no existe, créalo e instala los requisitos:\n"
+                 f"    {crear}\n"
+                 f"También puedes ejecutar directamente:  {directo}")
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 

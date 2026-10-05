@@ -1,7 +1,7 @@
 # Guion de ejecución por vendor (GitHub Copilot)
 
 Sustituye `<vendor>` por un nombre corto en minúsculas sin espacios (ej. `acme`). Las líneas con `$` van en la
-terminal (con `source .venv/bin/activate` hecho una vez); las demás se escriben en Copilot Chat en modo Agent (VS Code), invocando el prompt con `/nombre`; cada hoja en su propia conversación.
+terminal con el entorno activado (`source .venv/bin/activate` en macOS/Linux; `.venv\Scripts\Activate.ps1` en Windows, o anteponer `.venv\Scripts\python` a cada comando); las demás se escriben en Copilot Chat en modo Agent (VS Code), invocando el prompt con `/nombre`; cada hoja en su propia conversación.
 
 ## Paso 0 — Crear el vendor y cargar documentos
 ```
