@@ -12,7 +12,7 @@ lees `vendors/<vendor>/verif/…` y escribes en `vendors/<vendor>/informes/…`.
 Si no te dan el vendor y hay más de uno en `vendors/`, detente y pregúntalo. Las cifras y citas se copian tal
 como aparecen en las verificaciones, con el nombre oficial del documento que define `vendors/<vendor>/NOMBRES.md`.
 
-Usa EXCLUSIVAMENTE vendors/<vendor>/verif/T5.md y vendors/<vendor>/verif/00_consolidado.md. No abras vendors/<vendor>/docs/ ni matriz/. Toda cifra sale de
+Fuentes: vendors/<vendor>/verif/T5.md y vendors/<vendor>/verif/00_consolidado.md para todo lo verificado, y vendors/<vendor>/matriz/T5.txt SOLO para la sección 3b (capacidades declaradas). No abras vendors/<vendor>/docs/: la evidencia documental es la que ya registró la verificación, que buscó en todos los documentos del vendor (propuesta y anexos). Toda cifra sale de
 esos dos archivos. Toda afirmación referencia el ítem (T5-E<n>) y, cuando vendors/<vendor>/verif/T5.md la trae, la fuente
 documental con su nombre oficial y página u hoja/fila. No inventes evidencia que no esté en vendors/<vendor>/verif/T5.md.
 
@@ -24,6 +24,12 @@ Escribe vendors/<vendor>/informes/2_ejecutivo_T5.md con esta estructura:
 3. Fortalezas técnicas: 5 a 8 puntos. Cada uno con: capacidad concreta, ítem(s), evidencia documental con
    página, y por qué importa para el Banco. Solo cuentan como fortaleza las capacidades con veredicto CONFIRMA o
    COMPLETA y respaldo documental «Sí» en la columna de tres capas.
+3b. Capacidades declaradas por el proveedor sin respaldo documental: 5 a 10 puntos tomados de los ítems con veredicto
+   SIN EVIDENCIA (y de los CONFIRMA con respaldo «Parcial») cuya respuesta en la matriz afirma una capacidad relevante.
+   Cada uno con: capacidad, ítem(s), qué dice la celda (cita breve de vendors/<vendor>/matriz/T5.txt), nota del Banco → sugerida,
+   confianza BAJA, y la evidencia concreta que el proveedor tendría que entregar para que cuente como fortaleza.
+   Encabeza la sección con una frase que deje claro que son afirmaciones del proveedor, no capacidades verificadas,
+   y que por eso no suman al puntaje. Nunca mezcles estos puntos con los de la sección 3.
 4. Debilidades técnicas: 8 a 12 puntos, ordenadas por impacto (killers e indispensables primero). Cada una
    con: brecha concreta, ítem(s), qué dice la celda frente a qué dicen los documentos, nota del Banco → sugerida,
    y consecuencia práctica para el banco (coste, dependencia, riesgo operativo o de seguridad).

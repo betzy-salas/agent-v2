@@ -11,7 +11,7 @@ lees `vendors/<vendor>/verif/…` y escribes en `vendors/<vendor>/informes/…`.
 Si no te dan el vendor y hay más de uno en `vendors/`, detente y pregúntalo. Las cifras y citas se copian tal
 como aparecen en las verificaciones, con el nombre oficial del documento que define `vendors/<vendor>/NOMBRES.md`.
 
-Usa EXCLUSIVAMENTE vendors/<vendor>/verif/T1.md … vendors/<vendor>/verif/T8.md y vendors/<vendor>/verif/00_consolidado.md. No abras vendors/<vendor>/docs/ ni matriz/. Toda
+Fuentes: vendors/<vendor>/verif/T1.md … T8.md y vendors/<vendor>/verif/00_consolidado.md para todo lo verificado, y vendors/<vendor>/matriz/T<n>.txt SOLO para el apartado «Declarado sin respaldo» de cada dimensión. No abras vendors/<vendor>/docs/: la evidencia documental es la que ya registró cada verificación, que buscó en todos los documentos del vendor. Toda
 cifra sale del consolidado. Toda afirmación referencia el ítem (hoja-N°, por ejemplo T6-E19) y, cuando la
 verificación la trae, la fuente documental con su nombre oficial y página u hoja/fila. No inventes evidencia.
 
@@ -35,6 +35,9 @@ Escribe vendors/<vendor>/informes/6_fortalezas_debilidades.md con esta estructur
      no las que solo declara la celda.
    - Debilidades: 3 a 6 puntos, killers primero. Cada uno con brecha concreta, ítem(s), celda frente a
      documento, nota del Banco → sugerida, y consecuencia para el banco.
+   - Declarado sin respaldo: 2 a 4 capacidades relevantes que el proveedor afirma en la matriz (ítems SIN EVIDENCIA o
+     con respaldo Parcial) y ningún documento respalda; cada una con ítem, cita breve de la celda, confianza BAJA y
+     la evidencia que habría que pedir. Se presentan aparte de las fortalezas y no suman al puntaje.
    - Lo que la dimensión deja al banco: responsabilidades trasladadas o costes no incluidos, en 1-3 líneas
      (usa la sección (d) de T6 y T7 y los hallazgos de T2, T4 y T8 cuando apliquen).
    - Veredicto de la dimensión en una frase.
