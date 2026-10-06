@@ -16,13 +16,15 @@ copilot/
 ├── vendors/                          ← vacía; cada vendor se crea con scripts/00_nuevo_vendor.py
 └── .github/
     ├── copilot-instructions.md        ← reglas comunes (equivale a CLAUDE.md); Copilot lo lee solo
-    ├── agents/                        ← 14 agentes personalizados (*.agent.md)
+    ├── agents/                        ← 15 agentes personalizados (*.agent.md)
     │   ├── verificador-t1-arquitectura … verificador-t8-soporte
     │   ├── redactor-diagnostico, redactor-ejecutivo, redactor-ejecutivo-t5,
     │   │   redactor-pros-contras, redactor-fortalezas-debilidades
+    │   ├── redactor-implementacion
     │   └── revisor-cruzado
     ├── prompts/                       ← prompts reutilizables con parámetros (*.prompt.md), se invocan con /nombre
     │   ├── verificar-t1 … verificar-t8 (T6 → verificar-t6-bloque + unir-t6)
+    │   ├── implementacion (propuesta de implementación, sin verificaciones previas)
     │   ├── validar, consolidar, top-diferencias
     │   ├── informe-diagnostico, resumen-ejecutivo, pros-contras, informe-ejecutivo-t5, fortalezas-debilidades
     │   └── revision-cruzada, corregir-informes
@@ -73,6 +75,7 @@ Copilot Chat (modo Agent), una hoja por conversación:
 /verificar-t2 … /verificar-t5, /verificar-t7, /verificar-t8
 /verificar-t6-bloque   → pide vendor y bloque (1, 2, 3); tres conversaciones
 /unir-t6               → une los tres parciales en verif/T6.md
+/implementacion        → pros y contras de la propuesta de implementación (solo necesita la ingesta)
 /validar               → ejecuta scripts/06_validar_verif.py <vendor> (formato, conteos y citas de cada hoja)
 /consolidar            → ejecuta scripts/03_consolidar.py <vendor>
 /top-diferencias       → los 20 ítems con mayor diferencia, para la revisión manual

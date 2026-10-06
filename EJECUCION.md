@@ -21,6 +21,14 @@ Luego revisa dos archivos:
   «Secciones por dimensión», que es solo sugerida.
 
 
+## Paso 1b — Propuesta de implementación (opcional, no requiere verificaciones)
+Puede hacerse justo después de la ingesta. Lee directamente los documentos del vendor y escribe
+`vendors/<vendor>/informes/7_implementacion_pros_contras.md` (ficha, pros y contras con confianza, riesgos, lo que asume
+el Banco, alertas y preguntas; sin recomendación).
+```
+/implementacion
+```
+
 ## Paso 2 — Verificadores (uno por uno la primera vez)
 ```
 /verificar-t1   (pide el vendor)
