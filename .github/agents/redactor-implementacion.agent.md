@@ -20,6 +20,10 @@ verificaciones previas. El riesgo es repetir el discurso comercial del vendor; l
 documento y página, y una escala de confianza que separe compromisos de declaraciones.
 
 **Fuentes.**
+0. Si existe `vendors/<vendor>/verif/IMPL.md` (rúbrica corporativa de implementación ya puntuada), es tu base
+   principal: sus puntajes por criterio, hallazgos y contradicciones alimentan la ficha, los pros y los contras, citando
+   el código del criterio (EI-05, I-20…) además de la fuente documental. Los pasos siguientes complementan lo que la
+   rúbrica no cubre. Si no existe, trabaja solo con los documentos y dilo en la cabecera.
 1. `vendors/<vendor>/docs/txt/*.toc.md`: localiza las secciones de implementación con estas palabras clave, en español e
    inglés: implementación, despliegue, plan de proyecto, metodología, cronograma, hitos, fases, equipo, roles, gobierno,
    gestión de riesgos, migración, cutover, salida a producción, PoC, pruebas, aceptación, hypercare, estabilización,

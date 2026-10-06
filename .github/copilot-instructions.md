@@ -174,7 +174,8 @@ python scripts/00_nuevo_vendor.py <vendor>        # crea vendors/<vendor>/
 # copiar documentos a vendors/<vendor>/docs/raw
 python scripts/04_ingesta.py <vendor>             # 01 PDF→txt, 01a .toc.md, 01b anexos→txt, 02 matriz→T1..T8, INVENTARIO
 # revisar NOMBRES.md y los .toc.md; lanzar los 8 agentes verificadores con el vendor (uno por hoja)
-# opcional, sin verificaciones previas: redactor-implementacion → informes/7_implementacion_pros_contras.md
+# implementación (si docs/raw trae la rúbrica del Banco, la ingesta genera matriz/IMPL.txt con 02b):
+#   verificador-implementacion → verif/IMPL.md (0–5 por criterio); redactor-implementacion → informes/7_implementacion_pros_contras.md
 # comparativo entre vendors (tras la ingesta de varios): analista-despliegue → vendors/COMPARATIVO_DESPLIEGUE.md
 python scripts/06_validar_verif.py <vendor>       # valida filas, formato, VA y citas de cada verif/T<n>.md
 python scripts/03_consolidar.py <vendor>          # verif/00_consolidado.md

@@ -6,7 +6,7 @@ Uso: python scripts/04_ingesta.py <vendor> [--forzar]
 """
 import re, sys, subprocess, hashlib, datetime, zipfile
 from pathlib import Path
-from _comun import arg_vendor, vendor_dir, RAIZ, archivos_raw, slug_de, requiere
+from _comun import arg_vendor, vendor_dir, RAIZ, archivos_raw, slug_de, requiere, es_rubrica_implementacion
 requiere('pymupdf', 'openpyxl')
 
 v = arg_vendor(); d = vendor_dir(v); extra = [a for a in sys.argv[2:] if a.startswith('--')]
@@ -20,6 +20,7 @@ if not archivos: sys.exit(f"vendors/{v}/docs/raw está vacío: copia ahí los do
 if any(p.suffix.lower() == '.pdf' for p in archivos): run('01_pdf_a_texto.py', *extra); run('01a_toc_pdf.py', *extra)
 if any(p.suffix.lower() in ('.xlsx', '.xlsm', '.pptx') for p in archivos): run('01b_anexos_a_texto.py', *[a for a in extra if a != '--forzar'])
 run('02_matriz_a_texto.py')
+if any(p.suffix.lower() in ('.xlsx', '.xlsm') and es_rubrica_implementacion(p) for p in archivos): run('02b_rubrica_implementacion.py')
 
 # ---- INVENTARIO: tabla de documentos
 def fecha_meta(p):

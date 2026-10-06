@@ -16,7 +16,7 @@ import re, sys, zipfile, pathlib, warnings
 warnings.filterwarnings("ignore")
 from openpyxl import load_workbook
 
-from _comun import arg_vendor, vendor_dir, escribir_nombres, es_matriz_evaluacion, archivos_raw, slug_de, requiere
+from _comun import arg_vendor, vendor_dir, escribir_nombres, es_matriz_evaluacion, es_rubrica_implementacion, archivos_raw, slug_de, requiere
 requiere('openpyxl')
 v = arg_vendor(); d = vendor_dir(v)
 raw, out = d / 'docs' / 'raw', d / 'docs' / 'txt'
@@ -78,6 +78,8 @@ for p in archivos_raw(raw):
     if p.suffix.lower() in ('.xlsx', '.xlsm'):
         if not INCLUIR_MATRIZ and es_matriz_evaluacion(p):
             print(f'{p.relative_to(raw)}: es la matriz de evaluación del Banco, omitida (ya está en matriz/)'); continue
+        if es_rubrica_implementacion(p):
+            print(f'{p.relative_to(raw)}: es la rúbrica de implementación del Banco, omitida (va a matriz/IMPL.txt con 02b)'); continue
         escribir(p, *xlsx(p), 'SHEET')
     elif p.suffix.lower() == '.pptx':
         escribir(p, *pptx(p), 'SLIDE')

@@ -126,6 +126,16 @@ def es_matriz_evaluacion(xlsx: pathlib.Path) -> bool:
     except Exception:
         return False
 
+def es_rubrica_implementacion(xlsx: pathlib.Path) -> bool:
+    """True si el xlsx es la rúbrica corporativa del Banco (hoja «Criterios Estrat Implementación» o «Criterios Implementador»)."""
+    try:
+        from openpyxl import load_workbook
+        wb = load_workbook(xlsx, read_only=True)
+        n = [re.sub(r'[^a-z]', '', s.lower()) for s in wb.sheetnames]
+        return any(x.startswith('criteriosestrat') or x == 'criteriosimplementador' for x in n)
+    except Exception:
+        return False
+
 def buscar_matriz_evaluacion(raw: pathlib.Path) -> pathlib.Path:
     cands = [p for p in archivos_raw(raw) if p.suffix.lower() in ('.xlsx', '.xlsm') and es_matriz_evaluacion(p)]
     if not cands:

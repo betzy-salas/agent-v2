@@ -21,8 +21,16 @@ Luego revisa dos archivos:
   «Secciones por dimensión», que es solo sugerida.
 
 
-## Paso 1b — Propuesta de implementación (opcional, no requiere verificaciones)
-Puede hacerse justo después de la ingesta. Lee directamente los documentos del vendor y escribe
+## Paso 1b — Implementación (rúbrica corporativa + resumen), no requiere las verificaciones T1–T8
+Si en `docs/raw` está la rúbrica del Banco (xlsx con «Criterios Estrat Implementación»), la ingesta genera
+`matriz/IMPL.txt` (61 criterios: estrategia, fabricante, implementador, con escalas 0–5 y las respuestas del Anexo de
+perfiles). Primero se puntúa y luego se redacta:
+```
+/verificar-implementacion
+```
+Escribe `vendors/<vendor>/verif/IMPL.md` (puntaje por criterio con el descriptor exacto de la escala, respaldo
+Documentado / Solo declarado / No encontrado, evidencia con documento, página, sección y cita). Después, el resumen
+ejecutivo, que usa IMPL.md como base si existe. Lee directamente los documentos del vendor y escribe
 `vendors/<vendor>/informes/7_implementacion_pros_contras.md` (ficha, pros y contras con confianza, riesgos, lo que asume
 el Banco, alertas y preguntas; sin recomendación).
 ```
