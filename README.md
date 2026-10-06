@@ -16,16 +16,16 @@ copilot/
 ├── vendors/                          ← vacía; cada vendor se crea con scripts/00_nuevo_vendor.py
 └── .github/
     ├── copilot-instructions.md        ← reglas comunes (equivale a CLAUDE.md); Copilot lo lee solo
-    ├── agents/                        ← 17 agentes personalizados (*.agent.md)
+    ├── agents/                        ← 18 agentes personalizados (*.agent.md)
     │   ├── verificador-t1-arquitectura … verificador-t8-soporte
     │   ├── redactor-diagnostico, redactor-ejecutivo, redactor-ejecutivo-t5,
     │   │   redactor-pros-contras, redactor-fortalezas-debilidades
-    │   ├── verificador-implementacion (rúbrica corporativa 0–5), redactor-implementacion, analista-despliegue (comparativo)
+    │   ├── verificador-implementacion (rúbrica corporativa 0–5), redactor-implementacion, analista-despliegue y comparador-implementacion (comparativos)
     │   └── revisor-cruzado
     ├── prompts/                       ← prompts reutilizables con parámetros (*.prompt.md), se invocan con /nombre
     │   ├── verificar-t1 … verificar-t8 (T6 → verificar-t6-bloque + unir-t6)
     │   ├── verificar-implementacion (rúbrica EI/F/I), implementacion (resumen pros y contras)
-    │   ├── despliegue (modelos SaaS/PaaS y nubes por vendor, comparativo)
+    │   ├── despliegue (modelos SaaS/PaaS y nubes por vendor, comparativo), comparar-implementacion (comparativo)
     │   ├── validar, consolidar, top-diferencias
     │   ├── informe-diagnostico, resumen-ejecutivo, pros-contras, informe-ejecutivo-t5, fortalezas-debilidades
     │   └── revision-cruzada, corregir-informes
@@ -85,7 +85,7 @@ Copilot Chat (modo Agent), una hoja por conversación:
 /revision-cruzada
 /corregir-informes     → aplica las correcciones de la revisión a un informe
 ```
-Después de todos los vendors: `python scripts/05_comparar.py` y, para modelos de despliegue y nubes, `/despliegue`.
+Después de todos los vendors: `python scripts/05_comparar.py` y, para los comparativos, `/despliegue` (modelos y nubes) y `/comparar-implementacion` (implementaciones).
 
 También se puede elegir el agente en el selector y escribir la orden a mano: «verifica T3 del vendor acme».
 En el Copilot coding agent de GitHub.com se asigna un issue al agente con el mismo texto.

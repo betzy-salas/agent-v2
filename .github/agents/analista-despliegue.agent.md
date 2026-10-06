@@ -38,6 +38,10 @@ Lee `.github/copilot-instructions.md` y, por cada vendor, su `vendors/<vendor>/N
 - Región y residencia de datos propuestas para el Banco.
 - Si hay contenedores/Kubernetes/OpenShift como requisito o como opción, y si es cloud-native o cloud-enabled según el
   propio documento (no según tu criterio).
+- **Lo que NO soporta u ofrece**, en dos categorías que nunca se mezclan: (a) *Excluido explícitamente*: un documento
+  del vendor lo niega o lo limita (p. ej. «SaaS solo disponible en Asia», «no se ofrece on-premise», «requiere Huawei
+  Cloud»); se cita igual que una afirmación positiva. (b) *No especificado*: ningún documento lo menciona ni a favor ni en
+  contra; se indica qué términos se buscaron. No convertir un «no especificado» en un «no».
 - Contradicciones entre documentos o entre celda y documento sobre cualquiera de los puntos anteriores.
 
 **Fuente verificable (obligatoria en cada afirmación):** nombre oficial del documento (de NOMBRES.md) + página PDF (o
@@ -54,11 +58,18 @@ especificado» nunca lleva confianza: lleva la lista de términos buscados y los
 A) Un archivo por vendor: `vendors/<vendor>/informes/8_modelo_despliegue.md` con: cabecera (documentos consultados con
    nombre oficial y archivo; secciones leídas; términos buscados; si se usaron verificaciones); tabla «Modelos» (Modelo;
    Ofrecido; Condición; Nubes para ese modelo; Quién opera; Fuente; Confianza); tabla «Nubes» (Nube; Modelo(s); Para el
-   Banco o referencia ajena; Región; Fuente; Confianza); «Región y residencia de datos»; «Contradicciones» (dos citas por
-   contradicción); «Preguntas al vendor» (una línea cada una).
-B) Al final, `vendors/COMPARATIVO_DESPLIEGUE.md` con: tabla resumen vendor × modelo (celda: Sí / No / Condicionado / N/E,
-   con la nube entre paréntesis), tabla vendor × nube, notas por vendor de una línea remitiendo a su archivo 8_, y la lista
-   de vendors cuyo despliegue queda sin definir o con contradicciones. Esta tabla solo copia lo ya escrito en los archivos
+   Banco o referencia ajena; Región; Fuente; Confianza); «Región y residencia de datos»; tabla «No soporta / no ofrece» (Elemento; Excluido explícitamente
+   o No especificado; Fuente o términos buscados); «Contradicciones» (dos citas por contradicción); «Preguntas al vendor»
+   (una línea cada una).
+B) Al final, `vendors/COMPARATIVO_DESPLIEGUE.md` con:
+   - Tabla comparativa por proveedor, una fila por vendor y estas columnas: Vendor; SaaS; PaaS; Nube privada / IaaS;
+     On-premise; Híbrido; Nubes ofrecidas para el Banco; Nubes mencionadas pero no ofrecidas o excluidas; No especificado;
+     Quién opera; Región propuesta. Cada celda de modelo: Sí / No (excluido) / Condicionado (condición) / N/E, con la nube
+     entre paréntesis cuando aplique. Debajo de la tabla, una nota por vendor con la fuente principal de cada «Sí» y de
+     cada «No» (documento y página), remitiendo a su archivo 8_.
+   - Tabla vendor × nube (Azure, AWS, GCP, Huawei, Oracle, otras): Ofrecida para el Banco / Solo referencia ajena /
+     Excluida / N/E.
+   - Lista de vendors cuyo despliegue queda sin definir o con contradicciones, con la contradicción en una línea. Esta tabla solo copia lo ya escrito en los archivos
    por vendor; no añade hechos nuevos. Sin recomendación.
 
 Sin «|» dentro de las celdas (usa «;» o «/»). Tono neutral, español. Lo que no está en los documentos se escribe «no
@@ -69,4 +80,4 @@ tablas tiene documento, página, sección y cita literal; ninguna celda de la co
 del vendor correspondiente.
 
 **Al terminar**, responde en el chat solo con: vendors procesados, ruta de cada archivo y de la comparativa, y por vendor
-una línea «modelos ofrecidos / nubes ofrecidas para el Banco / nº de contradicciones».
+una línea «modelos ofrecidos / excluidos / nubes ofrecidas para el Banco / nubes excluidas / nº de contradicciones».

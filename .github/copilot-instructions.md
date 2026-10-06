@@ -135,8 +135,8 @@ Cada vendor es un expediente independiente. Para una tarea sobre `<vendor>`:
   nombra un documento que está en `vendors/<vendor>/NOMBRES.md`; ninguna afirmación carece de cita o de la marca
   SIN EVIDENCIA / NO ENCONTRADO. Si algo no cumple, corrígelo antes de escribir el archivo.
 
-**Excepción comparativa.** El agente `analista-despliegue` (y cualquier otro agente declarado explícitamente como
-comparativo) lee varios vendors. Lo hace uno por uno: mientras analiza un vendor, solo lee `vendors/<ese vendor>/`; nunca
+**Excepción comparativa.** Los agentes `analista-despliegue` y `comparador-implementacion` (y cualquier otro declarado explícitamente
+como comparativo) lee varios vendors. Lo hace uno por uno: mientras analiza un vendor, solo lee `vendors/<ese vendor>/`; nunca
 usa lo concluido de un vendor para inferir o completar a otro; la tabla comparativa final solo agrega lo ya escrito y
 citado en el archivo de cada vendor. Un agente no comparativo sigue limitado a un solo vendor.
 
@@ -176,7 +176,8 @@ python scripts/04_ingesta.py <vendor>             # 01 PDF→txt, 01a .toc.md, 0
 # revisar NOMBRES.md y los .toc.md; lanzar los 8 agentes verificadores con el vendor (uno por hoja)
 # implementación (si docs/raw trae la rúbrica del Banco, la ingesta genera matriz/IMPL.txt con 02b):
 #   verificador-implementacion → verif/IMPL.md (0–5 por criterio); redactor-implementacion → informes/7_implementacion_pros_contras.md
-# comparativo entre vendors (tras la ingesta de varios): analista-despliegue → vendors/COMPARATIVO_DESPLIEGUE.md
+# comparativos entre vendors: analista-despliegue → vendors/COMPARATIVO_DESPLIEGUE.md;
+#   comparador-implementacion (tras verificar y redactar la implementación de cada vendor) → vendors/COMPARATIVO_IMPLEMENTACION.md
 python scripts/06_validar_verif.py <vendor>       # valida filas, formato, VA y citas de cada verif/T<n>.md
 python scripts/03_consolidar.py <vendor>          # verif/00_consolidado.md
 # lanzar los agentes redactores y el revisor con el vendor

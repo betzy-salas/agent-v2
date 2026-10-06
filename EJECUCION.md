@@ -109,3 +109,12 @@ cita literal) y `vendors/COMPARATIVO_DESPLIEGUE.md`.
 ```
 /despliegue        → pide «todos» o la lista de vendors
 ```
+
+## Paso 7c — Comparación de implementaciones entre vendors
+Requiere que cada vendor tenga `verif/IMPL.md` e `informes/7_implementacion_pros_contras.md` (Paso 1b). Escribe
+`vendors/COMPARATIVO_IMPLEMENTACION.md`: tabla resumen por vendor (% EI/F/I, enfoque, duración, implementador),
+rúbrica criterio a criterio EI-01…EI-12, fortalezas y debilidades por vendor, diferencias transversales y preguntas.
+Sin recomendación ni ranking.
+```
+/comparar-implementacion   → pide «todos» o la lista de vendors
+```
