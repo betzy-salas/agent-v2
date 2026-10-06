@@ -135,6 +135,11 @@ Cada vendor es un expediente independiente. Para una tarea sobre `<vendor>`:
   nombra un documento que está en `vendors/<vendor>/NOMBRES.md`; ninguna afirmación carece de cita o de la marca
   SIN EVIDENCIA / NO ENCONTRADO. Si algo no cumple, corrígelo antes de escribir el archivo.
 
+**Excepción comparativa.** El agente `analista-despliegue` (y cualquier otro agente declarado explícitamente como
+comparativo) lee varios vendors. Lo hace uno por uno: mientras analiza un vendor, solo lee `vendors/<ese vendor>/`; nunca
+usa lo concluido de un vendor para inferir o completar a otro; la tabla comparativa final solo agrega lo ya escrito y
+citado en el archivo de cada vendor. Un agente no comparativo sigue limitado a un solo vendor.
+
 ## Reglas inviolables
 - Toda afirmación cita documento y página del PDF (u hoja/fila). Si no hay evidencia, escribe SIN EVIDENCIA. Nunca inventes páginas, cifras, nombres de producto ni capacidades.
 - "Depende de la arquitectura", "se definirá en el contrato" o "puede integrarse" es parcial (1), no completo.
@@ -170,6 +175,7 @@ python scripts/00_nuevo_vendor.py <vendor>        # crea vendors/<vendor>/
 python scripts/04_ingesta.py <vendor>             # 01 PDF→txt, 01a .toc.md, 01b anexos→txt, 02 matriz→T1..T8, INVENTARIO
 # revisar NOMBRES.md y los .toc.md; lanzar los 8 agentes verificadores con el vendor (uno por hoja)
 # opcional, sin verificaciones previas: redactor-implementacion → informes/7_implementacion_pros_contras.md
+# comparativo entre vendors (tras la ingesta de varios): analista-despliegue → vendors/COMPARATIVO_DESPLIEGUE.md
 python scripts/06_validar_verif.py <vendor>       # valida filas, formato, VA y citas de cada verif/T<n>.md
 python scripts/03_consolidar.py <vendor>          # verif/00_consolidado.md
 # lanzar los agentes redactores y el revisor con el vendor

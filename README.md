@@ -16,15 +16,16 @@ copilot/
 ├── vendors/                          ← vacía; cada vendor se crea con scripts/00_nuevo_vendor.py
 └── .github/
     ├── copilot-instructions.md        ← reglas comunes (equivale a CLAUDE.md); Copilot lo lee solo
-    ├── agents/                        ← 15 agentes personalizados (*.agent.md)
+    ├── agents/                        ← 16 agentes personalizados (*.agent.md)
     │   ├── verificador-t1-arquitectura … verificador-t8-soporte
     │   ├── redactor-diagnostico, redactor-ejecutivo, redactor-ejecutivo-t5,
     │   │   redactor-pros-contras, redactor-fortalezas-debilidades
-    │   ├── redactor-implementacion
+    │   ├── redactor-implementacion, analista-despliegue (comparativo)
     │   └── revisor-cruzado
     ├── prompts/                       ← prompts reutilizables con parámetros (*.prompt.md), se invocan con /nombre
     │   ├── verificar-t1 … verificar-t8 (T6 → verificar-t6-bloque + unir-t6)
     │   ├── implementacion (propuesta de implementación, sin verificaciones previas)
+    │   ├── despliegue (modelos SaaS/PaaS y nubes por vendor, comparativo)
     │   ├── validar, consolidar, top-diferencias
     │   ├── informe-diagnostico, resumen-ejecutivo, pros-contras, informe-ejecutivo-t5, fortalezas-debilidades
     │   └── revision-cruzada, corregir-informes
@@ -83,7 +84,7 @@ Copilot Chat (modo Agent), una hoja por conversación:
 /revision-cruzada
 /corregir-informes     → aplica las correcciones de la revisión a un informe
 ```
-Después de todos los vendors: `python scripts/05_comparar.py`.
+Después de todos los vendors: `python scripts/05_comparar.py` y, para modelos de despliegue y nubes, `/despliegue`.
 
 También se puede elegir el agente en el selector y escribir la orden a mano: «verifica T3 del vendor acme».
 En el Copilot coding agent de GitHub.com se asigna un issue al agente con el mismo texto.

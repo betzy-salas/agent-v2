@@ -93,3 +93,11 @@ Genera `vendors/COMPARATIVO.md` con el puntaje del Banco y verificado de todos l
 Están en `.github/copilot-instructions.md` y Copilot las lee solo: escala textual de la hoja «Metodo de Evaluacion», cuatro
 veredictos, respuesta del proveedor sin sustento = Parcialmente Cubierto (1), toda cita con nombre oficial
 de documento, filas ocultas del Excel sí cuentan.
+
+## Paso 7b — Modelo de despliegue y nubes, comparativo entre vendors
+Requiere solo la ingesta de los vendors a comparar. Escribe `vendors/<vendor>/informes/8_modelo_despliegue.md` por vendor
+(SaaS / PaaS / privada / on-prem / híbrido, nubes, quién opera, región; cada fila con documento, página, sección, título y
+cita literal) y `vendors/COMPARATIVO_DESPLIEGUE.md`.
+```
+/despliegue        → pide «todos» o la lista de vendors
+```
