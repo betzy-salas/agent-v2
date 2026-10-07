@@ -39,6 +39,7 @@ CSS_COMP = """
 .ancha .vname{font-family:var(--display);font-weight:800;font-size:.9rem}
 .ancha .tile,.leyenda-tiles .tile{display:block;height:24px;line-height:22px;border-radius:6px;text-align:center;font-family:var(--display);font-size:.54rem;font-weight:700;letter-spacing:.02em;border:1px solid transparent;box-sizing:border-box}
 .ancha .tile.of,.leyenda-tiles .tile.of{background:var(--mc);color:var(--mt);border-color:var(--mc)} .ancha .tile.cond,.leyenda-tiles .tile.cond{background:transparent;color:var(--mc);border:2px solid var(--mc);line-height:20px} .ancha .tile.no,.leyenda-tiles .tile.no{background:transparent;color:var(--ink-3);border:2px dashed #8a8f98;line-height:20px} .ancha .tile.vacio,.leyenda-tiles .tile.vacio{background:var(--track);height:6px;margin:9px 6px;border-radius:3px}
+.ancha.invertida td{padding:1px 3px;border-bottom:0} .ancha.invertida td.vcol,.ancha.invertida th.vcol{width:1%;white-space:nowrap;vertical-align:middle;border-left:3px solid var(--line);padding:1px 14px 1px 10px} .ancha.invertida .mcol{white-space:nowrap;padding:1px 10px 1px 8px;font-size:.72rem;width:1%} .ancha.invertida .mlab{font-weight:700;color:var(--mc)} .ancha.invertida th.grupo{font-family:var(--display);font-size:.76rem;letter-spacing:.04em;color:var(--ink);padding:6px 4px;border-bottom:2px solid var(--line);border-radius:0;background:var(--panel)} .ancha.invertida th.mcol{text-align:left;padding:0 8px 6px;border-bottom:2px solid var(--line)} .ancha.invertida tbody.grupo-vendor{page-break-inside:avoid;break-inside:avoid} .ancha.invertida tr.fin td{border-bottom:2px solid var(--line)} .ancha.invertida .tile{height:16px;line-height:14px;font-size:.56rem;max-width:70px;margin:1px auto;border-radius:5px} .ancha.invertida .tile.cond,.ancha.invertida .tile.no{line-height:12px;overflow:hidden} .ancha.invertida .tile.vacio{height:4px;margin:7px auto;width:26px} @media print{.ancha.invertida .tile{height:15px;line-height:13px} .ancha.invertida .tile.cond,.ancha.invertida .tile.no{line-height:11px} .ancha.invertida .tile.vacio{height:4px;margin:6px auto}}
 .leyenda-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-top:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px} .lt-grupo{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center} .lt-k{flex-basis:100%;font-family:var(--display);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:700} .lt-item{display:inline-flex;align-items:center;gap:7px;font-size:.8rem} .lt-item .tile{width:44px;display:inline-block} .lt-item .tile.vacio{width:30px;margin:0}
 @media print{.ancha .tile{height:22px;line-height:20px} .ancha .tile.cond,.ancha .tile.no{line-height:18px} .ancha .tile.vacio{height:5px;margin:8px 6px}}
 @media print{html{font-size:10px} .comp table{font-size:.7rem} .cell{padding:1px 7px} .cell .d{font-size:.58rem} .comp td,.comp th{padding:4px 6px} .vgrid{grid-template-columns:repeat(3,1fr)} .portada-cards{grid-template-columns:repeat(3,1fr)} .seccion{page-break-before:always} .vbox,.pc,tr{page-break-inside:avoid}}
@@ -185,6 +186,33 @@ def tabla_nubes_ancha(V):
                f'<span class="lt-item">{tile("saas", None)}<span>no la asocia a ese modelo</span></span></div></div>')
     return '<div class="comp ancha"><table><thead>' + th1 + '</thead><tbody>' + ''.join(filas) + '</tbody></table></div>' + leyenda
 
+def tabla_nubes_invertida(V):
+    """Copia invertida de la vista alternativa: filas = vendor × modelo (SaaS, PaaS… dentro de cada vendor); columnas = nubes.
+    La ficha toma el color del modelo de su fila; el texto dice el estado: Sí (ofrecida), Cond. (condicionada), Menc. (mencionada sin ofrecer)."""
+    datos = []
+    for d in V:
+        lines = [l for l in str(d.get('desp_modelos', '')).split('\n') if l.strip().startswith('|')]
+        hdr, rows = m.parse_table(lines) if lines else ([], [])
+        if not hdr: continue
+        col = {m._norm(h)[:6]: i for i, h in enumerate(hdr)}; i_of, i_nu = col.get('ofreci'), col.get('nubes ')
+        por_modelo = {}
+        for clave, _ in MODELOS_ORDEN:
+            r = next((r for r in rows if clave in m._norm(r[0])), None)
+            por_modelo[clave] = marcas_nubes(r[i_of], r[i_nu]) if r and i_of is not None and i_nu is not None else {}
+        datos.append((d, por_modelo))
+    if not datos: return ''
+    TXT = {'of': 'Sí', 'cond': 'Cond.', 'no': 'Menc.'}
+    th = '<tr><th class="vcol">Vendor</th><th class="mcol">Modelo</th>' + ''.join(f'<th class="grupo c">{esc(pn)}</th>' for pn, _ in PLATAFORMAS) + '</tr>'
+    filas = []
+    for gi, (d, por_modelo) in enumerate(datos):
+        for k, (clave, _) in enumerate(MODELOS_ORDEN):
+            bg, fg = COLOR_MODELO[clave]
+            celdas = ''.join((lambda est: f'<td class="c g{gi % 2}">' + (f'<span class="tile {est}" style="--mc:{bg};--mt:{fg}">{TXT[est]}</span>' if est else '<span class="tile vacio"></span>') + '</td>')(por_modelo.get(clave, {}).get(pn)) for pn, _ in PLATAFORMAS)
+            primera = f'<td class="vcol g{gi % 2}" rowspan="{len(MODELOS_ORDEN)}"><span class="vname">{esc(m.nombre(d["vendor"]))}</span></td>' if k == 0 else ''
+            filas.append((gi, f'<tr class="{"fin" if k == len(MODELOS_ORDEN) - 1 else ""}">{primera}<td class="mcol g{gi % 2}"><span class="mlab" style="--mc:{bg}">{esc(NOMBRE_MODELO_LARGO[clave].split(" / ")[0])}</span></td>{celdas}</tr>'))
+    cuerpos = ''.join('<tbody class="grupo-vendor">' + ''.join(f for g, f in filas if g == gi) + '</tbody>' for gi in range(len(datos)))
+    return '<div class="comp ancha invertida"><table><thead>' + th + '</thead>' + cuerpos + '</table></div>'
+
 def seccion_despliegue(md, V):
     secs = m.sections(md); H = ['<section class="seccion"><p class="sec-eye">Comparativo 1 de 3</p><h2>Modelos de despliegue y nubes</h2>']
     H.append('<p class="small">Qué modelo ofrece cada vendor (SaaS, PaaS, nube privada, on-premise, híbrido), en qué nubes y cuáles quedan excluidas o sin especificar. Cada «Sí», «No» o «Condicionado» tiene su cita documental en el análisis de despliegue del vendor, incluido en su especificación.</p>')
@@ -198,6 +226,8 @@ def seccion_despliegue(md, V):
     if gn: H.append('<h3 style="page-break-before:always">Resumen por vendor: plataformas por modelo</h3><p class="small">La misma información de la tabla anterior, en cuadrícula: una fila por modelo y una columna por nube o plataforma. Solo marca lo que los documentos del vendor asocian a cada modelo; la fuente de cada fila está en la tabla anterior.</p>' + gn)
     ta = tabla_nubes_ancha(V)
     if ta: H.append('<h3 style="page-break-before:always">Vista alternativa: vendors por fila, nubes y modelos en columnas</h3><p class="small">Cada vendor en una fila y cada nube o plataforma en un grupo de columnas; dentro del grupo, una ficha por modelo de despliegue. El color de la ficha dice qué modelo es y su relleno si la nube se ofrece, es condicionada o solo se menciona (leyenda al pie). Debajo del nombre de cada nube, cuántos vendors la ofrecen en firme.</p>' + ta)
+    ti = tabla_nubes_invertida(V)
+    if ti: H.append('<h3 style="page-break-before:always">Vista invertida: modelos como filas dentro de cada vendor, nubes en columnas</h3><p class="small">Misma información que la vista anterior con los ejes cambiados: cada vendor agrupa cinco filas (SaaS, PaaS, nube privada, on-premise, híbrido) y cada columna es una nube o plataforma. La ficha toma el color del modelo de su fila y su texto indica el estado: Sí = ofrecida, Cond. = condicionada o solo compatibilidad declarada, Menc. = mencionada pero el modelo no se ofrece; barra gris = no la asocia.</p>' + ti)
     hdr, rows = tabla_de(m.find_section(secs, 'vendor x nube', 'vendor × nube', 'por nube'))
     if hdr:
         def r(i, c): return f'<b>{esc(m.nombres_en_texto(c))}</b>' if i == 0 else nube(c)
