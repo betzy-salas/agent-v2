@@ -135,4 +135,7 @@ Chrome instalados. No añade texto: todo sale de los informes de los agentes. Si
 ```
 .venv\Scripts\python scripts\07_informe_implementacion.py --pdf   (Windows)  ·  .venv/bin/python scripts/07_informe_implementacion.py --pdf  (macOS/Linux)
 ```
-Opciones: lista de vendors (`… sunline acme`), `--salida ruta.html`. Si no encuentra Edge/Chrome, abre el HTML e imprime a PDF.
+Versiones: `--ejecutivo` genera `INFORME_IMPLEMENTACION_EJECUTIVO` (comparativo + una página por vendor, ~13 páginas);
+`--vendor <v>` genera `INFORME_IMPLEMENTACION_<v>` (especificación vertical con los 61 criterios, ~11 páginas);
+`--todo` genera el ejecutivo y una especificación por vendor. Sin opción, el documento completo de antes.
+Otras opciones: lista de vendors (`… sunline acme`), `--salida ruta.html`. Si no encuentra Edge/Chrome, abre el HTML e imprime a PDF.

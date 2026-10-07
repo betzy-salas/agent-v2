@@ -85,7 +85,7 @@ Copilot Chat (modo Agent), una hoja por conversación:
 /revision-cruzada
 /corregir-informes     → aplica las correcciones de la revisión a un informe
 ```
-Documento final de implementación (HTML + PDF): `python scripts/07_informe_implementacion.py --pdf`. Después de todos los vendors: `python scripts/05_comparar.py` y, para los comparativos, `/despliegue` (modelos y nubes) y `/comparar-implementacion` (implementaciones) y `/comparar-t5` (desarrollo).
+Documento final de implementación (HTML + PDF): `python scripts/07_informe_implementacion.py --todo --pdf` (ejecutivo + una especificación por vendor; sin `--todo`, el documento completo). Después de todos los vendors: `python scripts/05_comparar.py` y, para los comparativos, `/despliegue` (modelos y nubes) y `/comparar-implementacion` (implementaciones) y `/comparar-t5` (desarrollo).
 
 También se puede elegir el agente en el selector y escribir la orden a mano: «verifica T3 del vendor acme».
 En el Copilot coding agent de GitHub.com se asigna un issue al agente con el mismo texto.
