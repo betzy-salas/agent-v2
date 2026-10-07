@@ -24,7 +24,7 @@ CSS_COMP = """
 .cell.gris{background:var(--track);color:var(--ink-2)} .cell .d{display:block;font-family:var(--body);font-size:.64rem;font-weight:400;opacity:.92;white-space:normal}
 .nube{display:inline-block;padding:3px 9px;border-radius:999px;font-size:.7rem;font-weight:600;border:1px solid var(--line)} .nube.of{background:#2a78d6;color:#fff;border-color:#2a78d6} .nube.ref{color:var(--ink-2);border-style:dashed} .nube.ne{color:var(--ink-3);background:var(--track);border-color:transparent}
 .vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px} .vgrid>*{min-width:0} .vbox{background:var(--panel);border:1px solid var(--line);border-top:5px solid var(--vc);border-radius:10px;padding:12px 14px;page-break-inside:avoid} .vbox h4{margin:0 0 6px;font-size:1rem} .vbox ul{margin:0;padding-left:1.1rem;font-size:.82rem} .vbox li{margin:.2rem 0} .vbox .k{font-family:var(--display);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin:.6rem 0 .2rem;font-weight:700}
-.vbox .fuente{display:block;color:var(--ink-3);font-size:.7rem} .dot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:middle;border:2px solid transparent} .dot.of{background:#2a78d6;border-color:#2a78d6} .dot.cond{background:transparent;border-color:#2a78d6} .dot.no{background:transparent;border-color:#8a8f98;border-style:dashed} .dot.vacio{background:var(--track);width:8px;height:8px;border:0} .grid-nubes .comp table{font-size:.72rem} .grid-nubes .comp th{font-size:.6rem;padding:4px 3px;text-align:center} .grid-nubes .comp td{padding:5px 3px} .grid-nubes .comp td:first-child{font-weight:600;font-family:var(--body);white-space:normal;border-left:0;padding-left:0;font-size:.74rem} .chip.mini{font-size:.6rem;padding:1px 6px;margin-left:5px} .comp td .nubes{margin-top:4px;font-size:.78rem;line-height:1.3} .comp td .fuente{display:block;color:var(--ink-3);font-size:.64rem;margin-top:3px;line-height:1.25}
+.vbox .fuente{display:block;color:var(--ink-3);font-size:.7rem} .dot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:middle;border:2px solid transparent} .dot.of{background:#2a78d6;border-color:#2a78d6} .dot.cond{background:transparent;border-color:#2a78d6} .dot.no{background:transparent;border-color:#8a8f98;border-style:dashed} .dot.vacio{background:var(--track);width:8px;height:8px;border:0} .grid-nubes .comp table{font-size:.72rem} .grid-nubes .comp th{font-size:.6rem;padding:4px 3px;text-align:center} .grid-nubes .comp td{padding:5px 3px} .grid-nubes .comp td:first-child{font-weight:600;font-family:var(--body);white-space:normal;border-left:0;padding-left:0;font-size:.74rem} .chip.mini{font-size:.6rem;padding:1px 6px;margin-left:5px} .ancha table{table-layout:auto} .ancha th.grupo{font-size:.7rem;color:var(--ink-2);border-bottom:1px solid var(--line);border-left:2px solid var(--line);padding:6px 2px} .ancha th.sub{font-size:.56rem;letter-spacing:0;text-transform:none;padding:4px 1px;color:var(--ink-3)} .ancha th.ini,.ancha td.ini{border-left:2px solid var(--line)} .ancha td{padding:9px 1px} .ancha td:first-child{white-space:nowrap;width:1%;padding-left:8px;padding-right:12px} .ancha .dot{width:12px;height:12px} .ancha .dot.vacio{width:6px;height:6px} .comp td .nubes{margin-top:4px;font-size:.78rem;line-height:1.3} .comp td .fuente{display:block;color:var(--ink-3);font-size:.64rem;margin-top:3px;line-height:1.25}
 .titular{font-size:1.05rem;line-height:1.45;background:var(--panel);border-left:5px solid var(--accent);padding:10px 14px;border-radius:0 8px 8px 0;margin:0 0 1rem}
 .seccion{page-break-before:always} .sec-eye{font-family:var(--display);font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:800;margin:0 0 .2rem}
 .portada-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px} .pc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0} .pc .num{font-family:var(--display);font-size:2rem;font-weight:800;color:var(--accent);line-height:1} .pc h3{margin:.4rem 0 .3rem;font-size:1.05rem} .pc p{margin:0;font-size:.84rem;color:var(--ink-2)} .pc .meta{font-size:.72rem;color:var(--ink-3);margin-top:.5rem}
@@ -112,6 +112,8 @@ def marcas_nubes(ofrecido, nubes):
                 break
     return out
 
+LEYENDA_DOTS = '<p class="small"><span class="dot of"></span> ofrecida para ese modelo · <span class="dot cond"></span> condicionada o solo compatibilidad declarada · <span class="dot no"></span> mencionada, pero el modelo no se ofrece · <span class="dot vacio"></span> no la asocia a ese modelo. «Nube privada» incluye la nube privada del vendor (p. ej. FIS Private Cloud) o del cliente.</p>'
+
 def grids_nubes(V):
     """Una cuadrícula por vendor: filas = modelos, columnas = plataformas; la celda marca si la plataforma se ofrece para ese modelo."""
     cards = []
@@ -132,6 +134,33 @@ def grids_nubes(V):
     leyenda = '<p class="small"><span class="dot of"></span> ofrecida para ese modelo · <span class="dot cond"></span> condicionada o solo compatibilidad declarada · <span class="dot no"></span> mencionada, pero el modelo no se ofrece · <span class="dot vacio"></span> no la asocia a ese modelo. «Nube privada» incluye la nube privada del vendor (p. ej. FIS Private Cloud) o del cliente.</p>'
     return leyenda + '<div class="vgrid">' + ''.join(cards) + '</div>'
 
+ABREV_MODELO = {'saas': 'SaaS', 'paas': 'PaaS', 'privada': 'Priv.', 'on-prem': 'On-p.', 'hibrid': 'Híb.'}
+def tabla_nubes_ancha(V):
+    """Vista alternativa en una sola tabla: filas = vendors; cabecera de dos niveles = nube y, debajo, cada modelo."""
+    datos = []
+    for d in V:
+        lines = [l for l in str(d.get('desp_modelos', '')).split('\n') if l.strip().startswith('|')]
+        hdr, rows = m.parse_table(lines) if lines else ([], [])
+        if not hdr: continue
+        col = {m._norm(h)[:6]: i for i, h in enumerate(hdr)}; i_of, i_nu = col.get('ofreci'), col.get('nubes ')
+        por_modelo = {}
+        for clave, _ in MODELOS_ORDEN:
+            r = next((r for r in rows if clave in m._norm(r[0])), None)
+            por_modelo[clave] = marcas_nubes(r[i_of], r[i_nu]) if r and i_of is not None and i_nu is not None else {}
+        datos.append((d, por_modelo))
+    if not datos: return ''
+    th1 = '<tr><th rowspan="2" style="vertical-align:bottom">Vendor</th>' + ''.join(f'<th colspan="{len(MODELOS_ORDEN)}" class="c grupo">{esc(pn)}</th>' for pn, _ in PLATAFORMAS) + '</tr>'
+    th2 = '<tr>' + ''.join(''.join(f'<th class="c sub{" ini" if k == 0 else ""}">{ABREV_MODELO[clave]}</th>' for k, (clave, _) in enumerate(MODELOS_ORDEN)) for _ in PLATAFORMAS) + '</tr>'
+    filas = []
+    for d, por_modelo in datos:
+        celdas = ''
+        for pn, _ in PLATAFORMAS:
+            for k, (clave, _) in enumerate(MODELOS_ORDEN):
+                est = por_modelo.get(clave, {}).get(pn)
+                celdas += f'<td class="c{" ini" if k == 0 else ""}"><span class="dot {est or "vacio"}"></span></td>'
+        filas.append(f'<tr style="--vc:{m.vcolor(d["_i"])}"><td>{esc(m.nombre(d["vendor"]))}</td>{celdas}</tr>')
+    return '<div class="comp ancha"><table><thead>' + th1 + th2 + '</thead><tbody>' + ''.join(filas) + '</tbody></table></div>'
+
 def seccion_despliegue(md, V):
     secs = m.sections(md); H = ['<section class="seccion"><p class="sec-eye">Comparativo 1 de 3</p><h2>Modelos de despliegue y nubes</h2>']
     H.append('<p class="small">Qué modelo ofrece cada vendor (SaaS, PaaS, nube privada, on-premise, híbrido), en qué nubes y cuáles quedan excluidas o sin especificar. Cada «Sí», «No» o «Condicionado» tiene su cita documental en el análisis de despliegue del vendor, incluido en su especificación.</p>')
@@ -143,6 +172,8 @@ def seccion_despliegue(md, V):
     tmn = tabla_modelo_nube(V)
     if tmn: H.append('<h3 style="page-break-before:always">En qué nube o plataforma se ofrece cada modelo</h3><p class="small">Complemento de la tabla anterior: para cada vendor y cada modelo, las nubes o plataformas (AWS, Azure, GCP, Huawei, OCI, OpenShift, nube privada del vendor…) que sus documentos asocian a ese modelo, con la condición que declaran. Celda vacía de nubes = el modelo no aplica o el vendor no lo especifica. Cada celda indica el documento de origen; la cita completa está en el análisis de despliegue del vendor.</p>' + tmn)
     if gn: H.append('<h3 style="page-break-before:always">Resumen por vendor: plataformas por modelo</h3><p class="small">La misma información de la tabla anterior, en cuadrícula: una fila por modelo y una columna por nube o plataforma. Solo marca lo que los documentos del vendor asocian a cada modelo; la fuente de cada fila está en la tabla anterior.</p>' + gn)
+    ta = tabla_nubes_ancha(V)
+    if ta: H.append('<h3 style="page-break-before:always">Vista alternativa: vendors por fila, nubes y modelos en columnas</h3><p class="small">La misma información de la cuadrícula anterior en una sola tabla: cada vendor en una fila; arriba, las nubes o plataformas; debajo de cada una, sus cinco modelos (SaaS, PaaS, Priv. = nube privada / IaaS dedicada, On-p. = on-premise, Híb. = híbrido). </p>' + LEYENDA_DOTS + ta)
     hdr, rows = tabla_de(m.find_section(secs, 'vendor x nube', 'vendor × nube', 'por nube'))
     if hdr:
         def r(i, c): return f'<b>{esc(m.nombres_en_texto(c))}</b>' if i == 0 else nube(c)
