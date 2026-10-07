@@ -35,11 +35,11 @@ CSS_COMP = """
 .ancha th.sub{font-size:.56rem;letter-spacing:0;text-transform:none;padding:3px 1px 6px;text-align:center;color:var(--ink-3);border-bottom:2px solid var(--line)}
 .ancha .g1{background:color-mix(in srgb,var(--accent) 5%,var(--panel))} .ancha .g0{background:var(--panel)}
 .ancha th.ini,.ancha td.ini{border-left:1px solid var(--line)}
-.ancha td{padding:7px 2px;border-bottom:1px solid var(--line)} .ancha td.vcol{white-space:nowrap;padding:7px 10px 7px 10px;border-left:6px solid var(--vc);border-bottom:1px solid var(--line)} .ancha th.vcol,.ancha th.scol{white-space:nowrap;vertical-align:bottom;padding:0 8px 6px;border-bottom:2px solid var(--line)} .ancha td.scol{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ancha td{padding:7px 2px;border-bottom:1px solid var(--line)} .ancha td.vcol{white-space:nowrap;padding:7px 12px 7px 10px;border-left:3px solid var(--line);border-bottom:1px solid var(--line)} .ancha th.vcol,.ancha th.scol{white-space:nowrap;vertical-align:bottom;padding:0 8px 6px;border-bottom:2px solid var(--line)} .ancha td.scol{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 .ancha .vname{font-family:var(--display);font-weight:800;font-size:.9rem}
 .ancha .tile,.leyenda-tiles .tile{display:block;height:24px;line-height:22px;border-radius:6px;text-align:center;font-family:var(--display);font-size:.54rem;font-weight:700;letter-spacing:.02em;border:1px solid transparent;box-sizing:border-box}
-.ancha .tile.of,.leyenda-tiles .tile.of{background:#2a78d6;color:#fff;border-color:#2a78d6} .ancha .tile.cond,.leyenda-tiles .tile.cond{background:transparent;color:#1c5cab;border:2px solid #2a78d6;line-height:20px} .ancha .tile.no,.leyenda-tiles .tile.no{background:transparent;color:var(--ink-3);border:2px dashed #8a8f98;line-height:20px} .ancha .tile.vacio,.leyenda-tiles .tile.vacio{background:var(--track);height:6px;margin:9px 6px;border-radius:3px}
-.ancha td.c .big{font-family:var(--display);font-size:1.25rem;font-weight:800;color:var(--accent)}
+.ancha .tile.of,.leyenda-tiles .tile.of{background:var(--mc);color:var(--mt);border-color:var(--mc)} .ancha .tile.cond,.leyenda-tiles .tile.cond{background:transparent;color:var(--mc);border:2px solid var(--mc);line-height:20px} .ancha .tile.no,.leyenda-tiles .tile.no{background:transparent;color:var(--ink-3);border:2px dashed #8a8f98;line-height:20px} .ancha .tile.vacio,.leyenda-tiles .tile.vacio{background:var(--track);height:6px;margin:9px 6px;border-radius:3px}
+.leyenda-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-top:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px} .lt-grupo{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center} .lt-k{flex-basis:100%;font-family:var(--display);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:700} .lt-item{display:inline-flex;align-items:center;gap:7px;font-size:.8rem} .lt-item .tile{width:44px;display:inline-block} .lt-item .tile.vacio{width:30px;margin:0}
 @media print{.ancha .tile{height:22px;line-height:20px} .ancha .tile.cond,.ancha .tile.no{line-height:18px} .ancha .tile.vacio{height:5px;margin:8px 6px}}
 @media print{html{font-size:10px} .comp table{font-size:.7rem} .cell{padding:1px 7px} .cell .d{font-size:.58rem} .comp td,.comp th{padding:4px 6px} .vgrid{grid-template-columns:repeat(3,1fr)} .portada-cards{grid-template-columns:repeat(3,1fr)} .seccion{page-break-before:always} .vbox,.pc,tr{page-break-inside:avoid}}
 """
@@ -147,9 +147,15 @@ def grids_nubes(V):
     return leyenda + '<div class="vgrid">' + ''.join(cards) + '</div>'
 
 ABREV_MODELO = {'saas': 'SaaS', 'paas': 'PaaS', 'privada': 'Priv', 'on-prem': 'OnP', 'hibrid': 'Híb'}
+COLOR_MODELO = {'saas': ('#2a78d6', '#fff'), 'paas': ('#eb6834', '#fff'), 'privada': ('#1baf7a', '#fff'), 'on-prem': ('#eda100', '#1b1b1b'), 'hibrid': ('#4a3aa7', '#fff')}   # paleta categórica validada (dataviz)
+NOMBRE_MODELO_LARGO = {'saas': 'SaaS', 'paas': 'PaaS', 'privada': 'Nube privada / IaaS dedicada', 'on-prem': 'On-premise', 'hibrid': 'Híbrido'}
+def tile(clave, est):
+    bg, fg = COLOR_MODELO[clave]
+    return f'<span class="tile {est or "vacio"}" style="--mc:{bg};--mt:{fg}">{ABREV_MODELO[clave] if est else ""}</span>'
+
 def tabla_nubes_ancha(V):
-    """Vista alternativa en una sola tabla: filas = vendors; cabecera de dos niveles = nube y, debajo, cada modelo.
-    Cada celda es una ficha con el nombre del modelo: llena = ofrecida; contorno = condicionada; punteada = mencionada sin ofrecer."""
+    """Vista alternativa en una sola tabla: filas = vendors; columnas = nubes, y dentro de cada nube una ficha por modelo.
+    El color de la ficha identifica el modelo (leyenda al pie); su relleno, si la nube se ofrece, es condicionada o solo se menciona."""
     datos = []
     for d in V:
         lines = [l for l in str(d.get('desp_modelos', '')).split('\n') if l.strip().startswith('|')]
@@ -163,20 +169,21 @@ def tabla_nubes_ancha(V):
         datos.append((d, por_modelo))
     if not datos: return ''
     def n_vendors(pn): return sum(1 for _, pm in datos if any(pm[c].get(pn) == 'of' for c, _ in MODELOS_ORDEN))
-    th1 = '<tr><th rowspan="2" class="vcol">Vendor</th>' + ''.join(f'<th colspan="{len(MODELOS_ORDEN)}" class="grupo g{i % 2}"><span class="gn">{esc(pn)}</span><span class="gc">{n_vendors(pn)} de {len(datos)} la ofrecen</span></th>' for i, (pn, _) in enumerate(PLATAFORMAS)) + '<th rowspan="2" class="scol c">Nubes ofrecidas</th></tr>'
-    th2 = '<tr>' + ''.join(''.join(f'<th class="sub g{i % 2}{" ini" if k == 0 else ""}">{ABREV_MODELO[clave]}</th>' for k, (clave, _) in enumerate(MODELOS_ORDEN)) for i, _ in enumerate(PLATAFORMAS)) + '</tr>'
+    th1 = '<tr><th class="vcol">Vendor</th>' + ''.join(f'<th colspan="{len(MODELOS_ORDEN)}" class="grupo g{i % 2}"><span class="gn">{esc(pn)}</span><span class="gc">{n_vendors(pn)} de {len(datos)} la ofrecen</span></th>' for i, (pn, _) in enumerate(PLATAFORMAS)) + '</tr>'
     filas = []
     for d, por_modelo in datos:
         celdas = ''
         for i, (pn, _) in enumerate(PLATAFORMAS):
             for k, (clave, _) in enumerate(MODELOS_ORDEN):
-                est = por_modelo.get(clave, {}).get(pn)
-                celdas += f'<td class="g{i % 2}{" ini" if k == 0 else ""}"><span class="tile {est or "vacio"}">{ABREV_MODELO[clave] if est else ""}</span></td>'
-        ofrecidas = [pn for pn, _ in PLATAFORMAS if any(por_modelo[c].get(pn) == 'of' for c, _ in MODELOS_ORDEN)]
-        condic = [pn for pn, _ in PLATAFORMAS if pn not in ofrecidas and any(por_modelo[c].get(pn) == 'cond' for c, _ in MODELOS_ORDEN)]
-        resumen = f'<span class="big">{len(ofrecidas)}</span>' + (f'<span class="small"> +{len(condic)} cond.</span>' if condic else '')
-        filas.append(f'<tr style="--vc:{m.vcolor(d["_i"])}"><td class="vcol"><span class="vname">{esc(m.nombre(d["vendor"]))}</span></td>{celdas}<td class="scol c">{resumen}</td></tr>')
-    return '<div class="comp ancha"><table><thead>' + th1 + th2 + '</thead><tbody>' + ''.join(filas) + '</tbody></table></div>'
+                celdas += f'<td class="g{i % 2}{" ini" if k == 0 else ""}">{tile(clave, por_modelo.get(clave, {}).get(pn))}</td>'
+        filas.append(f'<tr><td class="vcol"><span class="vname">{esc(m.nombre(d["vendor"]))}</span></td>{celdas}</tr>')
+    leyenda = ('<div class="leyenda-tiles"><div class="lt-grupo"><span class="lt-k">Modelo (color de la ficha)</span>' + ''.join(f'<span class="lt-item">{tile(clave, "of")}<span>{esc(NOMBRE_MODELO_LARGO[clave])}</span></span>' for clave, _ in MODELOS_ORDEN) + '</div>'
+               '<div class="lt-grupo"><span class="lt-k">Estado (relleno de la ficha)</span>'
+               f'<span class="lt-item">{tile("saas", "of")}<span>ofrecida para ese modelo</span></span>'
+               f'<span class="lt-item">{tile("saas", "cond")}<span>condicionada o solo compatibilidad declarada</span></span>'
+               f'<span class="lt-item">{tile("saas", "no")}<span>mencionada, pero el modelo no se ofrece</span></span>'
+               f'<span class="lt-item">{tile("saas", None)}<span>no la asocia a ese modelo</span></span></div></div>')
+    return '<div class="comp ancha"><table><thead>' + th1 + '</thead><tbody>' + ''.join(filas) + '</tbody></table></div>' + leyenda
 
 def seccion_despliegue(md, V):
     secs = m.sections(md); H = ['<section class="seccion"><p class="sec-eye">Comparativo 1 de 3</p><h2>Modelos de despliegue y nubes</h2>']
@@ -190,7 +197,7 @@ def seccion_despliegue(md, V):
     if tmn: H.append('<h3 style="page-break-before:always">En qué nube o plataforma se ofrece cada modelo</h3><p class="small">Complemento de la tabla anterior: para cada vendor y cada modelo, las nubes o plataformas (AWS, Azure, GCP, Huawei, OCI, OpenShift, nube privada del vendor…) que sus documentos asocian a ese modelo, con la condición que declaran. Celda vacía de nubes = el modelo no aplica o el vendor no lo especifica. Cada celda indica el documento de origen; la cita completa está en el análisis de despliegue del vendor.</p>' + tmn)
     if gn: H.append('<h3 style="page-break-before:always">Resumen por vendor: plataformas por modelo</h3><p class="small">La misma información de la tabla anterior, en cuadrícula: una fila por modelo y una columna por nube o plataforma. Solo marca lo que los documentos del vendor asocian a cada modelo; la fuente de cada fila está en la tabla anterior.</p>' + gn)
     ta = tabla_nubes_ancha(V)
-    if ta: H.append('<h3 style="page-break-before:always">Vista alternativa: vendors por fila, nubes y modelos en columnas</h3><p class="small">La misma información de la cuadrícula anterior en una sola tabla: cada vendor en una fila; arriba, las nubes o plataformas; debajo de cada una, sus cinco modelos (SaaS, PaaS, Priv. = nube privada / IaaS dedicada, On-p. = on-premise, Híb. = híbrido). </p><p class="small leyenda-tiles"><span class="tile of" style="display:inline-block;width:46px;vertical-align:middle">SaaS</span> ofrecida para ese modelo · <span class="tile cond" style="display:inline-block;width:46px;vertical-align:middle">PaaS</span> condicionada o solo compatibilidad declarada · <span class="tile no" style="display:inline-block;width:46px;vertical-align:middle">SaaS</span> mencionada, pero el modelo no se ofrece · barra gris = no la asocia a ese modelo. La última columna cuenta las nubes ofrecidas en firme por el vendor.</p>' + ta)
+    if ta: H.append('<h3 style="page-break-before:always">Vista alternativa: vendors por fila, nubes y modelos en columnas</h3><p class="small">Cada vendor en una fila y cada nube o plataforma en un grupo de columnas; dentro del grupo, una ficha por modelo de despliegue. El color de la ficha dice qué modelo es y su relleno si la nube se ofrece, es condicionada o solo se menciona (leyenda al pie). Debajo del nombre de cada nube, cuántos vendors la ofrecen en firme.</p>' + ta)
     hdr, rows = tabla_de(m.find_section(secs, 'vendor x nube', 'vendor × nube', 'por nube'))
     if hdr:
         def r(i, c): return f'<b>{esc(m.nombres_en_texto(c))}</b>' if i == 0 else nube(c)
