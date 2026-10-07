@@ -12,7 +12,7 @@ La carpeta es autocontenida: es un repositorio listo para abrir en VS Code con C
 copilot/
 ├── README.md, EJECUCION.md           ← esta guía y el guion paso a paso por vendor
 ├── requirements.txt, .gitignore
-├── scripts/                          ← los 10 scripts del pipeline (00 … 06, 02b rúbrica de implementación, _comun.py)
+├── scripts/                          ← los 11 scripts del pipeline (00 … 07, 02b rúbrica de implementación, _comun.py)
 ├── vendors/                          ← vacía; cada vendor se crea con scripts/00_nuevo_vendor.py
 └── .github/
     ├── copilot-instructions.md        ← reglas comunes (equivale a CLAUDE.md); Copilot lo lee solo
@@ -85,7 +85,7 @@ Copilot Chat (modo Agent), una hoja por conversación:
 /revision-cruzada
 /corregir-informes     → aplica las correcciones de la revisión a un informe
 ```
-Después de todos los vendors: `python scripts/05_comparar.py` y, para los comparativos, `/despliegue` (modelos y nubes) y `/comparar-implementacion` (implementaciones) y `/comparar-t5` (desarrollo).
+Documento final de implementación (HTML + PDF): `python scripts/07_informe_implementacion.py --pdf`. Después de todos los vendors: `python scripts/05_comparar.py` y, para los comparativos, `/despliegue` (modelos y nubes) y `/comparar-implementacion` (implementaciones) y `/comparar-t5` (desarrollo).
 
 También se puede elegir el agente en el selector y escribir la orden a mano: «verifica T3 del vendor acme».
 En el Copilot coding agent de GitHub.com se asigna un issue al agente con el mismo texto.

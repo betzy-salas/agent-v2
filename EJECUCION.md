@@ -126,3 +126,13 @@ y fuente, tabla por bloque temático, diferencias transversales y preguntas. Sin
 ```
 /comparar-t5   → pide «todos» o la lista de vendors
 ```
+
+## Paso 8 — Documento final de estrategias de implementación (HTML + PDF)
+Requiere, por vendor, `informes/7_implementacion_pros_contras.md`; si además existe `verif/IMPL.md`, incluye la rúbrica
+puntuada (barras por bloque, mapa de calor de los 12 criterios y anexo con los 61 criterios). Genera
+`vendors/INFORME_IMPLEMENTACION.html` (autocontenido, se abre en cualquier navegador) y, con `--pdf`, el PDF usando Edge o
+Chrome instalados. No añade texto: todo sale de los informes de los agentes. Sin ranking ni recomendación.
+```
+.venv\Scripts\python scripts\07_informe_implementacion.py --pdf   (Windows)  ·  .venv/bin/python scripts/07_informe_implementacion.py --pdf  (macOS/Linux)
+```
+Opciones: lista de vendors (`… sunline acme`), `--salida ruta.html`. Si no encuentra Edge/Chrome, abre el HTML e imprime a PDF.
