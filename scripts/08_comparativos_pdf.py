@@ -33,7 +33,7 @@ CSS_COMP = """
 .ancha table{table-layout:auto;border-spacing:0;width:100%} .ancha th,.ancha td{border-bottom:0}
 .ancha th.grupo{text-align:center;padding:8px 4px 6px;border-bottom:0;border-radius:8px 8px 0 0;vertical-align:bottom} .ancha th.grupo .gn{display:block;font-family:var(--display);font-size:.82rem;letter-spacing:.04em;color:var(--ink)} .ancha th.grupo .gc{display:block;font-size:.6rem;letter-spacing:0;text-transform:none;color:var(--ink-3);font-weight:500;margin-top:2px}
 .ancha th.sub{font-size:.56rem;letter-spacing:0;text-transform:none;padding:3px 1px 6px;text-align:center;color:var(--ink-3);border-bottom:2px solid var(--line)}
-.ancha .g1{background:color-mix(in srgb,var(--accent) 5%,var(--panel))} .ancha .g0{background:color-mix(in srgb,var(--ink) 2.5%,var(--panel))}
+.ancha .g0{background:color-mix(in srgb,#f59e0b 9%,var(--panel))} .ancha .g1{background:color-mix(in srgb,#2a78d6 9%,var(--panel))} .ancha .g2{background:color-mix(in srgb,#14b8a6 9%,var(--panel))} .ancha .g3{background:color-mix(in srgb,#e34948 9%,var(--panel))} .ancha .g4{background:color-mix(in srgb,#e87ba4 9%,var(--panel))} .ancha .g5{background:color-mix(in srgb,#7c3aed 9%,var(--panel))} .ancha .g6{background:color-mix(in srgb,#64748b 9%,var(--panel))}
 .ancha th.ini,.ancha td.ini{border-left:1px solid var(--line)}
 .ancha td{padding:7px 2px;border-bottom:1px solid var(--line)} .ancha td.vcol{white-space:normal;width:1%;padding:7px 12px 7px 10px;border-left:6px solid var(--vc,var(--line));border-bottom:1px solid var(--line)} .ancha tr.ult td.vcol{border-radius:0 0 8px 8px;border-bottom:0} .ancha tr.ult td{border-bottom:0} .ancha th.vcol,.ancha th.scol{white-space:nowrap;vertical-align:bottom;padding:0 8px 6px;border-bottom:2px solid var(--line);border-radius:8px 8px 0 0;background:color-mix(in srgb,var(--ink) 2.5%,var(--panel))} .ancha td.scol{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 .ancha .vname{font-family:var(--display);font-weight:800;font-size:.9rem;line-height:1.1;display:block}
@@ -171,13 +171,13 @@ def tabla_nubes_ancha(V):
         datos.append((d, por_modelo))
     if not datos: return ''
     def n_vendors(pn): return sum(1 for _, pm in datos if any(pm[c].get(pn) == 'of' for c, _ in MODELOS_ORDEN))
-    th1 = '<tr><th class="vcol">Vendor</th>' + ''.join(f'<th colspan="{len(MODELOS_ORDEN)}" class="grupo g{i % 2}"><span class="gn">{esc(pn)}</span><span class="gc">{n_vendors(pn)} de {len(datos)} la ofrecen</span></th>' for i, (pn, _) in enumerate(PLATAFORMAS)) + '</tr>'
+    th1 = '<tr><th class="vcol">Vendor</th>' + ''.join(f'<th colspan="{len(MODELOS_ORDEN)}" class="grupo g{i}"><span class="gn">{esc(pn)}</span><span class="gc">{n_vendors(pn)} de {len(datos)} la ofrecen</span></th>' for i, (pn, _) in enumerate(PLATAFORMAS)) + '</tr>'
     filas = []
     for d, por_modelo in datos:
         celdas = ''
         for i, (pn, _) in enumerate(PLATAFORMAS):
             for k, (clave, _) in enumerate(MODELOS_ORDEN):
-                celdas += f'<td class="g{i % 2}{" ini" if k == 0 else ""}{" fin" if k == len(MODELOS_ORDEN) - 1 else ""}">{tile(clave, por_modelo.get(clave, {}).get(pn))}</td>'
+                celdas += f'<td class="g{i}{" ini" if k == 0 else ""}{" fin" if k == len(MODELOS_ORDEN) - 1 else ""}">{tile(clave, por_modelo.get(clave, {}).get(pn))}</td>'
         filas.append(f'<tr style="--vc:{m.vcolor(d["_i"])}"><td class="vcol"><span class="vname">{esc(m.nombre(d["vendor"]))}</span></td>{celdas}</tr>')
     filas[-1] = filas[-1].replace('<tr style=', '<tr class="ult" style=', 1)
     leyenda = ('<div class="leyenda-tiles"><div class="lt-box"><span class="lt-k">Modelo (color de la ficha)</span><div class="lt-grupo">' + ''.join(f'<span class="lt-item">{tile(clave, "of")}<span>{esc(NOMBRE_MODELO_LARGO[clave])}</span></span>' for clave, _ in MODELOS_ORDEN) + '</div></div>'
