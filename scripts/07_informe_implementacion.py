@@ -219,7 +219,7 @@ RAMP = ['#e8e7e3', '#86b6ef', '#5598e7', '#2a78d6', '#1c5cab', '#0d366b']   # 0 
 INK_ON = ['#52514e', '#0b0b0b', '#0b0b0b', '#ffffff', '#ffffff', '#ffffff']
 def color_puntaje(p): return RAMP[max(0, min(5, int(p)))] if p is not None else '#e8e7e3'
 
-def svg_barras_h(items, titulo, maxv=100, fmt=lambda x: f'{x:.1f}', ancho=560):
+def svg_barras_h(items, titulo, maxv=100, fmt=lambda x: f'{x:.1f}', ancho=560, color=None):
     """items: [(etiqueta, valor)] — barras horizontales, una tinta, etiqueta directa."""
     fila, top, izq = 26, 8, 170; alto = top + fila * len(items) + 8; w = ancho - izq - 70
     s = [f'<svg class="chart" viewBox="0 0 {ancho} {alto}" role="img" aria-label="{html.escape(titulo)}">']
@@ -227,7 +227,7 @@ def svg_barras_h(items, titulo, maxv=100, fmt=lambda x: f'{x:.1f}', ancho=560):
         y = top + k * fila; v = 0 if val is None else val; bw = max(0, w * v / maxv)
         s.append(f'<text x="{izq-8}" y="{y+16}" text-anchor="end" class="lbl">{html.escape(lab[:28])}</text>')
         s.append(f'<rect x="{izq}" y="{y+4}" width="{w}" height="16" class="track"/>')
-        if val is not None: s.append(f'<rect x="{izq}" y="{y+4}" width="{bw:.1f}" height="16" rx="3" fill="{RAMP[3]}"><title>{html.escape(lab)}: {fmt(val)}</title></rect>')
+        if val is not None: s.append(f'<rect x="{izq}" y="{y+4}" width="{bw:.1f}" height="16" rx="3" fill="{color or RAMP[3]}"><title>{html.escape(lab)}: {fmt(val)}</title></rect>')
         s.append(f'<text x="{izq+bw+6:.1f}" y="{y+16}" class="val">{fmt(val) if val is not None else "sin dato"}</text>')
     s.append('</svg>'); return '\n'.join(s)
 
@@ -287,60 +287,90 @@ def leyenda_escala():
     return '<div class="leyenda">' + ''.join(f'<span class="chip" style="background:{RAMP[i]};color:{INK_ON[i]}">{i}</span>' for i in range(6)) + '<span class="lbl-leyenda">puntaje de la rúbrica: 0 = no presentado (gris) · 1 a 5 = de menor a mayor</span></div>'
 
 # ----------------------------------------------------------------------------- HTML
-FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">'
+FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">'
 CSS = """
-/* Layout: informe de comité en una columna de lectura (72ch) con tablas y gráficos a ancho completo; portada compacta. */
+/* Layout: dashboard de comité. Portada con una tarjeta por vendor, scorecard de una página, gráficos grandes con color por
+   vendor, y una sección por vendor compuesta de fichas (no tablas). Las tablas completas viven solo en el anexo. */
 :root{
-  --bg:#f7f7f4; --bg-2:#eeeeea; --panel:#ffffff; --line:#d9dad3; --line-2:#c3c5bd;
-  --ink:#141518; --ink-2:#4b4f58; --ink-3:#7a7f8a;
-  --accent:#1c5cab; --accent-2:#2a78d6; --accent-soft:#e3edf9; --track:#e6e7e1;
-  --warn:#8a5a00;
-  --display:"IBM Plex Sans Condensed","Helvetica Neue",Arial,sans-serif;
-  --body:"IBM Plex Sans","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --bg:#f5f6f8; --bg-2:#eaedf1; --panel:#ffffff; --line:#d6dbe3; --line-2:#b9c1cc;
+  --ink:#10151d; --ink-2:#47505d; --ink-3:#7a8392;
+  --accent:#1c5cab; --accent-soft:#e2ecf9; --track:#e3e7ed;
+  --display:"Manrope","Segoe UI",system-ui,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#15171b; --bg-2:#1d2026; --panel:#1b1e24; --line:#2e323a; --line-2:#3c414b; --ink:#f1f2ef; --ink-2:#bfc3cb; --ink-3:#8b909b; --accent:#6da7ec; --accent-2:#86b6ef; --accent-soft:#1d2d44; --track:#2a2e36; --warn:#e0a94a; color-scheme:dark } }
-:root[data-theme="dark"]{ --bg:#15171b; --bg-2:#1d2026; --panel:#1b1e24; --line:#2e323a; --line-2:#3c414b; --ink:#f1f2ef; --ink-2:#bfc3cb; --ink-3:#8b909b; --accent:#6da7ec; --accent-2:#86b6ef; --accent-soft:#1d2d44; --track:#2a2e36; --warn:#e0a94a; color-scheme:dark }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#0f1318; --bg-2:#171c23; --panel:#161b22; --line:#2a313b; --line-2:#3a4350; --ink:#eef1f5; --ink-2:#b8c0cc; --ink-3:#84909f; --accent:#6da7ec; --accent-soft:#1a2a40; --track:#262d37; color-scheme:dark } }
+:root[data-theme="dark"]{ --bg:#0f1318; --bg-2:#171c23; --panel:#161b22; --line:#2a313b; --line-2:#3a4350; --ink:#eef1f5; --ink-2:#b8c0cc; --ink-3:#84909f; --accent:#6da7ec; --accent-soft:#1a2a40; --track:#262d37; color-scheme:dark }
 *{box-sizing:border-box} html{font-size:15px}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5;font-variant-numeric:tabular-nums}
-.wrap{max-width:1120px;margin:0 auto;padding-block:0 64px;padding-inline:clamp(16px,4vw,40px)}
-header.portada{padding-block:56px 32px;border-bottom:1px solid var(--line);page-break-after:always;display:grid;gap:18px}
-.kicker{font-family:var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-size:.78rem;font-weight:600}
-h1{font-family:var(--display);font-size:clamp(2rem,5vw,3rem);line-height:1.05;margin:0;font-weight:700;text-wrap:balance;max-width:20ch}
-h2{font-family:var(--display);font-size:1.7rem;line-height:1.15;margin:2.8rem 0 .9rem;padding-top:.7rem;border-top:3px solid var(--accent);page-break-after:avoid;text-wrap:balance}
-h3{font-family:var(--display);font-size:1.25rem;margin:1.9rem 0 .55rem;page-break-after:avoid;text-wrap:balance}
-h4{font-family:var(--display);font-size:1rem;margin:1.3rem 0 .35rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em} h5,h6{font-size:.95rem;margin:1rem 0 .2rem;color:var(--ink-2)}
-p{margin:.35rem 0 .8rem;max-width:72ch} .meta{color:var(--ink-2);font-size:.92rem;max-width:80ch}
-.tbl-wrap{overflow-x:auto;margin:.6rem 0 1.3rem;min-width:0} table{border-collapse:collapse;width:100%;font-size:.85rem}
-th{text-align:left;background:var(--bg-2);color:var(--ink-2);font-family:var(--display);font-weight:600;letter-spacing:.02em;padding:8px 10px;border-bottom:2px solid var(--line-2);vertical-align:bottom}
-td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top} tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--bg-2) 55%,transparent)}
-td:first-child{font-weight:500}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:.6rem 0 1.2rem}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0} .kpi .n{font-family:var(--mono);font-size:1.8rem;font-weight:500;color:var(--accent);line-height:1}
-.kpi .l{font-size:.78rem;color:var(--ink-2);margin-top:6px;line-height:1.3}
-.chart{width:100%;height:auto;display:block;margin:.4rem 0 1rem;max-width:100%} .chart .lbl{font-size:12px;fill:var(--ink-2);font-family:var(--body)} .chart .lbl.b{font-weight:600;fill:var(--ink)}
-.chart .val{font-size:12px;fill:var(--ink);font-weight:500;font-family:var(--mono)} .chart .cell{font-size:12px;font-weight:600;font-family:var(--mono)} .chart .track{fill:var(--track)}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px} .grid2>*{min-width:0}
-.leyenda{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-.3rem 0 .9rem} .chip{display:inline-block;min-width:28px;height:22px;border-radius:4px;text-align:center;font-size:.76rem;line-height:22px;font-weight:600;font-family:var(--mono)}
-.lbl-leyenda{font-size:.8rem;color:var(--ink-2);margin-left:6px}
-.pill{display:inline-block;padding:1px 8px;border-radius:4px;font-size:.74rem;font-weight:600;background:var(--bg-2);color:var(--ink-2);border:1px solid var(--line);font-family:var(--display);letter-spacing:.03em;white-space:nowrap}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.45;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding-block:0 64px;padding-inline:clamp(16px,4vw,40px)}
+h1,h2,h3,h4{font-family:var(--display);text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.05;margin:0;font-weight:800}
+h2{font-size:1.65rem;line-height:1.15;margin:2.4rem 0 .8rem;font-weight:800;page-break-after:avoid}
+h3{font-size:1.15rem;margin:1.6rem 0 .5rem;font-weight:700;page-break-after:avoid}
+h4{font-size:.78rem;margin:1.1rem 0 .4rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+p{margin:.3rem 0 .7rem;max-width:76ch} .small{font-size:.82rem;color:var(--ink-2);max-width:86ch} .fuente{color:var(--ink-3);font-size:.76rem;line-height:1.35}
+.kicker{font-family:var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-size:.74rem;font-weight:700}
+.eyebrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 0 10px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.eyebrow .meta{margin:0;font-size:.82rem;color:var(--ink-3)}
+header.portada{padding-block:28px 24px;display:grid;gap:18px;page-break-after:always}
+.portada .lead{font-size:1rem;color:var(--ink-2);max-width:78ch;margin:0}
+.vcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:6px}
+.vcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 0 12px;overflow:hidden;min-width:0;page-break-inside:avoid;display:flex;flex-direction:column;gap:10px}
+.vcard .band{height:8px;background:var(--vc)} .vcard .body{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+.vcard .name{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap} .vcard .name b{font-family:var(--display);font-size:1.2rem;font-weight:800}
+.vcard .name .tag{font-size:.74rem;color:var(--ink-3)} .vcard .tit{font-size:.88rem;color:var(--ink-2);margin:0;line-height:1.35}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:.82rem} .facts div{min-width:0} .facts .k{color:var(--ink-3);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;font-family:var(--display);font-weight:700} .facts .v{color:var(--ink);line-height:1.3}
+.mini{display:grid;gap:5px} .mini .row{display:grid;grid-template-columns:92px 1fr 46px;align-items:center;gap:8px;font-size:.78rem} .mini .lab{color:var(--ink-2)} .mini .bar{height:9px;background:var(--track);border-radius:4px;overflow:hidden} .mini .bar i{display:block;height:100%;background:var(--vc);border-radius:4px} .mini .num{font-family:var(--mono);text-align:right;font-size:.78rem}
+.chips{display:flex;gap:6px;flex-wrap:wrap} .chip{display:inline-flex;align-items:center;gap:6px;min-height:22px;border-radius:5px;padding:0 8px;font-size:.74rem;font-weight:700;font-family:var(--display);background:var(--bg-2);color:var(--ink-2);border:1px solid var(--line);letter-spacing:.02em;white-space:nowrap}
+.chip.si{background:var(--accent-soft);color:var(--accent);border-color:transparent} .chip.no{color:var(--ink-3)} .chip.cond{border-color:var(--line-2)}
+.chip.sc{min-width:28px;justify-content:center;font-family:var(--mono);border:0}
+.toc{margin-top:4px} .toc ol{columns:3;column-gap:28px;padding-left:1.1rem;margin:0;font-size:.88rem} .toc li{margin:.1rem 0;break-inside:avoid} .toc a{color:var(--ink);text-decoration:none} .toc a:hover,.toc a:focus-visible{color:var(--accent);outline:none}
+@media(max-width:760px){.toc ol{columns:1}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(124px,1fr));gap:10px;margin:.6rem 0 1.2rem}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0} .kpi .n{font-family:var(--mono);font-size:1.9rem;font-weight:500;color:var(--accent);line-height:1} .kpi.v .n{color:var(--vc)}
+.kpi .l{font-size:.76rem;color:var(--ink-2);margin-top:6px;line-height:1.3}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0;page-break-inside:avoid}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px} .grid2>*{min-width:0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px} .grid3>*{min-width:0}
+.chart{width:100%;height:auto;display:block;margin:.3rem 0 .6rem;max-width:100%} .chart .lbl{font-size:12px;fill:var(--ink-2);font-family:var(--body)} .chart .lbl.b{font-weight:700;fill:var(--ink);font-family:var(--display)}
+.chart .val{font-size:12px;fill:var(--ink);font-weight:500;font-family:var(--mono)} .chart .cell{font-size:12px;font-weight:600;font-family:var(--mono)} .chart .track{fill:var(--track)} .chart .grid{stroke:var(--line);stroke-width:1} .chart .axis{font-size:11px;fill:var(--ink-3);font-family:var(--mono)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--ink-2);margin:.2rem 0 .6rem} .legend span{display:inline-flex;align-items:center;gap:6px} .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.score-table{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:.86rem} .score-table th{text-align:left;font-family:var(--display);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);padding:0 10px 2px;font-weight:700}
+.score-table td{background:var(--panel);padding:10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:middle;min-width:0} .score-table td:first-child{border-left:6px solid var(--vc);border-radius:8px 0 0 8px;font-family:var(--display);font-weight:800} .score-table td:last-child{border-right:1px solid var(--line);border-radius:0 8px 8px 0}
+.inl{display:grid;grid-template-columns:1fr 44px;align-items:center;gap:8px;min-width:120px} .inl .bar{height:10px;background:var(--track);border-radius:4px;overflow:hidden} .inl .bar i{display:block;height:100%;background:var(--vc);border-radius:4px} .inl .num{font-family:var(--mono);font-size:.8rem;text-align:right}
+.cards{list-style:none;padding:0;margin:0;counter-reset:c;display:grid;gap:8px} .cards li{counter-increment:c;min-width:0} .card{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--vc,var(--accent));border-radius:8px;padding:10px 12px;page-break-inside:avoid}
+.cards.contras .card{border-left-color:var(--line-2)} .card-h{display:flex;gap:8px;align-items:flex-start} .card-h .chip{flex:none;height:20px;font-size:.66rem} .card-t{font-weight:600;font-size:.9rem;min-width:0;line-height:1.35} .card-t::before{content:counter(c) " ";color:var(--ink-3);font-family:var(--mono);font-weight:500}
+.ficha{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px} .ficha .f{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0;page-break-inside:avoid} .ficha .k{font-family:var(--display);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:700;display:flex;justify-content:space-between;gap:8px} .ficha .v{font-size:.88rem;margin:4px 0 6px;line-height:1.35}
+.vendor{page-break-before:always} .vhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 0 6px;border-top:6px solid var(--vc);margin-top:1.6rem} .vhead h2{margin:0;border:0;padding:0} .vhead .tag{font-size:.8rem;color:var(--ink-3)}
+.nota{background:var(--accent-soft);border-left:4px solid var(--vc,var(--accent));padding:12px 16px;border-radius:0 8px 8px 0;margin:.8rem 0 1rem;font-size:.95rem;max-width:none}
+.desp{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px} .desp .d{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0;page-break-inside:avoid;display:grid;gap:4px} .desp .d .top{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap} .desp .d .m{font-family:var(--display);font-weight:800} .desp .d .t{font-size:.84rem;color:var(--ink-2)}
+.tbl-wrap{overflow-x:auto;margin:.6rem 0 1.2rem;min-width:0} table{border-collapse:collapse;width:100%;font-size:.82rem}
+th{text-align:left;background:var(--bg-2);color:var(--ink-2);font-family:var(--display);font-weight:700;font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;padding:8px 10px;border-bottom:2px solid var(--line-2);vertical-align:bottom}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.pill{display:inline-block;padding:1px 8px;border-radius:4px;font-size:.72rem;font-weight:700;background:var(--bg-2);color:var(--ink-2);border:1px solid var(--line);font-family:var(--display);white-space:nowrap}
 .pill.doc{border-color:var(--accent);color:var(--accent)} .pill.dec{border-color:var(--line-2)} .pill.no{color:var(--ink-3)}
 .score{display:inline-block;min-width:26px;text-align:center;border-radius:4px;padding:1px 6px;font-weight:600;font-size:.8rem;font-family:var(--mono)}
-.vendor{page-break-before:always} .nota{background:var(--accent-soft);border-left:4px solid var(--accent);padding:12px 16px;border-radius:0 6px 6px 0;margin:1rem 0;font-size:.95rem;max-width:none}
-.cards{list-style:none;padding:0;margin:0;counter-reset:c;display:grid;gap:8px} .cards li{counter-increment:c;min-width:0} .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;page-break-inside:avoid}
-.cards.contras .card{border-color:var(--line-2)} .card-h{display:flex;gap:8px;align-items:flex-start} .card-h .chip{flex:none;height:20px;line-height:20px;font-size:.68rem;letter-spacing:.04em;font-family:var(--display)} .card-t{font-weight:600;font-size:.9rem;min-width:0} .card-t::before{content:counter(c) ". ";color:var(--ink-3);font-weight:600;font-family:var(--mono)}
-.toc ol{columns:2;column-gap:32px;padding-left:1.2rem;margin:0} .toc li{margin:.15rem 0;break-inside:avoid} .toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)} .toc a:hover,.toc a:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}
-@media(max-width:640px){.toc ol{columns:1}}
-.small{font-size:.82rem;color:var(--ink-2);max-width:80ch} .fuente{color:var(--ink-3);font-size:.78rem}
+ol,ul{padding-left:1.25rem} li{margin:.2rem 0;max-width:86ch} .compact li{font-size:.9rem}
 blockquote{margin:.6rem 0;padding:.2rem 0 .2rem 14px;border-left:3px solid var(--line-2);color:var(--ink-2)}
 code{font-family:var(--mono);font-size:.85em;background:var(--bg-2);padding:1px 4px;border-radius:3px}
-ol,ul{padding-left:1.3rem} li{margin:.2rem 0;max-width:80ch}
 footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--ink-2);font-size:.82rem}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important}}
-@page{size:A4;margin:16mm 14mm 18mm}
-@media print{html{font-size:11.5px} :root{--bg:#fff;--panel:#fff} .wrap{max-width:none;padding-inline:0} header.portada{padding-block:60mm 20mm} h2{margin-top:1.6rem} .tbl-wrap{overflow:visible} table{font-size:.8rem} tr,td,th,.card,.kpi{page-break-inside:avoid} .chart{page-break-inside:avoid} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@page{size:A4 landscape;margin:12mm 12mm 14mm}
+@media print{html{font-size:10.5px} h1{font-size:2.1rem} header.portada{gap:12px;padding-block:14px 10px} .vcard .body{gap:7px} .vcard .tit{font-size:.8rem} .facts{font-size:.76rem} .mini .row{grid-template-columns:80px 1fr 40px} .kpis{grid-template-columns:repeat(7,1fr)} :root{--bg:#fff;--panel:#fff} .wrap{max-width:none;padding-inline:0} .vcards{grid-template-columns:repeat(3,1fr)} .grid2{grid-template-columns:1fr 1fr} .ficha{grid-template-columns:repeat(3,1fr)} .desp{grid-template-columns:repeat(2,1fr)} .toc ol{columns:3} tr,td,th,.card,.kpi,.panel,.vcard,.f,.d{page-break-inside:avoid} .chart{page-break-inside:avoid} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 """
+
+# ----------------------------------------------------------------------------- identidad por vendor
+VENDOR_PAL = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948']   # orden validado (dataviz)
+VENDOR_INK = ['#ffffff', '#ffffff', '#0b0b0b', '#0b0b0b', '#0b0b0b', '#ffffff', '#ffffff', '#ffffff']
+NOMBRES_VENDOR = {'fis': 'FIS', 'infosys': 'Infosys', 'pismo': 'Pismo', 'sunline': 'Sunline', 'temenos': 'Temenos', 'tm': 'Thought Machine', 'tought-machine': 'Thought Machine', 'thought-machine': 'Thought Machine'}
+def nombre(v): return NOMBRES_VENDOR.get(v.lower(), v.replace('-', ' ').title())
+def recorta(t, n):
+    t = (t or '').strip()
+    if len(t) <= n: return t
+    c = t[:n].rsplit(' ', 1)[0]
+    return c.rstrip(' ,;:') + '…'
+def vcolor(i): return VENDOR_PAL[i % len(VENDOR_PAL)]
 
 def badge_respaldo(r):
     rl = (r or '').lower(); cls = 'doc' if 'document' in rl else 'dec' if 'declar' in rl else 'no' if 'no encontr' in rl else ''
@@ -358,106 +388,202 @@ def tabla_criterios(items, con_impl=False, con_resp=False):
         out.append('<tr>' + ''.join(f'<td>{x}</td>' for x in cells) + '</tr>')
     out.append('</tbody></table></div>'); return '\n'.join(out)
 
+def chip_modelo(txt):
+    t = (txt or '').strip(); tl = _norm(t)
+    cls = 'si' if tl.startswith('si') or tl.startswith('sí') else 'no' if tl.startswith('no (') or tl == 'no' or tl.startswith('no ') and 'especific' not in tl else 'cond' if 'condicion' in tl else ''
+    corto = re.split(r'[(:;]', t)[0].strip()[:18] or '—'
+    return cls, corto
+
+def svg_barras_vendor(vendors_data, key, maxv=100, ancho=720):
+    """Barras horizontales, una por vendor, color por vendor, etiqueta directa."""
+    fila, top, izq = 30, 10, 150; alto = top + fila * len(vendors_data) + 24; w = ancho - izq - 70
+    s = [f'<svg class="chart" viewBox="0 0 {ancho} {alto}" role="img" aria-label="Porcentaje por vendor">']
+    for g in (0, 25, 50, 75, 100):
+        x = izq + w * g / maxv; s.append(f'<line x1="{x:.1f}" y1="{top-4}" x2="{x:.1f}" y2="{alto-18}" class="grid"/><text x="{x:.1f}" y="{alto-4}" text-anchor="middle" class="axis">{g}%</text>')
+    for k, d in enumerate(vendors_data):
+        y = top + k * fila; v = d['resumen'].get(key); col = vcolor(d['_i'])
+        s.append(f'<text x="{izq-10}" y="{y+16}" text-anchor="end" class="lbl b">{html.escape(nombre(d["vendor"]))}</text>')
+        if v is None: s.append(f'<text x="{izq+6}" y="{y+16}" class="lbl">sin rúbrica</text>'); continue
+        bw = w * v / maxv
+        s.append(f'<rect x="{izq}" y="{y+4}" width="{bw:.1f}" height="18" rx="4" fill="{col}"><title>{html.escape(nombre(d["vendor"]))}: {v:.1f}%</title></rect>')
+        s.append(f'<text x="{izq+bw+8:.1f}" y="{y+17}" class="val">{v:.1f}%</text>')
+    s.append('</svg>'); return '\n'.join(s)
+
+def svg_puntos_criterios(vendors_data, ei_cods, ei_names, ancho=1000):
+    """Dot plot: fila por criterio EI, un punto por vendor (color por vendor) sobre la escala 0–5, con etiqueta del puntaje."""
+    fila, top, izq = 34, 30, 330; w = ancho - izq - 40; alto = top + fila * len(ei_cods) + 20
+    s = [f'<svg class="chart" viewBox="0 0 {ancho} {alto}" role="img" aria-label="Puntaje por criterio y vendor">']
+    for g in range(6):
+        x = izq + w * g / 5; s.append(f'<line x1="{x:.1f}" y1="{top-6}" x2="{x:.1f}" y2="{alto-16}" class="grid"/><text x="{x:.1f}" y="{top-12}" text-anchor="middle" class="axis">{g}</text>')
+    for i, cod in enumerate(ei_cods):
+        y = top + i * fila + 16
+        s.append(f'<text x="{izq-12}" y="{y+4}" text-anchor="end" class="lbl">{html.escape(cod)} {html.escape(ei_names[cod][:40])}</text>')
+        s.append(f'<line x1="{izq}" y1="{y}" x2="{izq+w}" y2="{y}" class="grid"/>')
+        # agrupar vendors por puntaje para desplazar los que coinciden
+        grupos = {}
+        for d in vendors_data:
+            p = next((c['puntaje'] for c in d['crit']['EI'] if c['codigo'] == cod), None)
+            if p is not None: grupos.setdefault(p, []).append(d)
+        for p, ds in grupos.items():
+            x = izq + w * p / 5; n = len(ds)
+            for j, d in enumerate(ds):
+                off = (j - (n - 1) / 2) * 13
+                s.append(f'<circle cx="{x+off:.1f}" cy="{y}" r="7" fill="{vcolor(d["_i"])}" stroke="var(--panel)" stroke-width="2"><title>{html.escape(nombre(d["vendor"]))} · {html.escape(cod)}: {p}</title></circle>')
+    s.append('</svg>'); return '\n'.join(s)
+
+def legend_vendors(vendors_data):
+    return '<div class="legend">' + ''.join(f'<span><i style="background:{vcolor(d["_i"])}"></i>{html.escape(nombre(d["vendor"]))}</span>' for d in vendors_data) + '</div>'
+
+def svg_confianza(vendors_data, clave, titulo, ancho=640):
+    fila, top, izq = 30, 8, 150; alto = top + fila * len(vendors_data) + 8; w = ancho - izq - 44
+    maxn = max((sum(conteo_conf(d.get(clave, [])).values()) for d in vendors_data), default=1) or 1
+    sv = [f'<svg class="chart" viewBox="0 0 {ancho} {alto}" role="img" aria-label="{html.escape(titulo)}">']
+    for k, d in enumerate(vendors_data):
+        y = top + k * fila; c = conteo_conf(d.get(clave, [])); x = izq
+        sv.append(f'<text x="{izq-10}" y="{y+18}" text-anchor="end" class="lbl b">{html.escape(nombre(d["vendor"]))}</text>')
+        for lvl in ('ALTA', 'MEDIA', 'BAJA'):
+            n = c[lvl]
+            if not n: continue
+            bw = w * n / maxn
+            sv.append(f'<rect x="{x:.1f}" y="{y+5}" width="{max(bw-2,1):.1f}" height="18" rx="4" fill="{CONF_COL[lvl]}"><title>{html.escape(nombre(d["vendor"]))}: {n} {lvl}</title></rect>')
+            if bw > 16: sv.append(f'<text x="{x+bw/2-1:.1f}" y="{y+18}" text-anchor="middle" class="cell" fill="{CONF_INK[lvl]}">{n}</text>')
+            x += bw
+        sv.append(f'<text x="{x+6:.1f}" y="{y+18}" class="val">{sum(c.values())}</text>')
+    sv.append('</svg>'); return '\n'.join(sv)
+
+def tarjetas(items, tipo):
+    if not items: return '<p class="small">Sin datos.</p>'
+    out = [f'<ol class="cards {tipo}">']
+    for it in items:
+        conf = it.get('confianza') or ''
+        chip = f'<span class="chip" style="background:{CONF_COL.get(conf, "#e8e7e3")};color:{CONF_INK.get(conf, "#52514e")}">{conf or "s/c"}</span>' if conf else ''
+        if it.get('fuente') or it.get('importa'):
+            out.append(f'<li><div class="card"><div class="card-h">{chip}<span class="card-t">{inline(it["afirmacion"])}</span></div>' + (f'<div class="fuente">Fuente: {inline(it["fuente"])}</div>' if it.get('fuente') else '') + (f'<div class="small">{inline(it["importa"])}</div>' if it.get('importa') else '') + '</div></li>')
+        else:
+            out.append(f'<li><div class="card"><div class="card-h">{chip}<span class="card-t">{inline(it["texto"])}</span></div></div></li>')
+    out.append('</ol>'); return '\n'.join(out)
+
+def ficha_cards(d):
+    f = d.get('ficha', {})
+    if not f: return ''
+    out = ['<div class="ficha">']
+    for k, val in f.items():
+        out.append(f'<div class="f"><div class="k"><span>{html.escape(k.capitalize())}</span><span>{html.escape(val["conf"])}</span></div><div class="v">{inline(val["que"])}</div><div class="fuente">{inline(val["fuente"])}</div></div>')
+    out.append('</div>'); return '\n'.join(out)
+
+def despliegue_cards(d):
+    """Tarjetas por modelo con condición, nubes, quién opera, fuente y confianza, desde la tabla «Modelos» del informe 8."""
+    body = d.get('desp_modelos', '')
+    if not body: return ''
+    hdr, rows = first_table(body)
+    if not hdr: return md_to_html(body)
+    def ix(*p):
+        for q in p:
+            for i, c in enumerate(hdr):
+                if _norm(c).startswith(_norm(q)): return i
+        return None
+    iM, iO, iC, iN, iQ, iF, iCf = ix('Modelo'), ix('Ofrecido'), ix('Condici'), ix('Nubes'), ix('Quien', 'Quién'), ix('Fuente'), ix('Confianza')
+    out = ['<div class="desp">']
+    for r in rows:
+        r = r + [''] * (len(hdr) - len(r)); g = lambda i: r[i] if i is not None else ''
+        cls, corto = chip_modelo(g(iO))
+        out.append(f'<div class="d"><div class="top"><span class="m">{inline(g(iM))}</span><span class="chip {cls}">{html.escape(corto)}</span>' + (f'<span class="chip">{html.escape(g(iCf))}</span>' if g(iCf) else '') + '</div>'
+                   + (f'<div class="t"><b>Condición:</b> {inline(g(iC))}</div>' if g(iC) and g(iC) != '—' else '')
+                   + (f'<div class="t"><b>Nubes:</b> {inline(g(iN))}</div>' if g(iN) else '') + (f'<div class="t"><b>Opera:</b> {inline(g(iQ))}</div>' if g(iQ) else '')
+                   + (f'<div class="fuente">Fuente: {inline(g(iF))}</div>' if g(iF) else '') + '</div>')
+    out.append('</div>'); return '\n'.join(out)
+
+def vendor_card(d):
+    col = vcolor(d['_i']); cp, cc = conteo_conf(d.get('pros_items', [])), conteo_conf(d.get('contras_items', []))
+    modelos = d.get('modelos', {}); chips = []
+    for k, v in modelos.items():
+        if re.match(r'^(SaaS|PaaS|On-?prem)', k, re.I):
+            cls, corto = chip_modelo(v); chips.append(f'<span class="chip {cls}">{html.escape(k.split(" ")[0])}: {html.escape(corto)}</span>')
+    mini = ''.join(f'<div class="row"><span class="lab">{lab}</span><span class="bar"><i style="width:{d["resumen"].get(k):.0f}%"></i></span><span class="num">{d["resumen"].get(k):.0f}%</span></div>' if d['resumen'].get(k) is not None else '' for k, lab in (('EI', 'Estrategia'), ('F', 'Fabricante'), ('I', 'Implementador')))
+    return (f'<article class="vcard" style="--vc:{col}"><div class="band"></div><div class="body">'
+            f'<div class="name"><b>{html.escape(nombre(d["vendor"]))}</b><span class="tag">{html.escape(recorta(ficha_get(d, "implementador"), 60))}</span></div>'
+            f'<p class="tit">{inline(recorta(d.get("titular") or "", 170))}</p>'
+            f'<div class="facts"><div><div class="k">Enfoque</div><div class="v">{inline(recorta(ficha_get(d, "enfoque"), 105))}</div></div><div><div class="k">Duración</div><div class="v">{inline(recorta(ficha_get(d, "duración", "duracion"), 90))}</div></div></div>'
+            + (f'<div class="mini">{mini}</div>' if mini else '')
+            + f'<div class="chips"><span class="chip si">{len(d.get("pros_items", []))} pros · {cp["ALTA"]} alta</span><span class="chip no">{len(d.get("contras_items", []))} contras · {cc["ALTA"]} alta</span>{"".join(chips)}</div>'
+            '</div></article>')
+
 def construir(vendors_data, comparativo_md, hoy, artefacto=False):
     V = [d for d in vendors_data if d['ok']]; faltan = [d['vendor'] for d in vendors_data if not d['ok']]
-    nombres = [d['vendor'] for d in V]
-    H = []
+    for i, d in enumerate(V): d['_i'] = i
+    con_impl = [d for d in V if d['tiene_impl']]
     titulo = 'Estrategias de implementación'
+    H = []
     if artefacto: H.append(f'<title>{titulo}</title>{FONTS}<style>{CSS}</style><div class="wrap">')
     else: H.append(f'<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>{titulo}</title>{FONTS}<style>{CSS}</style></head><body><div class="wrap">')
-    # portada
-    rangos = [d['resumen'].get('EI') for d in V if d['resumen'].get('EI') is not None]
-    H.append('<header class="portada"><div class="kicker">Selección de core bancario · Evaluación técnica</div>')
-    H.append('<h1>Estrategias de implementación<br>Informe comparativo de vendors</h1>')
-    H.append(f'<p class="meta">Vendors incluidos: {", ".join(nombres)}. Generado el {hoy} a partir de los informes de implementación por vendor (ficha, pros y contras con fuente y nivel de confianza) y, cuando existe, de la rúbrica corporativa de implementación puntuada (61 criterios, escala 0–5). Sin ranking ni recomendación: el documento expone lo verificado, con su fuente.</p>')
-    if faltan: H.append(f'<p class="meta">Sin verificación de implementación (no incluidos en cifras): {", ".join(faltan)}.</p>')
-    con_impl = [d for d in V if d['tiene_impl']]
-    tot_pros = sum(len(d.get('pros_items', [])) for d in V); tot_contras = sum(len(d.get('contras_items', [])) for d in V)
-    alta_pros = sum(conteo_conf(d.get('pros_items', []))['ALTA'] for d in V)
-    H.append('<div class="kpis">' + f'<div class="kpi"><div class="n">{len(V)}</div><div class="l">vendors comparados</div></div>'
-             + f'<div class="kpi"><div class="n">{tot_pros}</div><div class="l">pros identificados ({alta_pros} con confianza alta)</div></div>'
-             + f'<div class="kpi"><div class="n">{tot_contras}</div><div class="l">contras identificados</div></div>'
-             + (f'<div class="kpi"><div class="n">{len(con_impl)}/{len(V)}</div><div class="l">vendors con rúbrica puntuada (61 criterios)</div></div>' if con_impl else '')
-             + (f'<div class="kpi"><div class="n">{min(rangos):.0f}–{max(rangos):.0f}%</div><div class="l">rango del bloque Estrategia</div></div>' if rangos else '') + '</div>')
-    H.append('<nav class="toc" aria-label="Contenido"><h4>Contenido</h4><ol>' + '<li><a href="#resumen">Resumen comparativo</a></li><li><a href="#graficos">Lectura gráfica</a></li>' + ''.join(f'<li><a href="#v-{d["vendor"]}">{html.escape(d["vendor"])}</a></li>' for d in V) + '<li><a href="#metodo">Metodología y fuentes</a></li>' + ('<li><a href="#anexo">Anexo: criterios completos</a></li>' if con_impl else '') + '</ol></nav></header>')
-    # resumen comparativo
-    H.append('<h2 id="resumen">1. Resumen comparativo</h2>')
-    if comparativo_md:
-        cs = sections(comparativo_md); tit = find_section(cs, 'Titular') or ''
-        trans = find_section(cs, 'transversal')
-        if tit.strip(): H.append(f'<div class="nota">{inline(tit.strip().split(chr(10))[0])}</div>')
-        if trans.strip(): H.append('<h3>Lectura comparativa</h3>' + md_to_html(trans))
-    cols = ['Vendor', 'Enfoque', 'Duración total', 'Implementador', 'Migración', 'Hypercare', 'Modalidad comercial', 'Pros (A/M/B)', 'Contras (A/M/B)'] + (['% EI', '% F', '% I'] if con_impl else []) + (['Modelo de despliegue'] if any(d.get('modelos') for d in V) else [])
-    H.append('<h3>Tabla comparativa por vendor</h3><div class="tbl-wrap"><table><thead><tr>' + ''.join(f'<th>{c}</th>' for c in cols) + '</tr></thead><tbody>')
+    # ---------- portada: tarjetas por vendor
+    H.append(f'<div class="eyebrow"><span class="kicker">Selección de core bancario · Evaluación técnica</span><p class="meta">Generado el {hoy} · {len(V)} vendors · sin ranking ni recomendación</p></div>')
+    H.append('<header class="portada"><h1>Estrategias de implementación: comparativo de vendors</h1>')
+    H.append('<p class="lead">Qué propone cada vendor para implantar el core, con qué equipo y en cuánto tiempo, y qué tan respaldado está por sus documentos. Las cifras de rúbrica salen de la rúbrica corporativa de implementación (61 criterios, escala 0 a 5); los pros y contras llevan fuente y nivel de confianza.' + (f' Sin verificación de implementación: {", ".join(faltan)}.' if faltan else '') + '</p>')
+    H.append('<div class="vcards">' + ''.join(vendor_card(d) for d in V) + '</div>')
+    H.append('<nav class="toc" aria-label="Contenido"><h4>Contenido</h4><ol><li><a href="#scorecard">Scorecard comparativo</a></li><li><a href="#graficos">Rúbrica y criterios</a></li><li><a href="#confianza">Pros y contras por confianza</a></li>' + ''.join(f'<li><a href="#v-{d["vendor"]}">{html.escape(nombre(d["vendor"]))}</a></li>' for d in V) + '<li><a href="#metodo">Metodología</a></li>' + ('<li><a href="#anexo">Anexo: 61 criterios por vendor</a></li>' if con_impl else '') + '</ol></nav></header>')
+    # ---------- scorecard
+    H.append('<h2 id="scorecard">Scorecard comparativo</h2><p class="small">Una fila por vendor. Las barras son el porcentaje de la rúbrica por bloque (Σ peso × puntaje / Σ peso × 5). «A» = pros o contras con confianza alta. El modelo de despliegue resume el análisis de despliegue de cada vendor; su evidencia está en la sección del vendor.</p>')
+    H.append('<div class="tbl-wrap"><table class="score-table"><thead><tr><th>Vendor</th><th>Enfoque</th><th>Duración</th><th>Implementador</th><th>Estrategia</th><th>Fabricante</th><th>Implementador (rúbrica)</th><th>En 0</th><th>Pros A/total</th><th>Contras A/total</th><th>SaaS</th><th>PaaS</th></tr></thead><tbody>')
     for d in V:
-        modelos = d.get('modelos', {}); mod = '; '.join(f'{k}: {v.split("(")[0].strip()}' for k, v in modelos.items() if re.match(r'^(SaaS|PaaS)', k, re.I)) or '—'
         cp, cc = conteo_conf(d.get('pros_items', [])), conteo_conf(d.get('contras_items', []))
-        celdas = [f'<strong>{html.escape(d["vendor"])}</strong>', inline(ficha_get(d, 'enfoque')), inline(ficha_get(d, 'duración', 'duracion')), inline(ficha_get(d, 'implementador')), inline(ficha_get(d, 'migraci')), inline(ficha_get(d, 'hypercare')), inline(ficha_get(d, 'modalidad')),
-                  f'{cp["ALTA"]} / {cp["MEDIA"]} / {cp["BAJA"]}', f'{cc["ALTA"]} / {cc["MEDIA"]} / {cc["BAJA"]}']
-        if con_impl: celdas += [f'{d["resumen"].get(k):.1f}%' if d['resumen'].get(k) is not None else '—' for k in ('EI', 'F', 'I')]
-        if any(x.get('modelos') for x in V): celdas.append(inline(mod))
-        H.append('<tr>' + ''.join(f'<td>{x}</td>' for x in celdas) + '</tr>')
-    H.append('</tbody></table></div><p class="small">Textos tomados de la ficha de cada informe de implementación. Pros y contras contados por nivel de confianza (A = alta, M = media, B = baja).' + (' Porcentajes = Σ(peso × puntaje) / Σ(peso × 5) de cada bloque de la rúbrica; informativos excluidos.' if con_impl else '') + '</p>')
-    # ficha comparada elemento a elemento
-    elementos = []
-    for d in V:
-        for k in d.get('ficha', {}).keys():
-            if k not in elementos: elementos.append(k)
-    if elementos:
-        H.append('<h3>Ficha comparada, elemento a elemento</h3><div class="tbl-wrap"><table><thead><tr><th>Elemento</th>' + ''.join(f'<th>{html.escape(d["vendor"])}</th>' for d in V) + '</tr></thead><tbody>')
-        for k in elementos:
-            H.append(f'<tr><td><strong>{html.escape(k.capitalize())}</strong></td>' + ''.join(f'<td>{inline(d.get("ficha", {}).get(k, {"que": "—"})["que"])}</td>' for d in V) + '</tr>')
-        H.append('</tbody></table></div>')
-    # gráficos
-    H.append('<h2 id="graficos">2. Lectura gráfica</h2>')
-    H.append('<h3>Pros y contras por nivel de confianza</h3>' + leyenda_conf() + '<div class="grid2"><div><h4>Pros</h4>' + svg_confianza(V, 'pros_items', 'Pros por confianza') + '</div><div><h4>Contras</h4>' + svg_confianza(V, 'contras_items', 'Contras por confianza') + '</div></div>')
-    H.append('<p class="small">Un pro con confianza ALTA está respaldado por una cifra, fecha o compromiso explícito en un documento del vendor; uno con confianza BAJA es una afirmación genérica o solo declarada. Más pros no significa mejor propuesta: importa la confianza y el contenido de cada uno, en las secciones por vendor.</p>')
+        def inl(k):
+            v = d['resumen'].get(k)
+            return f'<div class="inl"><span class="bar"><i style="width:{v:.0f}%"></i></span><span class="num">{v:.0f}%</span></div>' if v is not None else '<span class="small">—</span>'
+        def mchip(nombre_modelo):
+            for k, v in d.get('modelos', {}).items():
+                if _norm(k).startswith(_norm(nombre_modelo)):
+                    cls, corto = chip_modelo(v); return f'<span class="chip {cls}">{html.escape(corto)}</span>'
+            return '<span class="small">—</span>'
+        H.append(f'<tr style="--vc:{vcolor(d["_i"])}"><td>{html.escape(nombre(d["vendor"]))}</td><td class="small">{inline(recorta(ficha_get(d, "enfoque"), 120))}</td><td class="small">{inline(recorta(ficha_get(d, "duración", "duracion"), 80))}</td><td class="small">{inline(recorta(ficha_get(d, "implementador"), 80))}</td><td>{inl("EI")}</td><td>{inl("F")}</td><td>{inl("I")}</td><td class="num">{d["ceros"] if d["tiene_impl"] else "—"}</td><td>{cp["ALTA"]}/{len(d.get("pros_items", []))}</td><td>{cc["ALTA"]}/{len(d.get("contras_items", []))}</td><td>{mchip("SaaS")}</td><td>{mchip("PaaS")}</td></tr>')
+    H.append('</tbody></table></div>')
+    if comparativo_md:
+        cs = sections(comparativo_md); trans = find_section(cs, 'transversal')
+        if trans.strip(): H.append('<div class="panel"><h3 style="margin-top:0">Lo que cambia entre vendors</h3><div class="compact">' + md_to_html(trans) + '</div></div>')
+    # ---------- rúbrica y criterios
     if con_impl:
-        H.append('<h3>Rúbrica corporativa: puntaje por bloque</h3><div class="grid2">')
-        for k, nom in (('EI', 'Estrategia de implementación'), ('F', 'Perfil del fabricante'), ('I', 'Perfil del implementador')):
-            H.append(f'<div><h4>{nom}</h4>' + svg_barras_h([(d['vendor'], d['resumen'].get(k)) for d in con_impl], f'% {nom} por vendor', fmt=lambda x: f'{x:.1f}%') + '</div>')
-        H.append('</div>')
+        H.append('<h2 id="graficos">Rúbrica corporativa: puntaje por bloque y por criterio</h2>' + legend_vendors(V))
+        H.append('<div class="grid3">' + ''.join(f'<div class="panel"><h4 style="margin-top:0">{nom}</h4>' + svg_barras_vendor(V, k) + '</div>' for k, nom in (('EI', 'Estrategia de implementación'), ('F', 'Perfil del fabricante'), ('I', 'Perfil del implementador'))) + '</div>')
+        H.append('<p class="small">Los 0 % en «Perfil del implementador» corresponden a vendors que implementan directamente y no diligenciaron la hoja de implementadores: los 25 criterios del bloque quedaron en «0 — No informa».</p>')
         ei_cods = []; ei_names = {}
         for d in con_impl:
             for c in d['crit']['EI']:
                 if c['codigo'] not in ei_names: ei_cods.append(c['codigo']); ei_names[c['codigo']] = c['criterio']
         if ei_cods:
-            matriz = [[next((c['puntaje'] for c in d['crit']['EI'] if c['codigo'] == cod), None) for d in con_impl] for cod in ei_cods]
-            H.append('<h3>Mapa de calor: los 12 criterios de estrategia por vendor</h3>' + leyenda_escala() + svg_heatmap([f'{c} {ei_names[c]}' for c in ei_cods], [d['vendor'] for d in con_impl], matriz))
-            H.append('<p class="small">Cada celda muestra el puntaje; el color refuerza la lectura pero el número es la fuente. Las tablas completas, con descriptor, respaldo y evidencia, están en el anexo.</p>')
-    # por vendor
+            H.append('<div class="panel"><h3 style="margin-top:0">Los 12 criterios de estrategia, vendor a vendor</h3><p class="small">Cada punto es el puntaje de un vendor en ese criterio (0 a 5). Los puntos que coinciden se separan ligeramente.</p>' + legend_vendors(con_impl) + svg_puntos_criterios(con_impl, ei_cods, ei_names) + '</div>')
+    # ---------- confianza
+    H.append('<h2 id="confianza">Pros y contras por nivel de confianza</h2>' + leyenda_conf())
+    H.append('<div class="grid2"><div class="panel"><h4 style="margin-top:0">Pros</h4>' + svg_confianza(V, 'pros_items', 'Pros por confianza') + '</div><div class="panel"><h4 style="margin-top:0">Contras</h4>' + svg_confianza(V, 'contras_items', 'Contras por confianza') + '</div></div>')
+    H.append('<p class="small">Confianza ALTA: cifra, fecha o compromiso explícito en un documento del vendor. MEDIA: descrito sin cifra. BAJA: afirmación genérica o solo declarada. Más pros no significa mejor propuesta: importa la confianza y el contenido de cada uno.</p>')
+    # ---------- por vendor
     for n, d in enumerate(V, 1):
-        H.append(f'<section class="vendor" id="v-{d["vendor"]}"><h2>{n+2}. {html.escape(d["vendor"])}</h2>')
+        col = vcolor(d['_i']); cp, cc = conteo_conf(d.get('pros_items', [])), conteo_conf(d.get('contras_items', []))
+        H.append(f'<section class="vendor" id="v-{d["vendor"]}" style="--vc:{col}"><div class="vhead"><h2>{html.escape(nombre(d["vendor"]))}</h2><span class="tag">{html.escape(recorta(ficha_get(d, "implementador"), 90))}</span></div>')
         if d.get('titular'): H.append(f'<div class="nota">{inline(d["titular"])}</div>')
-        cp, cc = conteo_conf(d.get('pros_items', [])), conteo_conf(d.get('contras_items', []))
-        H.append('<div class="kpis">' + f'<div class="kpi"><div class="n">{len(d.get("pros_items", []))}</div><div class="l">pros · {cp["ALTA"]} con confianza alta</div></div><div class="kpi"><div class="n">{len(d.get("contras_items", []))}</div><div class="l">contras · {cc["ALTA"]} con confianza alta</div></div>'
-                 + ''.join(f'<div class="kpi"><div class="n">{d["resumen"].get(k):.0f}%</div><div class="l">{lab}</div></div>' if d['resumen'].get(k) is not None else '' for k, lab in (('EI', 'rúbrica · Estrategia'), ('F', 'rúbrica · Fabricante'), ('I', 'rúbrica · Implementador')))
-                 + (f'<div class="kpi"><div class="n">{d["ceros"]}</div><div class="l">criterios en 0</div></div>' if d['tiene_impl'] else '') + '</div>')
-        if d.get('ficha'):
-            H.append('<h3>Ficha de la propuesta de implementación</h3><div class="tbl-wrap"><table><thead><tr><th>Elemento</th><th>Qué propone</th><th>Fuente</th><th>Confianza</th></tr></thead><tbody>')
-            for k, val in d['ficha'].items(): H.append(f'<tr><td><strong>{html.escape(k.capitalize())}</strong></td><td>{inline(val["que"])}</td><td class="fuente">{inline(val["fuente"])}</td><td>{html.escape(val["conf"])}</td></tr>')
-            H.append('</tbody></table></div>')
-        if d['tiene_impl'] and d['crit']['EI']: H.append('<h3>Rúbrica corporativa: estrategia de implementación, puntaje por criterio</h3>' + svg_barras_h([(f'{c["codigo"]} {c["criterio"]}', c['puntaje']) for c in d['crit']['EI']], 'Puntaje EI', maxv=5, fmt=lambda x: f'{x:.0f} / 5'))
+        H.append('<div class="kpis">' + ''.join(f'<div class="kpi v"><div class="n">{d["resumen"].get(k):.0f}%</div><div class="l">{lab}</div></div>' if d['resumen'].get(k) is not None else '' for k, lab in (('EI', 'rúbrica · estrategia'), ('F', 'rúbrica · fabricante'), ('I', 'rúbrica · implementador')))
+                 + (f'<div class="kpi"><div class="n">{d["ceros"]}</div><div class="l">criterios en 0</div></div><div class="kpi"><div class="n">{d["declarados"]}</div><div class="l">solo declarados</div></div>' if d['tiene_impl'] else '')
+                 + f'<div class="kpi"><div class="n">{len(d.get("pros_items", []))}</div><div class="l">pros · {cp["ALTA"]} con confianza alta</div></div><div class="kpi"><div class="n">{len(d.get("contras_items", []))}</div><div class="l">contras · {cc["ALTA"]} con confianza alta</div></div></div>')
+        if d.get('ficha'): H.append('<h3>Ficha de la propuesta de implementación</h3>' + ficha_cards(d))
+        if d['tiene_impl'] and d['crit']['EI']:
+            H.append('<h3>Estrategia de implementación: puntaje por criterio</h3>' + svg_barras_h([(f'{c["codigo"]} {c["criterio"]}', c['puntaje']) for c in d['crit']['EI']], 'Puntaje EI', maxv=5, fmt=lambda x: f'{x:.0f} / 5', color=col))
         if d.get('pros_items') or d.get('contras_items'): H.append('<div class="grid2"><div><h3>Pros</h3>' + tarjetas(d.get('pros_items', []), 'pros') + '</div><div><h3>Contras</h3>' + tarjetas(d.get('contras_items', []), 'contras') + '</div></div>')
-        for titulo, clave in (('Riesgos de ejecución', 'riesgos'), ('Lo que el Banco asume', 'asume'), ('Incoherencias y señales de alerta', 'alertas7'), ('Contradicciones de la rúbrica', 'contradicciones'), ('Señales de alerta de la rúbrica', 'alertas'), ('Preguntas pendientes al vendor', 'preguntas7')):
-            if d.get(clave, '').strip(): H.append(f'<h3>{titulo}</h3>' + md_to_html(d[clave]))
         if d.get('desp_modelos'):
-            H.append('<h3>Modelo de despliegue y nubes</h3><p class="small">Cada fila indica la fuente verificable (documento, página u hoja y fila, sección) y el nivel de confianza, tal como las registró el análisis de despliegue del vendor.</p>')
-            H.append('<h4>Modelos</h4>' + md_to_html(d['desp_modelos']))
+            H.append('<h3>Modelo de despliegue y nubes</h3><p class="small">Cada tarjeta trae la fuente verificable (documento, página u hoja y fila, sección) y la confianza registradas en el análisis de despliegue.</p>' + despliegue_cards(d))
             if d.get('desp_nubes'): H.append('<h4>Nubes</h4>' + md_to_html(d['desp_nubes']))
-            if d.get('desp_region', '').strip(): H.append('<h4>Región y residencia de datos</h4>' + md_to_html(d['desp_region']))
-            if d.get('desp_no', '').strip(): H.append('<h4>No soporta o no ofrece</h4>' + md_to_html(d['desp_no']))
-            if d.get('desp_contra', '').strip(): H.append('<h4>Contradicciones sobre despliegue</h4>' + md_to_html(d['desp_contra']))
-        H.append('</section>')
-    # metodología
-    H.append('<h2 id="metodo">Metodología y fuentes</h2><p>Para cada vendor se analizó su propuesta de implementación leyendo directamente sus documentos (propuesta técnica y anexos): metodología y fases, cronograma, equipo e implementador, gobierno, migración, pruebas, transición, supuestos y responsabilidades del Banco. Cada pro y contra lleva su fuente (documento y página) y un nivel de confianza: ALTA si hay cifra, fecha o compromiso explícito; MEDIA si está descrito sin cifra; BAJA si es una afirmación genérica o solo declarada.</p>' + ('<p>Cuando existe, se añade la rúbrica corporativa de implementación del Banco: 12 criterios de estrategia de implementación, 24 de perfil del fabricante y 25 de perfil del implementador, cada uno con peso relativo y una escala de 0 a 5 cuyos niveles tienen un descriptor textual. El puntaje de cada criterio es el descriptor que mejor describe lo que los documentos del vendor demuestran, con la cita exacta (documento, página o fila, sección). Las respuestas del vendor en su anexo de perfiles se tratan como declaraciones: si ningún otro documento las respalda, el criterio queda como «Solo declarado» y no supera la mitad del puntaje máximo. Las sesiones de referenciación no forman parte de este documento por ser entrevistas. </p>' if con_impl else '') + '<p>Cada vendor se analizó de forma aislada, con sus propios documentos; la comparación solo agrega lo verificado por vendor.</p>')
-    H.append('<p>Archivos de origen por vendor: <code>verif/IMPL.md</code> (rúbrica puntuada), <code>informes/7_implementacion_pros_contras.md</code> (ficha, pros y contras), <code>informes/8_modelo_despliegue.md</code> (modelo de despliegue, cuando existe). Este documento fue generado por <code>scripts/07_informe_implementacion.py</code> sin añadir texto propio.</p>')
-    # anexo
-    if con_impl: H.append('<h2 id="anexo">Anexo: criterios completos por vendor (rúbrica corporativa)</h2>' + leyenda_escala())
+            if d.get('desp_no', '').strip(): H.append('<h4>No soporta o no ofrece</h4><div class="compact">' + md_to_html(d['desp_no']) + '</div>')
+        H.append('<div class="grid2">')
+        for titulo_s, clave in (('Riesgos de ejecución', 'riesgos'), ('Lo que el Banco asume', 'asume'), ('Señales de alerta', 'alertas7'), ('Contradicciones', 'contradicciones'), ('Preguntas pendientes al vendor', 'preguntas7')):
+            if d.get(clave, '').strip(): H.append(f'<div class="panel"><h3 style="margin-top:0">{titulo_s}</h3><div class="compact">' + md_to_html(d[clave]) + '</div></div>')
+        H.append('</div></section>')
+    # ---------- metodología
+    H.append('<h2 id="metodo">Metodología y fuentes</h2><div class="grid2"><div class="panel"><h3 style="margin-top:0">Cómo se analizó</h3><p class="small">Para cada vendor se leyó directamente su propuesta de implementación (propuesta técnica y anexos): metodología y fases, cronograma, equipo e implementador, gobierno, migración, pruebas, transición, supuestos y responsabilidades del Banco. Cada pro y contra lleva su fuente y un nivel de confianza: ALTA si hay cifra, fecha o compromiso explícito; MEDIA si está descrito sin cifra; BAJA si es una afirmación genérica o solo declarada. Cada vendor se analizó de forma aislada; la comparación solo agrega lo verificado por vendor.</p></div>')
+    H.append('<div class="panel"><h3 style="margin-top:0">La rúbrica</h3><p class="small">Rúbrica corporativa de implementación del Banco: 12 criterios de estrategia, 24 de perfil del fabricante y 25 de perfil del implementador, con peso relativo y escala de 0 a 5 con descriptor textual por nivel. El puntaje de cada criterio es el descriptor que mejor describe lo que los documentos del vendor demuestran, con cita. Las respuestas del anexo de perfiles son declaraciones: sin otro documento que las respalde quedan como «solo declarado» y no superan la mitad del máximo. Las sesiones de referenciación no se incluyen. Archivos de origen: <code>verif/IMPL.md</code>, <code>informes/7_implementacion_pros_contras.md</code>, <code>informes/8_modelo_despliegue.md</code>. Documento generado por <code>scripts/07_informe_implementacion.py</code> sin añadir texto propio.</p></div></div>')
+    # ---------- anexo
+    if con_impl: H.append('<h2 id="anexo">Anexo: los 61 criterios por vendor</h2>' + leyenda_escala())
     for d in con_impl:
-        H.append(f'<h3 class="vendor">{html.escape(d["vendor"])} — Estrategia de implementación (EI)</h3>' + tabla_criterios(d['crit']['EI']))
-        H.append(f'<h3>{html.escape(d["vendor"])} — Perfil del fabricante (F)</h3>' + tabla_criterios(d['crit']['F'], con_resp=True))
-        H.append(f'<h3>{html.escape(d["vendor"])} — Perfil del implementador (I)</h3>' + tabla_criterios(d['crit']['I'], con_impl=True, con_resp=True))
+        H.append(f'<h3 class="vendor" style="--vc:{vcolor(d["_i"])}">{html.escape(nombre(d["vendor"]))} — Estrategia de implementación (EI)</h3>' + tabla_criterios(d['crit']['EI']))
+        H.append(f'<h3>{html.escape(nombre(d["vendor"]))} — Perfil del fabricante (F)</h3>' + tabla_criterios(d['crit']['F'], con_resp=True))
+        H.append(f'<h3>{html.escape(nombre(d["vendor"]))} — Perfil del implementador (I)</h3>' + tabla_criterios(d['crit']['I'], con_impl=True, con_resp=True))
     H.append(f'<footer>Informe generado el {hoy}. Escala y pesos: rúbrica corporativa de implementación del Banco. Sin ranking ni recomendación.</footer></div>' + ('' if artefacto else '</body></html>'))
     return '\n'.join(H)
 
