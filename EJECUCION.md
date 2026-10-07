@@ -140,3 +140,12 @@ Versiones: `--ejecutivo` genera `INFORME_IMPLEMENTACION_EJECUTIVO` (comparativo 
 `--vendor <v>` genera `INFORME_IMPLEMENTACION_<v>` (especificación vertical con los 61 criterios, ~11 páginas);
 `--todo` genera el ejecutivo y una especificación por vendor. Sin opción, el documento completo de antes.
 Otras opciones: lista de vendors (`… sunline acme`), `--salida ruta.html`. Si no encuentra Edge/Chrome, abre el HTML e imprime a PDF.
+
+## Paso 9 — Informe PDF de los comparativos entre vendors
+Reúne en un solo documento los tres comparativos que existan en `vendors/`: `COMPARATIVO_DESPLIEGUE.md` (Paso 7b),
+`COMPARATIVO_IMPLEMENTACION.md` (Paso 7c) y `COMPARATIVO.md` (05_comparar). Genera `vendors/INFORME_COMPARATIVOS.html`
+y, con `--pdf`, el PDF (apaisado). Las fuentes de la comparación transversal se toman de los documentos citados por cada
+vendor. Sin ranking ni recomendación.
+```
+.venv\Scripts\python scripts\08_comparativos_pdf.py --pdf
+```
