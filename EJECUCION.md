@@ -118,3 +118,11 @@ Sin recomendación ni ranking.
 ```
 /comparar-implementacion   → pide «todos» o la lista de vendors
 ```
+
+## Paso 7d — Comparación de la dimensión de desarrollo (T5) entre vendors
+Requiere que cada vendor tenga `informes/2_ejecutivo_T5.md` (Paso 5). Escribe `vendors/COMPARATIVO_T5.md`: tabla resumen
+(T5 Banco → verificado, killer E76, herramientas sin evidencia), 8 pros y 8 contras por vendor con ítem, notas, confianza
+y fuente, tabla por bloque temático, diferencias transversales y preguntas. Sin recomendación ni orden de vendors.
+```
+/comparar-t5   → pide «todos» o la lista de vendors
+```
