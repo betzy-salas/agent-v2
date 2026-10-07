@@ -29,16 +29,26 @@ celdas y lo dices en la cabecera; nunca rellenes sus celdas con suposiciones.
    cita el archivo del vendor); Debilidades (3 a 6, igual, las de mayor impacto primero); Lo que deja al Banco (1-3 líneas);
    Señales de alerta (material reciclado, [TBD], contradicciones); Veredicto en una frase.
 6. Comparación transversal: 5 a 8 diferencias que importan para la decisión (enfoque de corte, plazo, migración,
-   equipo local, hypercare, dependencias del Banco), cada una con los vendors a cada lado y sus fuentes.
+   equipo local, hypercare, dependencias del Banco), cada una con los vendors a cada lado. Debajo de cada diferencia,
+   una línea «Fuentes:» con una cita documental por vendor mencionado, en este formato:
+   `Fuentes: FIS: <documento oficial p.n> (P03) · Infosys: <documento oficial, hoja X, f.n> (EI-02) · …`.
+   La cita se copia del archivo del vendor (la ficha o el pro/contra del informe 7_, la columna Evidencia del criterio en
+   IMPL.md, o la columna Fuente de la tabla de despliegue del 8_) y se acompaña del código de donde sale.
 7. Preguntas pendientes por vendor (3 a 5 cada uno), tomadas de sus archivos.
 No incluyas recomendación final ni ranking: el informe expone, no decide. Si el comité la pide, se añade aparte.
 
-**Forma de citar.** Copia las citas tal como están en los archivos del vendor (nombre oficial del documento, página,
-sección); añade el código del criterio (EI-05, I-20) o del pro/contra (P07, C12) de donde sale. Sin «|» dentro de celdas.
+**Forma de citar.** Una fuente es siempre un documento del vendor: nombre oficial (el de su `NOMBRES.md` o el que usa
+su informe) más página del PDF, u hoja y fila del Excel, o slide. La copias tal como está en el archivo del vendor y añades
+el código del criterio (EI-05, I-20) o del pro/contra (P07, C12) de donde sale. **Nunca** es fuente el nombre de un archivo
+de trabajo (`IMPL.md`, `7_implementacion_pros_contras.md`, `8_modelo_despliegue.md`, rutas `vendors/…`, `verif/`,
+`informes/`): esos archivos son de dónde copias la cita, no la cita. Si el archivo del vendor no trae cita documental para
+un dato, escribe «sin cita documental en el informe del vendor» y no inventes una. Sin «|» dentro de celdas.
 Tono neutral, español, cada frase con un hecho, un código o una cifra.
 
 **Autocomprobación:** toda cifra de la tabla resumen está en el archivo del vendor correspondiente; ninguna celda de un
-vendor incompleto contiene datos; cada fortaleza y debilidad lleva código y fuente.
+vendor incompleto contiene datos; cada fortaleza y debilidad lleva código y fuente documental; en todo el archivo no
+aparece ningún nombre de archivo `.md` ni ruta (`vendors/`, `verif/`, `informes/`, `docs/txt`) como fuente: búscalos
+antes de guardar y sustitúyelos por la cita documental del archivo del vendor.
 
 **Al terminar**, responde en el chat solo con: vendors comparados, ruta, porcentajes EI/F/I por vendor y las 3 diferencias
 transversales principales.

@@ -114,7 +114,8 @@ cita literal) y `vendors/COMPARATIVO_DESPLIEGUE.md`.
 Requiere que cada vendor tenga `verif/IMPL.md` e `informes/7_implementacion_pros_contras.md` (Paso 1b). Escribe
 `vendors/COMPARATIVO_IMPLEMENTACION.md`: tabla resumen por vendor (% EI/F/I, enfoque, duración, implementador),
 rúbrica criterio a criterio EI-01…EI-12, fortalezas y debilidades por vendor, diferencias transversales y preguntas.
-Sin recomendación ni ranking.
+Sin recomendación ni ranking. Toda fuente es un documento del vendor (nombre oficial + página u hoja/fila), copiada del
+archivo del vendor; nunca el nombre de un archivo `.md`. Si el comparativo actual cita archivos `.md`, relanzar este paso.
 ```
 /comparar-implementacion   → pide «todos» o la lista de vendors
 ```
