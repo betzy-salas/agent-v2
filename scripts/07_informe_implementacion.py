@@ -115,13 +115,18 @@ num = lambda s: (lambda m: int(m.group()) if m else None)(re.search(r'\d', s or 
 pct = lambda s: (lambda m: float(m.group(1)) if m else None)(re.search(r'(\d+(?:[.,]\d+)?)\s*%?', (s or '').replace(',', '.')))
 
 # ----------------------------------------------------------------------------- carga por vendor
+def leer_md(path):
+    t = path.read_text(encoding='utf-8-sig')
+    for a, b in (('a¦ü', 'á'), ('e¦ü', 'é'), ('i¦ü', 'í'), ('o¦ü', 'ó'), ('u¦ü', 'ú'), ('A¦ü', 'Á'), ('E¦ü', 'É'), ('O¦ü', 'Ó'), ('n¦ā', 'ñ')): t = t.replace(a, b)
+    return t
+
 def cargar_vendor(v):
     d = VENDORS / v; data = {'vendor': v, 'ok': False, 'crit': {'EI': [], 'F': [], 'I': []}, 'resumen': {}, 'ceros': 0, 'declarados': 0, 'implementadores': ['—'], 'tiene_impl': False}
     impl = d / 'verif' / 'IMPL.md'; f7 = d / 'informes' / '7_implementacion_pros_contras.md'
     if not impl.exists() and not f7.exists(): return data
     data['ok'] = True
     if impl.exists():
-      data['tiene_impl'] = True; md = impl.read_text(encoding='utf-8-sig'); secs = sections(md); data['impl_secs'] = secs
+      data['tiene_impl'] = True; md = leer_md(impl); secs = sections(md); data['impl_secs'] = secs
       def tabla(clave):
           hdr, rows = first_table(find_section(secs, clave)); return hdr, rows
       def idx(hdr, *pref):
@@ -170,7 +175,7 @@ def cargar_vendor(v):
     # informe 7
     f7 = d / 'informes' / '7_implementacion_pros_contras.md'
     if f7.exists():
-        md7 = f7.read_text(encoding='utf-8-sig'); s7 = sections(md7); data['f7_secs'] = s7
+        md7 = leer_md(f7); s7 = sections(md7); data['f7_secs'] = s7
         h1 = next(((t, b) for lvl, t, b in s7 if lvl == 1), ('', ''))
         tit = h1[0] if h1[0] and not re.match(r'^\d*[.)]?\s*Titular', h1[0], re.I) else (find_section(s7, 'Titular') or h1[1])
         data['titular'] = re.sub(r'^\d{1,2}[.)]\s+', '', re.sub(r'^\*\*|\*\*$', '', tit.strip().split('\n')[0].strip()))
@@ -185,7 +190,7 @@ def cargar_vendor(v):
     # informe 8
     f8 = d / 'informes' / '8_modelo_despliegue.md'
     if f8.exists():
-        s8 = sections(f8.read_text(encoding='utf-8-sig')); data['s8'] = s8
+        s8 = sections(leer_md(f8)); data['s8'] = s8
         data['desp_modelos'] = find_section(s8, 'Modelos'); data['desp_nubes'] = find_section(s8, 'Nubes')
         data['desp_region'] = find_section(s8, 'Region', 'Región'); data['desp_no'] = find_section(s8, 'No soporta')
         data['desp_contra'] = find_section(s8, 'Contradicciones')
@@ -374,7 +379,53 @@ def nombres_en_texto(texto):
         texto = re.sub(r'(?<![\w-])' + re.escape(slug) + r'(?![\w-])', real, texto, flags=re.IGNORECASE)
     return texto
 
-def transversal_html(md):
+def primera_cita(fuente):
+    """Primera cita documental de una cadena «Doc p.x; Doc2 p.y» (sin la cita literal entre comillas)."""
+    f = re.split(r'\s*;\s*', str(fuente or '').strip())[0]
+    f = re.sub(r'\s*[-–—]\s*["“].*$', '', f).strip().rstrip('.')
+    return f
+
+def ficha_fuente(d, *claves):
+    f = d.get('ficha', {})
+    for k, val in f.items():
+        if any(_norm(c) in _norm(k) for c in claves): return val.get('fuente', '')
+    return ''
+
+TEMAS_TRANSVERSAL = [
+    (('hypercare', 'estabilizacion'), 'ficha', ('hypercare',)),
+    (('despliegue', 'saas', 'paas', 'nube'), 'despliegue', ()),
+    (('evidencia de implementador', 'porcentaje i', 'perfil del implementador'), 'rubrica_i', ()),
+    (('migracion', 'integracion', 'carga al banco'), 'ficha', ('migración', 'migracion')),
+    (('plazo', 'duracion', 'cronograma', 'meses'), 'ficha', ('duración', 'duracion')),
+    (('modelo de implementacion', 'fabricante', 'implementador', 'terceros'), 'ficha', ('implementador',)),
+]
+
+def fuentes_reales(texto, vendors_data):
+    """Para un punto del comparativo, devuelve [(vendor, cita documental)] tomadas de los informes de cada vendor."""
+    t = _norm(texto)
+    for claves, tipo, campos in TEMAS_TRANSVERSAL:
+        if any(c in t for c in claves):
+            out = []
+            for d in vendors_data:
+                cita = ''
+                if tipo == 'ficha': cita = primera_cita(ficha_fuente(d, *campos))
+                elif tipo == 'rubrica_i':
+                    filas = d['crit']['I']
+                    fila = next((c for c in filas if _norm(c.get('respaldo')) != 'no encontrado'), filas[0] if filas else None)
+                    cita = primera_cita(fila['evidencia']) if fila else ''
+                elif tipo == 'despliegue':
+                    lineas = [l for l in str(d.get('desp_modelos', '')).split('\n') if l.strip().startswith('|')]
+                    hdr, rows = parse_table(lineas) if lineas else ([], [])
+                    if hdr:
+                        ifu = next((i for i, h in enumerate(hdr) if _norm(h).startswith('fuente')), None)
+                        if ifu is not None:
+                            for r in rows:
+                                if _norm(r[0]) in ('saas', 'paas') and len(r) > ifu and r[ifu].strip(): cita = primera_cita(r[ifu]); break
+                out.append((nombre(d['vendor']), cita or 'sin cita documental en su informe'))
+            return out
+    return []
+
+def transversal_html(md, vendors_data=None):
     """Lista numerada del comparativo transversal: cada punto con su línea «Fuentes» atenuada debajo."""
     items = []
     for l in md.split('\n'):
@@ -387,7 +438,9 @@ def transversal_html(md):
         fuentes = [re.sub(r'^fuentes?\s*:\s*', '', x, flags=re.IGNORECASE).rstrip('.') for x in subs if re.match(r'^fuentes?\s*:', x, flags=re.IGNORECASE)]
         otros = [x for x in subs if not re.match(r'^fuentes?\s*:', x, flags=re.IGNORECASE)]
         cuerpo = inline(nombres_en_texto(texto)) + ''.join(f' {inline(nombres_en_texto(x))}' for x in otros)
-        if fuentes: cuerpo += f'<span class="fuente">Fuentes: {inline(fuentes_legibles("; ".join(fuentes)))}.</span>'
+        reales = fuentes_reales(texto, vendors_data or [])
+        if reales: cuerpo += '<span class="fuente">Fuentes: ' + ' · '.join(f'<b>{html.escape(v)}</b>: {html.escape(c)}' for v, c in reales) + '.</span>'
+        elif fuentes: cuerpo += f'<span class="fuente">Fuentes: {inline(fuentes_legibles("; ".join(fuentes)))}.</span>'
         out.append(f'<li>{cuerpo}</li>')
     return '<ol class="trans">' + ''.join(out) + '</ol>'
 
@@ -576,7 +629,7 @@ def construir(vendors_data, comparativo_md, hoy, artefacto=False, ejecutivo=Fals
     H.append('</tbody></table></div>')
     if comparativo_md:
         cs = sections(comparativo_md); trans = find_section(cs, 'transversal')
-        if trans.strip(): H.append('<div class="panel"><h3 style="margin-top:0">Lo que cambia entre vendors</h3><p class="small">Diferencias que importan para la decisión, tomadas del comparativo de implementación. Cada punto indica de qué informe de vendor sale.</p><div class="compact cols2">' + transversal_html(trans) + '</div></div>')
+        if trans.strip(): H.append('<div class="panel"><h3 style="margin-top:0">Lo que cambia entre vendors</h3><p class="small">Diferencias que importan para la decisión, tomadas del comparativo de implementación. Debajo de cada punto, el documento de cada vendor donde está el dato (nombre oficial y página u hoja), tomado de su informe de implementación.</p><div class="compact cols2">' + transversal_html(trans, V) + '</div></div>')
     # ---------- rúbrica y criterios
     if con_impl:
         H.append('<h2 id="graficos">Rúbrica corporativa: puntaje por bloque y por criterio</h2>' + legend_vendors(V))
@@ -644,7 +697,7 @@ CSS_EXTRA = """
 .desp-row{display:grid;gap:6px} .desp-row .r{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:start;font-size:.8rem;border-bottom:1px solid var(--line);padding:4px 0} .desp-row .r:last-child{border:0} .desp-row .m{display:flex;gap:6px;align-items:center;font-family:var(--display);font-weight:700} .desp-row .fuente{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .alertas li{font-size:.84rem;margin:.15rem 0}
 .cols2{columns:2;column-gap:28px} .cols2 li,.cols2 p{break-inside:avoid;page-break-inside:avoid} .cols2>ol,.cols2>ul{margin:0} @media(max-width:800px){.cols2{columns:1}}
-ol.trans{padding-left:1.2rem;font-size:.9rem;columns:2;column-gap:28px;-webkit-columns:2} .cols2:has(ol.trans){columns:auto} ol.trans li{margin:0 0 .55rem} ol.trans .fuente{display:block;font-size:.74rem;color:var(--ink-3);margin-top:2px}
+ol.trans{padding-left:1.2rem;font-size:.9rem;columns:2;column-gap:28px;-webkit-columns:2} .cols2:has(ol.trans){columns:auto} ol.trans li{margin:0 0 .55rem} ol.trans .fuente{display:block;font-size:.74rem;color:var(--ink-3);margin-top:2px;line-height:1.35} ol.trans .fuente b{color:var(--ink-2);font-weight:600}
 h2.salto{page-break-before:always;break-before:page}
 @media print{ol.trans{font-size:.82rem} ol.trans .fuente{font-size:.68rem}}
 .op-pie{font-size:.74rem;color:var(--ink-3);margin:0}
