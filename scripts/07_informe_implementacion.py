@@ -11,7 +11,8 @@ Uso:
     python scripts/07_informe_implementacion.py --pdf           # además genera el PDF con Edge/Chrome sin cabeza
     python scripts/07_informe_implementacion.py --salida ruta.html
 """
-import re, sys, html, datetime, subprocess, shutil, platform, statistics
+import re, sys, html, datetime, subprocess, shutil, platform, statistics, unicodedata
+def _norm(x): return ''.join(c for c in unicodedata.normalize('NFKD', str(x or '')) if not unicodedata.combining(c)).lower().strip()
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _comun import VENDORS, RAIZ
@@ -52,8 +53,8 @@ def sections(md):
 
 def find_section(secs, *claves):
     for lvl, t, body in secs:
-        tl = t.lower()
-        if any(k.lower() in tl for k in claves): return body
+        tl = _norm(t)
+        if any(_norm(k) in tl for k in claves): return body
     return ''
 
 def first_table(body):
@@ -122,7 +123,7 @@ def cargar_vendor(v):
       def idx(hdr, *pref):
           for p in pref:
               for i, c in enumerate(hdr):
-                  if c.lower().startswith(p.lower()): return i
+                  if _norm(c).startswith(_norm(p)): return i
           return None
       crit = {'EI': [], 'F': [], 'I': []}
       for bloque, clave in (('EI', 'Tabla EI'), ('F', 'Tabla F'), ('I', 'Tabla I')):
@@ -144,7 +145,7 @@ def cargar_vendor(v):
       for r in rows:
           if not r: continue
           b = r[0].strip().upper()
-          key = 'EI' if 'ESTRATEGIA' in b or b.startswith('EI') else 'F' if 'FABRICANTE' in b or b == 'F' else 'I' if 'IMPLEMENTADOR' in b or b == 'I' else None
+          bn = _norm(b).upper(); key = 'EI' if 'ESTRATEGIA' in bn or bn.startswith('EI') else 'F' if 'FABRICANTE' in bn or bn == 'F' else 'I' if 'IMPLEMENTADOR' in bn or bn == 'I' else None
           if key:
               p = next((pct(c) for c in r[1:] if pct(c) is not None and '%' in c), None)
               if p is None:
@@ -206,7 +207,7 @@ def parse_items(body):
 def ficha_get(d, *claves):
     f = d.get('ficha', {})
     for k, val in f.items():
-        if any(c in k for c in claves): return val['que']
+        if any(_norm(c) in _norm(k) for c in claves): return val['que']
     return '—'
 
 # ----------------------------------------------------------------------------- gráficos SVG (una sola tinta, sequential azul)
