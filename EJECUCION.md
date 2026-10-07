@@ -128,6 +128,16 @@ y fuente, tabla por bloque temático, diferencias transversales y preguntas. Sin
 /comparar-t5   → pide «todos» o la lista de vendors
 ```
 
+## Paso 7e — Semáforo de la hoja T5 por categoría (por vendor)
+Traduce la calificación del Banco en la matriz T5 (columna VA) a un color fijo por ítem: 4 → 🟢 verde, 3 y 2 → 🟡 amarillo,
+1 y 0 → 🔴 rojo; por categoría solo se cuentan los ítems de cada color, sin nota nueva. Primero el script genera las tablas
+y luego el agente redacta la «Lectura» de cada categoría condensando pregunta, respuesta del proveedor y sustento del
+evaluador, sin añadir hechos ni recalificar. Solo requiere la ingesta (matriz/T5.txt).
+```
+.venv\Scripts\python scripts\09_semaforo_t5.py <vendor>
+/semaforo-t5 <vendor>
+```
+
 ## Paso 8 — Documento final de estrategias de implementación (HTML + PDF)
 Requiere, por vendor, `informes/7_implementacion_pros_contras.md`; si además existe `verif/IMPL.md`, incluye la rúbrica
 puntuada (barras por bloque, mapa de calor de los 12 criterios y anexo con los 61 criterios). Genera
