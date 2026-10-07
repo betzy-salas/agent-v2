@@ -368,6 +368,40 @@ VENDOR_PAL = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', 
 VENDOR_INK = ['#ffffff', '#ffffff', '#0b0b0b', '#0b0b0b', '#0b0b0b', '#ffffff', '#ffffff', '#ffffff']
 NOMBRES_VENDOR = {'fis': 'FIS', 'infosys': 'Infosys', 'pismo': 'Pismo', 'sunline': 'Sunline', 'temenos': 'Temenos', 'tm': 'Thought Machine', 'tought-machine': 'Thought Machine', 'thought-machine': 'Thought Machine'}
 def nombre(v): return NOMBRES_VENDOR.get(v.lower(), v.replace('-', ' ').title())
+def nombres_en_texto(texto):
+    """Pone el nombre real del vendor donde el comparativo usa la carpeta (sunline, tought-machine…)."""
+    for slug, real in sorted(NOMBRES_VENDOR.items(), key=lambda kv: -len(kv[0])):
+        texto = re.sub(r'(?<![\w-])' + re.escape(slug) + r'(?![\w-])', real, texto, flags=re.IGNORECASE)
+    return texto
+
+def transversal_html(md):
+    """Lista numerada del comparativo transversal: cada punto con su línea «Fuentes» atenuada debajo."""
+    items = []
+    for l in md.split('\n'):
+        if not l.strip(): continue
+        if re.match(r'^\s*\d+[.)]\s+', l): items.append([re.sub(r'^\s*\d+[.)]\s+', '', l).strip(), []])
+        elif items and re.match(r'^\s*[-*•]\s+', l): items[-1][1].append(re.sub(r'^\s*[-*•]\s+', '', l).strip())
+        elif items: items[-1][0] += ' ' + l.strip()
+    out = []
+    for texto, subs in items:
+        fuentes = [re.sub(r'^fuentes?\s*:\s*', '', x, flags=re.IGNORECASE).rstrip('.') for x in subs if re.match(r'^fuentes?\s*:', x, flags=re.IGNORECASE)]
+        otros = [x for x in subs if not re.match(r'^fuentes?\s*:', x, flags=re.IGNORECASE)]
+        cuerpo = inline(nombres_en_texto(texto)) + ''.join(f' {inline(nombres_en_texto(x))}' for x in otros)
+        if fuentes: cuerpo += f'<span class="fuente">Fuentes: {inline(fuentes_legibles("; ".join(fuentes)))}.</span>'
+        out.append(f'<li>{cuerpo}</li>')
+    return '<ol class="trans">' + ''.join(out) + '</ol>'
+
+def fuentes_legibles(texto):
+    """Sustituye nombres de archivos .md por descripciones con el nombre real del vendor."""
+    def nom(v): return nombre(v.strip())
+    texto = re.sub(r'(?:vendors/)?(?:[\w-]+/)*7_implementacion_pros_contras_([\w-]+)\.md', lambda m: f'informe de implementación de {nom(m.group(1))}', texto)
+    texto = re.sub(r'(?:vendors/)?(?:[\w-]+/)*8_modelo_despliegue_([\w-]+)\.md', lambda m: f'análisis de despliegue de {nom(m.group(1))}', texto)
+    texto = re.sub(r'(?:vendors/)?(?:[\w-]+/)*IMPL_([\w-]+)\.md', lambda m: f'rúbrica de implementación de {nom(m.group(1))}', texto)
+    texto = re.sub(r'vendors/([\w-]+)/verif/IMPL\.md', lambda m: f'rúbrica de implementación de {nom(m.group(1))}', texto)
+    texto = re.sub(r'vendors/([\w-]+)/informes/7_implementacion_pros_contras\.md', lambda m: f'informe de implementación de {nom(m.group(1))}', texto)
+    texto = re.sub(r'vendors/([\w-]+)/informes/8_modelo_despliegue\.md', lambda m: f'análisis de despliegue de {nom(m.group(1))}', texto)
+    return texto
+
 def recorta(t, n):
     t = (t or '').strip()
     if len(t) <= n: return t
@@ -511,7 +545,7 @@ def vendor_card(d):
             + f'<div class="chips"><span class="chip si">{len(d.get("pros_items", []))} pros · {cp["ALTA"]} alta</span><span class="chip no">{len(d.get("contras_items", []))} contras · {cc["ALTA"]} alta</span>{"".join(chips)}</div>'
             '</div></article>')
 
-def construir(vendors_data, comparativo_md, hoy, artefacto=False):
+def construir(vendors_data, comparativo_md, hoy, artefacto=False, ejecutivo=False):
     V = [d for d in vendors_data if d['ok']]; faltan = [d['vendor'] for d in vendors_data if not d['ok']]
     for i, d in enumerate(V): d['_i'] = i
     con_impl = [d for d in V if d['tiene_impl']]
@@ -542,7 +576,7 @@ def construir(vendors_data, comparativo_md, hoy, artefacto=False):
     H.append('</tbody></table></div>')
     if comparativo_md:
         cs = sections(comparativo_md); trans = find_section(cs, 'transversal')
-        if trans.strip(): H.append('<div class="panel"><h3 style="margin-top:0">Lo que cambia entre vendors</h3><div class="compact">' + md_to_html(trans) + '</div></div>')
+        if trans.strip(): H.append('<div class="panel"><h3 style="margin-top:0">Lo que cambia entre vendors</h3><p class="small">Diferencias que importan para la decisión, tomadas del comparativo de implementación. Cada punto indica de qué informe de vendor sale.</p><div class="compact cols2">' + transversal_html(trans) + '</div></div>')
     # ---------- rúbrica y criterios
     if con_impl:
         H.append('<h2 id="graficos">Rúbrica corporativa: puntaje por bloque y por criterio</h2>' + legend_vendors(V))
@@ -553,9 +587,15 @@ def construir(vendors_data, comparativo_md, hoy, artefacto=False):
             for c in d['crit']['EI']:
                 if c['codigo'] not in ei_names: ei_cods.append(c['codigo']); ei_names[c['codigo']] = c['criterio']
         if ei_cods:
-            H.append('<div class="panel"><h3 style="margin-top:0">Los 12 criterios de estrategia, vendor a vendor</h3><p class="small">Cada punto es el puntaje de un vendor en ese criterio (0 a 5). Los puntos que coinciden se separan ligeramente.</p>' + legend_vendors(con_impl) + svg_puntos_criterios(con_impl, ei_cods, ei_names) + '</div>')
+            matriz = [[next((c['puntaje'] for c in d['crit']['EI'] if c['codigo'] == cod), None) for d in con_impl] for cod in ei_cods]
+            if ejecutivo:
+                H.append('<div class="panel"><h3 style="margin-top:0">Los 12 criterios de estrategia de implementación, vendor a vendor</h3><p class="small">Cada celda es la nota (0 a 5) que obtuvo el vendor en ese criterio de la rúbrica del Banco. 5 es el nivel máximo del criterio; 0 significa que la propuesta no lo presenta. El color acompaña a la nota: más oscuro, más alto.</p>' + leyenda_escala() + svg_heatmap([f'{c} {ei_names[c]}' for c in ei_cods], [nombre(d['vendor']) for d in con_impl], matriz) + '</div>')
+            else:
+                H.append('<div class="panel"><h3 style="margin-top:0">Los 12 criterios de estrategia, vendor a vendor</h3><p class="small">Cada punto es el puntaje de un vendor en ese criterio (0 a 5). Los puntos que coinciden se separan ligeramente.</p>' + legend_vendors(con_impl) + svg_puntos_criterios(con_impl, ei_cods, ei_names) + '</div>')
     # ---------- confianza
-    H.append('<h2 id="confianza">Pros y contras por nivel de confianza</h2>' + leyenda_conf())
+    H.append('<h2 id="confianza"' + (' class="salto"' if ejecutivo else '') + '>Pros y contras de cada vendor: cuántos y qué tan respaldados están</h2>')
+    if ejecutivo: H.append('<p>Para cada vendor se identificaron hasta 10 pros (lo que su propuesta de implementación hace bien) y hasta 10 contras (brechas o riesgos). Cada uno se clasificó según qué tan respaldado está por los documentos del vendor: <strong>ALTA</strong>, hay una cifra, fecha o compromiso explícito con cita; <strong>MEDIA</strong>, está descrito pero sin cifra ni compromiso; <strong>BAJA</strong>, es una afirmación genérica o solo declarada. Las barras muestran cuántos pros y contras tiene cada vendor y de qué confianza. Un vendor con muchos pros de confianza BAJA promete más de lo que documenta.</p>')
+    H.append(leyenda_conf())
     H.append('<div class="grid2"><div class="panel"><h4 style="margin-top:0">Pros</h4>' + svg_confianza(V, 'pros_items', 'Pros por confianza') + '</div><div class="panel"><h4 style="margin-top:0">Contras</h4>' + svg_confianza(V, 'contras_items', 'Contras por confianza') + '</div></div>')
     H.append('<p class="small">Confianza ALTA: cifra, fecha o compromiso explícito en un documento del vendor. MEDIA: descrito sin cifra. BAJA: afirmación genérica o solo declarada. Más pros no significa mejor propuesta: importa la confianza y el contenido de cada uno.</p>')
     # ---------- por vendor
@@ -603,6 +643,10 @@ CSS_EXTRA = """
 .op-bottom{display:grid;grid-template-columns:7fr 5fr;gap:14px;align-items:start} .op-bottom>*{min-width:0} @media(max-width:800px){.op-bottom{grid-template-columns:1fr}}
 .desp-row{display:grid;gap:6px} .desp-row .r{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:start;font-size:.8rem;border-bottom:1px solid var(--line);padding:4px 0} .desp-row .r:last-child{border:0} .desp-row .m{display:flex;gap:6px;align-items:center;font-family:var(--display);font-weight:700} .desp-row .fuente{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .alertas li{font-size:.84rem;margin:.15rem 0}
+.cols2{columns:2;column-gap:28px} .cols2 li,.cols2 p{break-inside:avoid;page-break-inside:avoid} .cols2>ol,.cols2>ul{margin:0} @media(max-width:800px){.cols2{columns:1}}
+ol.trans{padding-left:1.2rem;font-size:.9rem;columns:2;column-gap:28px;-webkit-columns:2} .cols2:has(ol.trans){columns:auto} ol.trans li{margin:0 0 .55rem} ol.trans .fuente{display:block;font-size:.74rem;color:var(--ink-3);margin-top:2px}
+h2.salto{page-break-before:always;break-before:page}
+@media print{ol.trans{font-size:.82rem} ol.trans .fuente{font-size:.68rem}}
 .op-pie{font-size:.74rem;color:var(--ink-3);margin:0}
 table.compacta{font-size:.78rem} table.compacta td{padding:6px 8px} table.compacta .crit{font-weight:600} table.compacta .ev{display:block;color:var(--ink-3);font-size:.74rem;margin-top:3px} table.compacta .ju{display:block;margin-top:3px}
 @media print{.onepage{page-break-inside:avoid;gap:7px} .onepage .vhead{margin-top:0;border-top-width:5px} .onepage .nota{font-size:.82rem;padding:7px 12px} .onepage .kpis{gap:6px} .onepage .kpi{padding:7px 10px} .onepage .kpi .n{font-size:1.3rem} .onepage .kpi .l{font-size:.68rem}
@@ -660,7 +704,7 @@ def vendor_onepage(d):
     H.append('<div><div class="grid2" style="gap:12px"><div><h3>Pros destacados</h3>' + tarjetas(top_items(d.get('pros_items', [])), 'pros compact') + '</div><div><h3>Contras destacados</h3>' + tarjetas(top_items(d.get('contras_items', [])), 'contras compact') + '</div></div></div></div>')
     alertas = lista_items(d.get('alertas7', ''), 3)
     H.append('<div class="op-bottom"><div><h3>Modelo de despliegue</h3>' + despliegue_filas(d) + '</div><div><h3>Señales de alerta</h3>' + ('<ul class="alertas">' + ''.join(f'<li>{inline(a)}</li>' for a in alertas) + '</ul>' if alertas else '<p class="small">Sin señales registradas.</p>') + '</div></div>')
-    H.append(f'<p class="op-pie">Pros y contras destacados: los tres de mayor confianza según el informe de implementación del vendor; el detalle completo (10 y 10, riesgos, preguntas y los 61 criterios de la rúbrica) está en la especificación de {html.escape(nombre(d["vendor"]))}.</p></section>')
+    H.append(f'<p class="op-pie">Esta página muestra los 3 pros y 3 contras con mayor respaldo documental. El informe completo de {html.escape(nombre(d["vendor"]))}, con sus 10 pros, 10 contras, riesgos, preguntas al vendor y los 61 criterios de la rúbrica, es el documento «Especificación de implementación: {html.escape(nombre(d["vendor"]))}».</p></section>')
     return '\n'.join(H)
 
 def tabla_criterios_compacta(items, con_impl=False):
@@ -686,7 +730,7 @@ def construir_ejecutivo(vendors_data, comparativo_md, hoy, artefacto=False):
     H.append('<div class="vcards">' + ''.join(vendor_card(d) for d in V) + '</div>')
     H.append('<nav class="toc" aria-label="Contenido"><h4>Contenido</h4><ol><li><a href="#scorecard">Scorecard comparativo</a></li><li><a href="#graficos">Rúbrica y criterios</a></li><li><a href="#confianza">Pros y contras por confianza</a></li>' + ''.join(f'<li><a href="#v-{d["vendor"]}">{html.escape(nombre(d["vendor"]))}</a></li>' for d in V) + '<li><a href="#metodo">Metodología</a></li></ol></nav></header>')
     # scorecard + gráficos + confianza: reutiliza el cuerpo del documento completo hasta antes de las secciones por vendor
-    completo = construir(vendors_data, comparativo_md, hoy, artefacto=True)
+    completo = construir(vendors_data, comparativo_md, hoy, artefacto=True, ejecutivo=True)
     ini = completo.index('<h2 id="scorecard">'); fin = completo.index('<section class="vendor"')
     H.append(completo[ini:fin])
     for d in V: H.append(vendor_onepage(d))
