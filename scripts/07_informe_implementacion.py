@@ -10,6 +10,7 @@ Uso:
     python scripts/07_informe_implementacion.py sunline acme    # solo esos
     python scripts/07_informe_implementacion.py --pdf           # además genera el PDF con Edge/Chrome sin cabeza
     python scripts/07_informe_implementacion.py --salida ruta.html
+    python scripts/07_informe_implementacion.py --artefacto    # fragmento para publicar como artefacto de claude.ai
 """
 import re, sys, html, datetime, subprocess, shutil, platform, statistics, unicodedata
 def _norm(x): return ''.join(c for c in unicodedata.normalize('NFKD', str(x or '')) if not unicodedata.combining(c)).lower().strip()
@@ -181,7 +182,10 @@ def cargar_vendor(v):
     # informe 8
     f8 = d / 'informes' / '8_modelo_despliegue.md'
     if f8.exists():
-        s8 = sections(f8.read_text(encoding='utf-8-sig'))
+        s8 = sections(f8.read_text(encoding='utf-8-sig')); data['s8'] = s8
+        data['desp_modelos'] = find_section(s8, 'Modelos'); data['desp_nubes'] = find_section(s8, 'Nubes')
+        data['desp_region'] = find_section(s8, 'Region', 'Región'); data['desp_no'] = find_section(s8, 'No soporta')
+        data['desp_contra'] = find_section(s8, 'Contradicciones')
         hdr, rows = first_table(find_section(s8, 'Modelos')); modelos = {}
         for r in rows:
             if len(r) >= 2: modelos[r[0].strip()] = r[1]
@@ -283,42 +287,59 @@ def leyenda_escala():
     return '<div class="leyenda">' + ''.join(f'<span class="chip" style="background:{RAMP[i]};color:{INK_ON[i]}">{i}</span>' for i in range(6)) + '<span class="lbl-leyenda">puntaje de la rúbrica: 0 = no presentado (gris) · 1 a 5 = de menor a mayor</span></div>'
 
 # ----------------------------------------------------------------------------- HTML
+FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">'
 CSS = """
-:root{--ink:#0b0b0b;--ink2:#52514e;--ink3:#8a8984;--line:#e3e2dd;--surface:#fcfcfb;--panel:#f4f3ef;--accent:#1c5cab;--accent2:#2a78d6;--track:#ebeae6;}
+/* Layout: informe de comité en una columna de lectura (72ch) con tablas y gráficos a ancho completo; portada compacta. */
+:root{
+  --bg:#f7f7f4; --bg-2:#eeeeea; --panel:#ffffff; --line:#d9dad3; --line-2:#c3c5bd;
+  --ink:#141518; --ink-2:#4b4f58; --ink-3:#7a7f8a;
+  --accent:#1c5cab; --accent-2:#2a78d6; --accent-soft:#e3edf9; --track:#e6e7e1;
+  --warn:#8a5a00;
+  --display:"IBM Plex Sans Condensed","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#15171b; --bg-2:#1d2026; --panel:#1b1e24; --line:#2e323a; --line-2:#3c414b; --ink:#f1f2ef; --ink-2:#bfc3cb; --ink-3:#8b909b; --accent:#6da7ec; --accent-2:#86b6ef; --accent-soft:#1d2d44; --track:#2a2e36; --warn:#e0a94a; color-scheme:dark } }
+:root[data-theme="dark"]{ --bg:#15171b; --bg-2:#1d2026; --panel:#1b1e24; --line:#2e323a; --line-2:#3c414b; --ink:#f1f2ef; --ink-2:#bfc3cb; --ink-3:#8b909b; --accent:#6da7ec; --accent-2:#86b6ef; --accent-soft:#1d2d44; --track:#2a2e36; --warn:#e0a94a; color-scheme:dark }
 *{box-sizing:border-box} html{font-size:15px}
-body{margin:0;background:var(--surface);color:var(--ink);font-family:"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.45}
-.wrap{max-width:1120px;margin:0 auto;padding:0 32px 64px}
-header.portada{min-height:92vh;display:flex;flex-direction:column;justify-content:center;border-bottom:1px solid var(--line);page-break-after:always}
-.kicker{letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-size:.8rem;font-weight:600}
-h1{font-size:2.6rem;line-height:1.1;margin:.4rem 0 1rem;font-weight:700}
-h2{font-size:1.6rem;margin:2.6rem 0 .8rem;padding-top:.6rem;border-top:3px solid var(--accent);page-break-after:avoid}
-h3{font-size:1.2rem;margin:1.8rem 0 .5rem;color:var(--ink);page-break-after:avoid}
-h4{font-size:1rem;margin:1.2rem 0 .3rem;color:var(--ink2)} h5,h6{font-size:.95rem;margin:1rem 0 .2rem;color:var(--ink2)}
-p{margin:.4rem 0 .8rem} .meta{color:var(--ink2);font-size:.9rem}
-.tbl-wrap{overflow-x:auto;margin:.6rem 0 1.2rem} table{border-collapse:collapse;width:100%;font-size:.86rem}
-th{text-align:left;background:var(--panel);color:var(--ink2);font-weight:600;padding:8px 10px;border-bottom:2px solid var(--line);vertical-align:bottom}
-td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top} tbody tr:nth-child(even) td{background:#faf9f6}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:1rem 0 1.4rem}
-.kpi{background:var(--panel);border-radius:10px;padding:14px 16px} .kpi .n{font-size:1.9rem;font-weight:700;color:var(--accent);line-height:1}
-.kpi .l{font-size:.8rem;color:var(--ink2);margin-top:4px}
-.chart{width:100%;height:auto;display:block;margin:.4rem 0 1rem} .chart .lbl{font-size:12px;fill:var(--ink2)} .chart .lbl.b{font-weight:600;fill:var(--ink)}
-.chart .val{font-size:12px;fill:var(--ink);font-weight:600} .chart .cell{font-size:12px;font-weight:600} .chart .track{fill:var(--track)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px} @media(max-width:800px){.grid2{grid-template-columns:1fr}}
-.leyenda{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-.4rem 0 1rem} .chip{display:inline-block;width:28px;height:22px;border-radius:5px;text-align:center;font-size:.8rem;line-height:22px;font-weight:600}
-.lbl-leyenda{font-size:.8rem;color:var(--ink2);margin-left:6px}
-.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:600;background:var(--panel);color:var(--ink2);border:1px solid var(--line)}
-.pill.doc{border-color:#1c5cab;color:#1c5cab} .pill.dec{border-color:#8a8984} .pill.no{border-color:#b3b2ad;color:#8a8984}
-.score{display:inline-block;min-width:26px;text-align:center;border-radius:5px;padding:1px 6px;font-weight:700;font-size:.8rem}
-.vendor{page-break-before:always}
-.cards{list-style:none;padding:0;margin:0;counter-reset:c} .cards li{counter-increment:c;margin:0 0 8px} .card{background:var(--panel);border-radius:8px;padding:9px 12px;border-left:4px solid var(--accent2);page-break-inside:avoid}
-.cards.contras .card{border-left-color:#8a8984} .card-h{display:flex;gap:8px;align-items:flex-start} .card-h .chip{flex:none;height:20px;line-height:20px;font-size:.7rem} .card-t{font-weight:600;font-size:.9rem} .card-t::before{content:counter(c) '. ';color:var(--ink3);font-weight:600} .nota{background:var(--panel);border-left:4px solid var(--accent);padding:10px 14px;border-radius:6px;margin:1rem 0;font-size:.9rem}
-.toc ol{columns:2;gap:32px} .toc li{margin:.15rem 0} .toc a{color:var(--ink);text-decoration:none} .toc a:hover{text-decoration:underline}
-.small{font-size:.82rem;color:var(--ink2)} .fuente{color:var(--ink3);font-size:.78rem}
-blockquote{margin:.6rem 0;padding:.2rem 0 .2rem 14px;border-left:3px solid var(--line);color:var(--ink2)}
-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em;background:var(--panel);padding:1px 4px;border-radius:4px}
-footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--ink2);font-size:.82rem}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5;font-variant-numeric:tabular-nums}
+.wrap{max-width:1120px;margin:0 auto;padding-block:0 64px;padding-inline:clamp(16px,4vw,40px)}
+header.portada{padding-block:56px 32px;border-bottom:1px solid var(--line);page-break-after:always;display:grid;gap:18px}
+.kicker{font-family:var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-size:.78rem;font-weight:600}
+h1{font-family:var(--display);font-size:clamp(2rem,5vw,3rem);line-height:1.05;margin:0;font-weight:700;text-wrap:balance;max-width:20ch}
+h2{font-family:var(--display);font-size:1.7rem;line-height:1.15;margin:2.8rem 0 .9rem;padding-top:.7rem;border-top:3px solid var(--accent);page-break-after:avoid;text-wrap:balance}
+h3{font-family:var(--display);font-size:1.25rem;margin:1.9rem 0 .55rem;page-break-after:avoid;text-wrap:balance}
+h4{font-family:var(--display);font-size:1rem;margin:1.3rem 0 .35rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em} h5,h6{font-size:.95rem;margin:1rem 0 .2rem;color:var(--ink-2)}
+p{margin:.35rem 0 .8rem;max-width:72ch} .meta{color:var(--ink-2);font-size:.92rem;max-width:80ch}
+.tbl-wrap{overflow-x:auto;margin:.6rem 0 1.3rem;min-width:0} table{border-collapse:collapse;width:100%;font-size:.85rem}
+th{text-align:left;background:var(--bg-2);color:var(--ink-2);font-family:var(--display);font-weight:600;letter-spacing:.02em;padding:8px 10px;border-bottom:2px solid var(--line-2);vertical-align:bottom}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top} tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--bg-2) 55%,transparent)}
+td:first-child{font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:.6rem 0 1.2rem}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0} .kpi .n{font-family:var(--mono);font-size:1.8rem;font-weight:500;color:var(--accent);line-height:1}
+.kpi .l{font-size:.78rem;color:var(--ink-2);margin-top:6px;line-height:1.3}
+.chart{width:100%;height:auto;display:block;margin:.4rem 0 1rem;max-width:100%} .chart .lbl{font-size:12px;fill:var(--ink-2);font-family:var(--body)} .chart .lbl.b{font-weight:600;fill:var(--ink)}
+.chart .val{font-size:12px;fill:var(--ink);font-weight:500;font-family:var(--mono)} .chart .cell{font-size:12px;font-weight:600;font-family:var(--mono)} .chart .track{fill:var(--track)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px} .grid2>*{min-width:0}
+.leyenda{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-.3rem 0 .9rem} .chip{display:inline-block;min-width:28px;height:22px;border-radius:4px;text-align:center;font-size:.76rem;line-height:22px;font-weight:600;font-family:var(--mono)}
+.lbl-leyenda{font-size:.8rem;color:var(--ink-2);margin-left:6px}
+.pill{display:inline-block;padding:1px 8px;border-radius:4px;font-size:.74rem;font-weight:600;background:var(--bg-2);color:var(--ink-2);border:1px solid var(--line);font-family:var(--display);letter-spacing:.03em;white-space:nowrap}
+.pill.doc{border-color:var(--accent);color:var(--accent)} .pill.dec{border-color:var(--line-2)} .pill.no{color:var(--ink-3)}
+.score{display:inline-block;min-width:26px;text-align:center;border-radius:4px;padding:1px 6px;font-weight:600;font-size:.8rem;font-family:var(--mono)}
+.vendor{page-break-before:always} .nota{background:var(--accent-soft);border-left:4px solid var(--accent);padding:12px 16px;border-radius:0 6px 6px 0;margin:1rem 0;font-size:.95rem;max-width:none}
+.cards{list-style:none;padding:0;margin:0;counter-reset:c;display:grid;gap:8px} .cards li{counter-increment:c;min-width:0} .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;page-break-inside:avoid}
+.cards.contras .card{border-color:var(--line-2)} .card-h{display:flex;gap:8px;align-items:flex-start} .card-h .chip{flex:none;height:20px;line-height:20px;font-size:.68rem;letter-spacing:.04em;font-family:var(--display)} .card-t{font-weight:600;font-size:.9rem;min-width:0} .card-t::before{content:counter(c) ". ";color:var(--ink-3);font-weight:600;font-family:var(--mono)}
+.toc ol{columns:2;column-gap:32px;padding-left:1.2rem;margin:0} .toc li{margin:.15rem 0;break-inside:avoid} .toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)} .toc a:hover,.toc a:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}
+@media(max-width:640px){.toc ol{columns:1}}
+.small{font-size:.82rem;color:var(--ink-2);max-width:80ch} .fuente{color:var(--ink-3);font-size:.78rem}
+blockquote{margin:.6rem 0;padding:.2rem 0 .2rem 14px;border-left:3px solid var(--line-2);color:var(--ink-2)}
+code{font-family:var(--mono);font-size:.85em;background:var(--bg-2);padding:1px 4px;border-radius:3px}
+ol,ul{padding-left:1.3rem} li{margin:.2rem 0;max-width:80ch}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--ink-2);font-size:.82rem}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important}}
 @page{size:A4;margin:16mm 14mm 18mm}
-@media print{html{font-size:11.5px} body{background:#fff} .wrap{max-width:none;padding:0} header.portada{min-height:auto;padding:40mm 0} h2{margin-top:1.6rem} .tbl-wrap{overflow:visible} table{font-size:.8rem} tr,td,th{page-break-inside:avoid} .chart{page-break-inside:avoid} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{html{font-size:11.5px} :root{--bg:#fff;--panel:#fff} .wrap{max-width:none;padding-inline:0} header.portada{padding-block:60mm 20mm} h2{margin-top:1.6rem} .tbl-wrap{overflow:visible} table{font-size:.8rem} tr,td,th,.card,.kpi{page-break-inside:avoid} .chart{page-break-inside:avoid} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 """
 
 def badge_respaldo(r):
@@ -337,11 +358,13 @@ def tabla_criterios(items, con_impl=False, con_resp=False):
         out.append('<tr>' + ''.join(f'<td>{x}</td>' for x in cells) + '</tr>')
     out.append('</tbody></table></div>'); return '\n'.join(out)
 
-def construir(vendors_data, comparativo_md, hoy):
+def construir(vendors_data, comparativo_md, hoy, artefacto=False):
     V = [d for d in vendors_data if d['ok']]; faltan = [d['vendor'] for d in vendors_data if not d['ok']]
     nombres = [d['vendor'] for d in V]
     H = []
-    H.append(f'<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Estrategias de implementación — comparativo de vendors</title><style>{CSS}</style></head><body><div class="wrap">')
+    titulo = 'Estrategias de implementación'
+    if artefacto: H.append(f'<title>{titulo}</title>{FONTS}<style>{CSS}</style><div class="wrap">')
+    else: H.append(f'<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>{titulo}</title>{FONTS}<style>{CSS}</style></head><body><div class="wrap">')
     # portada
     rangos = [d['resumen'].get('EI') for d in V if d['resumen'].get('EI') is not None]
     H.append('<header class="portada"><div class="kicker">Selección de core bancario · Evaluación técnica</div>')
@@ -356,7 +379,7 @@ def construir(vendors_data, comparativo_md, hoy):
              + f'<div class="kpi"><div class="n">{tot_contras}</div><div class="l">contras identificados</div></div>'
              + (f'<div class="kpi"><div class="n">{len(con_impl)}/{len(V)}</div><div class="l">vendors con rúbrica puntuada (61 criterios)</div></div>' if con_impl else '')
              + (f'<div class="kpi"><div class="n">{min(rangos):.0f}–{max(rangos):.0f}%</div><div class="l">rango del bloque Estrategia</div></div>' if rangos else '') + '</div>')
-    H.append('<nav class="toc"><ol>' + '<li><a href="#resumen">Resumen comparativo</a></li><li><a href="#graficos">Lectura gráfica</a></li>' + ''.join(f'<li><a href="#v-{d["vendor"]}">{html.escape(d["vendor"])}</a></li>' for d in V) + '<li><a href="#metodo">Metodología y fuentes</a></li>' + ('<li><a href="#anexo">Anexo: criterios completos</a></li>' if con_impl else '') + '</ol></nav></header>')
+    H.append('<nav class="toc" aria-label="Contenido"><h4>Contenido</h4><ol>' + '<li><a href="#resumen">Resumen comparativo</a></li><li><a href="#graficos">Lectura gráfica</a></li>' + ''.join(f'<li><a href="#v-{d["vendor"]}">{html.escape(d["vendor"])}</a></li>' for d in V) + '<li><a href="#metodo">Metodología y fuentes</a></li>' + ('<li><a href="#anexo">Anexo: criterios completos</a></li>' if con_impl else '') + '</ol></nav></header>')
     # resumen comparativo
     H.append('<h2 id="resumen">1. Resumen comparativo</h2>')
     if comparativo_md:
@@ -418,8 +441,13 @@ def construir(vendors_data, comparativo_md, hoy):
         if d.get('pros_items') or d.get('contras_items'): H.append('<div class="grid2"><div><h3>Pros</h3>' + tarjetas(d.get('pros_items', []), 'pros') + '</div><div><h3>Contras</h3>' + tarjetas(d.get('contras_items', []), 'contras') + '</div></div>')
         for titulo, clave in (('Riesgos de ejecución', 'riesgos'), ('Lo que el Banco asume', 'asume'), ('Incoherencias y señales de alerta', 'alertas7'), ('Contradicciones de la rúbrica', 'contradicciones'), ('Señales de alerta de la rúbrica', 'alertas'), ('Preguntas pendientes al vendor', 'preguntas7')):
             if d.get(clave, '').strip(): H.append(f'<h3>{titulo}</h3>' + md_to_html(d[clave]))
-        if d.get('modelos'):
-            H.append('<h3>Modelo de despliegue</h3><div class="tbl-wrap"><table><thead><tr><th>Modelo</th><th>Ofrecido</th></tr></thead><tbody>' + ''.join(f'<tr><td>{html.escape(k)}</td><td>{inline(v)}</td></tr>' for k, v in d['modelos'].items()) + '</tbody></table></div>')
+        if d.get('desp_modelos'):
+            H.append('<h3>Modelo de despliegue y nubes</h3><p class="small">Cada fila indica la fuente verificable (documento, página u hoja y fila, sección) y el nivel de confianza, tal como las registró el análisis de despliegue del vendor.</p>')
+            H.append('<h4>Modelos</h4>' + md_to_html(d['desp_modelos']))
+            if d.get('desp_nubes'): H.append('<h4>Nubes</h4>' + md_to_html(d['desp_nubes']))
+            if d.get('desp_region', '').strip(): H.append('<h4>Región y residencia de datos</h4>' + md_to_html(d['desp_region']))
+            if d.get('desp_no', '').strip(): H.append('<h4>No soporta o no ofrece</h4>' + md_to_html(d['desp_no']))
+            if d.get('desp_contra', '').strip(): H.append('<h4>Contradicciones sobre despliegue</h4>' + md_to_html(d['desp_contra']))
         H.append('</section>')
     # metodología
     H.append('<h2 id="metodo">Metodología y fuentes</h2><p>Para cada vendor se analizó su propuesta de implementación leyendo directamente sus documentos (propuesta técnica y anexos): metodología y fases, cronograma, equipo e implementador, gobierno, migración, pruebas, transición, supuestos y responsabilidades del Banco. Cada pro y contra lleva su fuente (documento y página) y un nivel de confianza: ALTA si hay cifra, fecha o compromiso explícito; MEDIA si está descrito sin cifra; BAJA si es una afirmación genérica o solo declarada.</p>' + ('<p>Cuando existe, se añade la rúbrica corporativa de implementación del Banco: 12 criterios de estrategia de implementación, 24 de perfil del fabricante y 25 de perfil del implementador, cada uno con peso relativo y una escala de 0 a 5 cuyos niveles tienen un descriptor textual. El puntaje de cada criterio es el descriptor que mejor describe lo que los documentos del vendor demuestran, con la cita exacta (documento, página o fila, sección). Las respuestas del vendor en su anexo de perfiles se tratan como declaraciones: si ningún otro documento las respalda, el criterio queda como «Solo declarado» y no supera la mitad del puntaje máximo. Las sesiones de referenciación no forman parte de este documento por ser entrevistas. </p>' if con_impl else '') + '<p>Cada vendor se analizó de forma aislada, con sus propios documentos; la comparación solo agrega lo verificado por vendor.</p>')
@@ -430,7 +458,7 @@ def construir(vendors_data, comparativo_md, hoy):
         H.append(f'<h3 class="vendor">{html.escape(d["vendor"])} — Estrategia de implementación (EI)</h3>' + tabla_criterios(d['crit']['EI']))
         H.append(f'<h3>{html.escape(d["vendor"])} — Perfil del fabricante (F)</h3>' + tabla_criterios(d['crit']['F'], con_resp=True))
         H.append(f'<h3>{html.escape(d["vendor"])} — Perfil del implementador (I)</h3>' + tabla_criterios(d['crit']['I'], con_impl=True, con_resp=True))
-    H.append(f'<footer>Informe generado el {hoy}. Escala y pesos: rúbrica corporativa de implementación del Banco. Sin ranking ni recomendación.</footer></div></body></html>')
+    H.append(f'<footer>Informe generado el {hoy}. Escala y pesos: rúbrica corporativa de implementación del Banco. Sin ranking ni recomendación.</footer></div>' + ('' if artefacto else '</body></html>'))
     return '\n'.join(H)
 
 # ----------------------------------------------------------------------------- PDF
@@ -453,7 +481,7 @@ def a_pdf(html_path: Path, pdf_path: Path):
     print(f'PDF: {pdf_path}' if ok else f'No se pudo generar el PDF con {exe}. Abre el HTML e imprime a PDF.'); return ok
 
 def main():
-    args = [a for a in sys.argv[1:]]; pdf = '--pdf' in args; salida = None
+    args = [a for a in sys.argv[1:]]; pdf = '--pdf' in args; salida = None; artefacto = '--artefacto' in args
     if '--salida' in args: salida = Path(args[args.index('--salida') + 1]); args.remove('--salida'); args.remove(str(salida))
     vendors = [a for a in args if not a.startswith('--')]
     if not vendors: vendors = sorted(p.name for p in VENDORS.iterdir() if p.is_dir() and ((p / 'verif' / 'IMPL.md').exists() or (p / 'informes' / '7_implementacion_pros_contras.md').exists()))
@@ -461,7 +489,7 @@ def main():
     data = [cargar_vendor(v) for v in vendors]
     comp = VENDORS / 'COMPARATIVO_IMPLEMENTACION.md'; comp_md = comp.read_text(encoding='utf-8') if comp.exists() else ''
     hoy = datetime.date.today().strftime('%d-%m-%Y')
-    out = salida or (VENDORS / 'INFORME_IMPLEMENTACION.html'); out.write_text(construir(data, comp_md, hoy), encoding='utf-8')
+    out = salida or (VENDORS / ('INFORME_IMPLEMENTACION.artefacto.html' if artefacto else 'INFORME_IMPLEMENTACION.html')); out.write_text(construir(data, comp_md, hoy, artefacto=artefacto), encoding='utf-8')
     print(f'HTML: {out}  ({len(data)} vendors: {", ".join(d["vendor"] + ("" if d["ok"] else " [sin IMPL]") for d in data)})')
     if pdf: a_pdf(out, out.with_suffix('.pdf'))
 
