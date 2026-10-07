@@ -12,7 +12,7 @@ lees `vendors/<vendor>/verif/…` y escribes en `vendors/<vendor>/informes/…`.
 Si no te dan el vendor y hay más de uno en `vendors/`, detente y pregúntalo. Las cifras y citas se copian tal
 como aparecen en las verificaciones, con el nombre oficial del documento que define `vendors/<vendor>/NOMBRES.md`.
 
-Fuentes: vendors/<vendor>/verif/T5.md y vendors/<vendor>/verif/00_consolidado.md para todo lo verificado, y vendors/<vendor>/matriz/T5.txt SOLO para la sección 3b (capacidades declaradas). No abras vendors/<vendor>/docs/: la evidencia documental es la que ya registró la verificación, que buscó en todos los documentos del vendor (propuesta y anexos). Toda cifra sale de
+Fuentes: vendors/<vendor>/verif/T5.md y vendors/<vendor>/verif/00_consolidado.md para todo lo verificado, y vendors/<vendor>/matriz/T5.txt para la sección 3b (capacidades declaradas) y para el campo `cat=` (categoría del Banco de cada ítem), que agrupa la sección 5 y etiqueta cada pro y contra. No abras vendors/<vendor>/docs/: la evidencia documental es la que ya registró la verificación, que buscó en todos los documentos del vendor (propuesta y anexos). Toda cifra sale de
 esos dos archivos. Toda afirmación referencia el ítem (T5-E<n>) y, cuando vendors/<vendor>/verif/T5.md la trae, la fuente
 documental con su nombre oficial y página u hoja/fila. No inventes evidencia que no esté en vendors/<vendor>/verif/T5.md.
 
@@ -33,10 +33,13 @@ Escribe vendors/<vendor>/informes/2_ejecutivo_T5.md con esta estructura:
 4. Debilidades técnicas: 8 a 12 puntos, ordenadas por impacto (killers e indispensables primero). Cada una
    con: brecha concreta, ítem(s), qué dice la celda frente a qué dicen los documentos, nota del Banco → sugerida,
    y consecuencia práctica para el banco (coste, dependencia, riesgo operativo o de seguridad).
-5. Tabla por bloque temático de T5 (SDK y lenguaje; SDLC seguro y CI/CD; parametría y extensibilidad;
-   APIs, idempotencia y versionado; SLAs de desarrollo; rendimiento; licencias y mantenimiento de
-   personalizaciones; escrow; ambientes y pruebas): ítems, nota del Banco media, nota sugerida media, veredicto
-   del bloque (Fortaleza / Neutro / Debilidad) y una frase.
+5. Tabla por categoría de la matriz: una fila por cada valor distinto del campo `cat=` de vendors/<vendor>/matriz/T5.txt
+   (son las categorías del Banco, p. ej. Pruebas, Diseño de desarrollo, Herramientas DevSecOps, Licencia y SLAs de
+   desarrollo, Gestión de ambientes, Eventos y mensajería, Custodia de fuentes…). Columnas: Categoría; Ítems (códigos);
+   Evaluación Banco media; Evaluación sugerida media; Δ; Veredicto (Fortaleza si la sugerida media ≥ 3 y ningún ítem baja
+   a 0 o 1 / Debilidad si la sugerida media < 2 o algún Killer o Indispensable baja a 0 o 1 / Neutro en el resto); una
+   frase con el hecho principal. No inventes bloques propios: usa exactamente las categorías de la matriz, con su texto.
+   Indica además la categoría de cada pro y cada contra de las secciones 3 y 4 entre paréntesis tras el ítem.
 6. Herramientas declaradas sin evidencia: lista tomada de la sección (f) de vendors/<vendor>/verif/T5.md, agrupada por
    categoría (IDE/JDK, SAST/DAST/SCA, IaC/CD, observabilidad, pruebas).
 7. Incoherencias que debilitan la evaluación: preguntas repetidas con notas distintas (sección d) y

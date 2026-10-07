@@ -14,7 +14,8 @@ otro; la comparación final solo agrega lo ya escrito por cada vendor. Sin conoc
 **Fuentes por vendor.** Principal: `vendors/<vendor>/informes/2_ejecutivo_T5.md` (fortalezas, debilidades, capacidades
 declaradas sin respaldo, tabla por bloque temático, herramientas sin evidencia, incoherencias, preguntas). De apoyo:
 `vendors/<vendor>/verif/T5.md` solo para confirmar el código de ítem, la evaluación del Banco y la sugerida de cada pro o
-contra; `vendors/<vendor>/verif/00_consolidado.md` para el puntaje de T5. No abras `docs/` ni `matriz/`: no verificas de
+contra; `vendors/<vendor>/verif/00_consolidado.md` para el puntaje de T5; `vendors/<vendor>/matriz/T5.txt` solo para el campo `cat=`
+(categoría del Banco de cada ítem). No abras `docs/`: no verificas de
 nuevo, seleccionas y comparas. Un vendor sin `2_ejecutivo_T5.md` se incluye con la marca «sin informe T5» en todas sus
 celdas y se dice en la cabecera; nunca rellenes sus celdas con suposiciones.
 
@@ -38,10 +39,12 @@ la verificación».
    (ALTA / MEDIA / BAJA, la del informe); Fuente documental tal como la cita el informe (nombre oficial, página u
    hoja/fila); Por qué importa (≤20 palabras). Cierra la sección con una línea de capacidades declaradas sin respaldo
    que no entraron como pros.
-5. Tabla por bloque temático (SDK y lenguaje; SDLC seguro y CI/CD; parametría y extensibilidad; APIs, idempotencia y
-   versionado; SLAs de desarrollo; rendimiento; licencias y mantenimiento de personalizaciones; escrow; ambientes y
-   pruebas): filas = bloques, columnas = vendors, celda = veredicto del informe (Fortaleza / Neutro / Debilidad) con la
-   nota sugerida media del bloque si el informe la da.
+5. Tabla por categoría de la matriz: filas = categorías del campo `cat=` de `vendors/<vendor>/matriz/T5.txt` (son las
+   del Banco y coinciden entre vendors porque la matriz es su plantilla; si un vendor tuviera una categoría distinta, se
+   añade como fila propia), columnas = vendors, celda = veredicto por categoría del informe del vendor (Fortaleza / Neutro
+   / Debilidad) con la evaluación sugerida media si el informe la da. Si el informe de un vendor no trae la tabla por
+   categoría, calcúlala desde `verif/T5.md` y `matriz/T5.txt` y márcalo. Indica la categoría de cada pro y contra de la
+   sección 4 tras el ítem.
 6. Diferencias transversales: 5 a 8 puntos donde los vendors divergen en desarrollo, cada uno con los vendors a cada lado
    y sus fuentes.
 7. Preguntas pendientes por vendor (3 a 5 cada uno), tomadas de la sección de preguntas de su informe.
