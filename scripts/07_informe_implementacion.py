@@ -118,6 +118,7 @@ pct = lambda s: (lambda m: float(m.group(1)) if m else None)(re.search(r'(\d+(?:
 def leer_md(path):
     t = path.read_text(encoding='utf-8-sig')
     for a, b in (('a¦ü', 'á'), ('e¦ü', 'é'), ('i¦ü', 'í'), ('o¦ü', 'ó'), ('u¦ü', 'ú'), ('A¦ü', 'Á'), ('E¦ü', 'É'), ('O¦ü', 'Ó'), ('n¦ā', 'ñ')): t = t.replace(a, b)
+    t = re.sub(r'(?i)b[uú]squedas?\s+en\s+docs/txt(\s+del\s+vendor)?', 'Búsqueda en todos los documentos del vendor', t)
     return t
 
 def cargar_vendor(v):
