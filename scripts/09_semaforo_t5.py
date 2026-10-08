@@ -98,20 +98,12 @@ def main():
           '- Ítems de criticidad Indispensable calificados 1 o 0: ' + ('; '.join(ind_bajos) if ind_bajos else 'ninguno') + '.',
           '', '**Resumen ejecutivo**', '', '<!-- resumen -->', '',
           '## Semáforo por categoría', '',
-         'Una fila por categoría de la hoja T5: color, puntaje, conteo de calificaciones y la conclusión en una frase (la redacta el agente semaforo-t5 a partir de la pregunta, la respuesta del proveedor y el sustento del evaluador de los ítems de esa categoría).', '',
+         'Una fila por categoría de la hoja T5: color, puntaje, conteo de calificaciones y la conclusión redactada («es verde porque, de acuerdo con los criterios evaluados, cumple con…»), que escribe el agente semaforo-t5 a partir de la pregunta, la respuesta del proveedor y el sustento del evaluador de los ítems de esa categoría.', '',
          '| Categoría | Color | Puntaje 0–100 | Ítems | Calificaciones (4 / 3 / 2 / 1 / 0) | Conclusión |', '|---|---|---:|---:|---|---|']
     for cat, its in cats.items():
         pct, (nombre, sim) = cat_res[cat]
         dist = ' / '.join(str(sum(1 for i in its if i['va'] == v)) for v in (4, 3, 2, 1, 0))
         L.append(f'| {cat} | {sim} {nombre} | {pct if pct is not None else "—"} | {len(its)} | {dist} | <!-- conclusion: {cat} --> |')
-    L += ['', '### Por qué cada color', '', 'Lista automática, tomada de la matriz: para cada categoría, los ítems que suman (calificados 4) con el tema de su pregunta, y los que restan (3, 2, 1 o 0) con el sustento que escribió el evaluador. Sin interpretación.', '']
-    for cat, its in cats.items():
-        pct, (nombre, sim) = cat_res[cat]
-        suman = [i for i in its if i['va'] == 4]; restan = [i for i in its if i['va'] is not None and i['va'] < 4]
-        partes = []
-        if suman: partes.append(f'**suman** {len(suman)} en Completamente Cubierto (4): ' + '; '.join(f'{i["id"]} {celda(tema(i["q"]).rstrip(". :"), 70)}' for i in sorted(suman, key=lambda x: int(x["id"][1:]))))
-        if restan: partes.append(f'**restan** {len(restan)}: ' + '; '.join(f'{i["id"]} {i["eval"]} ({i["va"]}){" [Indispensable]" if "indispensable" in i["crit"].lower() else ""} — {celda(i["sust"].rstrip(". "), 110) or "sin sustento del evaluador"}' for i in sorted(restan, key=lambda x: int(x["id"][1:]))))
-        L.append(f'- **{cat} — {sim} {nombre} ({pct if pct is not None else "—"})**: ' + '. '.join(partes) + '.')
     L += ['', '## Sustento por categoría', '', 'Para cada categoría: su color y puntaje, el «Sustento» de la conclusión (lo redacta el agente semaforo-t5 condensando solo la pregunta, la respuesta del proveedor y el sustento del evaluador de la matriz, sin añadir hechos) y, como anexo, sus ítems con la calificación del Banco tal como está en la matriz. El color por ítem (4 🟢 · 3 y 2 🟡 · 1 y 0 🔴) es solo de apoyo para localizar qué ítems sostienen o restan al color de la categoría.', '']
     for cat, its in cats.items():
         v = sum(1 for i in its if COLOR[i['va']][0] == 'VERDE'); a = sum(1 for i in its if COLOR[i['va']][0] == 'AMARILLO'); r = sum(1 for i in its if COLOR[i['va']][0] == 'ROJO')
@@ -125,7 +117,15 @@ def main():
             ev = f'{it["eval"]} ({it["va"]})' if it['va'] is not None else 'Sin calificar (—)'
             L.append(f'| {it["id"]} | {celda(it["crit"])} | {ev} | {sim} {nombre} | {celda(it["q"], 160)} | {celda(it["prov"], 220)} | {celda(it["sust"], 160) or "—"} |')
         L += ['']
-    L += ['## Nota', '', 'Documento generado por scripts/09_semaforo_t5.py a partir de la matriz; sin ranking ni recomendación. Las verificaciones (verif/T5.md) no intervienen en el color.']
+    L += ['', '## Anexo: ítems que suman y que restan por categoría', '', 'Lista automática, tomada de la matriz: para cada categoría, los ítems que suman (calificados 4) con el tema de su pregunta, y los que restan (3, 2, 1 o 0) con el sustento que escribió el evaluador. Sin interpretación.', '']
+    for cat, its in cats.items():
+        pct, (nombre, sim) = cat_res[cat]
+        suman = [i for i in its if i['va'] == 4]; restan = [i for i in its if i['va'] is not None and i['va'] < 4]
+        partes = []
+        if suman: partes.append(f'**suman** {len(suman)} en Completamente Cubierto (4): ' + '; '.join(f'{i["id"]} {celda(tema(i["q"]).rstrip(". :"), 70)}' for i in sorted(suman, key=lambda x: int(x["id"][1:]))))
+        if restan: partes.append(f'**restan** {len(restan)}: ' + '; '.join(f'{i["id"]} {i["eval"]} ({i["va"]}){" [Indispensable]" if "indispensable" in i["crit"].lower() else ""} — {celda(i["sust"].rstrip(". "), 110) or "sin sustento del evaluador"}' for i in sorted(restan, key=lambda x: int(x["id"][1:]))))
+        L.append(f'- **{cat} — {sim} {nombre} ({pct if pct is not None else "—"})**: ' + '. '.join(partes) + '.')
+    L += ['', '## Nota', '', 'Documento generado por scripts/09_semaforo_t5.py a partir de la matriz; sin ranking ni recomendación. Las verificaciones (verif/T5.md) no intervienen en el color.']
     out = base / 'informes' / '9_semaforo_T5.md'; out.parent.mkdir(parents=True, exist_ok=True)
     texto = '\n'.join(L) + '\n'
     if out.exists():   # conserva lo ya redactado por el agente (conclusiones, sustentos y resumen) para la misma categoría

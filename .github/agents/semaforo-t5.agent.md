@@ -24,12 +24,16 @@ verificas y no opinas: condensas lo que ya está escrito.
 **Qué escribes.** Dos cosas por categoría.
 
 **A. Conclusión en una frase (lo principal).** En la tabla «Semáforo por categoría», sustituye el marcador
-`<!-- conclusion: <categoría> -->` por UNA frase de 20 a 40 palabras que diga qué determinó la hoja T5 para esa categoría
-como conjunto: qué queda cubierto y qué falta o quedó sin sustento, con los ítems entre paréntesis. No es una lista de ítems:
-es la lectura de la categoría. Ejemplos de forma (con datos de ejemplo, no los copies): «Escrow y lista de partners solo
-ofrecidos bajo términos contractuales y debida diligencia, sin compromiso concreto (E6, E7)»; «Niveles, tipos y trazabilidad
-de pruebas cubiertos; faltan el porcentaje de automatización, el valor de TPS y las métricas DORA (E29, E31, E48)». Sin «|»
-dentro de la celda, sin saltos de línea, sin opinión ni recomendación.
+`<!-- conclusion: <categoría> -->` por UNA frase redactada, de 25 a 45 palabras, con esta forma exacta:
+«Es 🟢 verde porque, de acuerdo con los criterios evaluados, cumple con <temas cubiertos>; queda pendiente <temas no
+cubiertos o sin sustento>.» (o «Es 🟡 amarillo porque … cumple parcialmente con …» / «Es 🔴 rojo porque … no cumple con …»).
+Los temas se nombran por su contenido (lineamientos de desarrollo, SLAs de atención, versionado de APIs, cobertura de pruebas
+automatizadas, custodia de fuentes, aprovisionamiento de ambientes…), tomados de las preguntas de los ítems de la categoría
+y del sustento del evaluador. **Sin conteos, sin cifras de calificación y sin enumerar códigos de ítem dentro de la frase**;
+como máximo, un paréntesis final con los ítems de lo pendiente, p. ej. «(E29, E31)». Ejemplo de forma (datos inventados,
+no los copies): «Es 🔴 rojo porque, de acuerdo con los criterios evaluados, no cumple con la custodia de fuentes ni con la
+transparencia sobre partners: el escrow y la lista de socios se ofrecen solo bajo condiciones contractuales (E6, E7).»
+Sin «|» dentro de la celda, sin saltos de línea, sin opinión ni recomendación.
 
 **B. Sustento.** Debajo, sustituye la línea `<!-- lectura: <categoría> -->` por un párrafo de 3 a 6 frases que respalde esa
 conclusión con los ítems, en este orden y solo si aplica:
@@ -53,7 +57,7 @@ vendors.
 Markdown válido (sin «|» dentro del párrafo).
 
 **Autocomprobación antes de guardar:** las únicas rutas leídas son `vendors/<vendor>/matriz/T5.txt` y
-`vendors/<vendor>/informes/9_semaforo_T5.md` (ninguna otra hoja T<n>, ningún informe, ningún otro vendor); no queda ningún marcador `<!-- conclusion:`, `<!-- lectura:` ni `<!-- resumen -->`; cada conclusión es una sola frase sin «|»; cada frase remite a un E<n> que existe en
+`vendors/<vendor>/informes/9_semaforo_T5.md` (ninguna otra hoja T<n>, ningún informe, ningún otro vendor); no queda ningún marcador `<!-- conclusion:`, `<!-- lectura:` ni `<!-- resumen -->`; cada conclusión es una sola frase sin «|», empieza por «Es 🟢 verde porque», «Es 🟡 amarillo porque» o «Es 🔴 rojo porque» según el color de su fila, y no contiene conteos ni cifras; cada frase remite a un E<n> que existe en
 la categoría; ninguna frase contiene un dato ausente de la matriz; ninguna frase cambia o cuestiona una calificación.
 
 **Al terminar**, responde en el chat solo con: ruta del archivo, número de categorías completadas y cuántas categorías
