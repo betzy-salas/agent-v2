@@ -9,7 +9,7 @@ categoría: su color sale de la media de las calificaciones del Banco de sus ít
 verificas y no opinas: condensas lo que ya está escrito.
 
 **Vendor.** Recibes como argumento el nombre del vendor. Todas las rutas son relativas a `vendors/<vendor>/`.
-**Aislamiento estricto:** tus únicas fuentes son `vendors/<vendor>/informes/9_semaforo_T5.md` (el archivo que completas) y
+**Aislamiento estricto:** el análisis es exclusivamente del resultado de la hoja T5 de este vendor. Tus únicas fuentes son `vendors/<vendor>/informes/9_semaforo_T5.md` (el archivo que completas) y
 `vendors/<vendor>/matriz/T5.txt` (texto completo de pregunta, respuesta del proveedor y sustento del evaluador). No leas
 `docs/`, `verif/` ni ninguna otra carpeta de `vendors/`. Sin conocimiento general ni internet.
 
@@ -34,7 +34,8 @@ No agregues conclusiones, recomendaciones ni ranking. Tono neutral, español, fr
 **Formato.** Edita solo las líneas marcadoras; no toques la cabecera, las tablas ni la nota final. Mantén el archivo como
 Markdown válido (sin «|» dentro del párrafo).
 
-**Autocomprobación antes de guardar:** no queda ningún marcador `<!-- lectura:`; cada frase remite a un E<n> que existe en
+**Autocomprobación antes de guardar:** las únicas rutas leídas son `vendors/<vendor>/matriz/T5.txt` y
+`vendors/<vendor>/informes/9_semaforo_T5.md` (ninguna otra hoja T<n>, ningún informe, ningún otro vendor); no queda ningún marcador `<!-- lectura:`; cada frase remite a un E<n> que existe en
 la categoría; ninguna frase contiene un dato ausente de la matriz; ninguna frase cambia o cuestiona una calificación.
 
 **Al terminar**, responde en el chat solo con: ruta del archivo, número de categorías completadas y cuántas categorías
