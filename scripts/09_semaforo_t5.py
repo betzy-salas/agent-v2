@@ -48,6 +48,11 @@ def descartable(it):
     q = it['q'].lower().strip()
     return q.startswith('se elimin') or q.startswith('se elemin') or q.startswith('eliminar')
 
+def tema(q):
+    """Tema de la pregunta: quita el verbo introductorio («Indique si», «Indicar», «Describa…») y deja el núcleo."""
+    q = re.sub(r'^(?:indi(?:que|car)|describ(?:a|ir)|detall(?:e|ar)|adjunt(?:e|ar)|especifi(?:que|car)|confirm(?:e|ar)|señal(?:e|ar)|listar|liste|mencion(?:e|ar)|explicar|explique)\s+(?:si\s+|cu[aá]l(?:es)?\s+(?:es|son)\s+|c[oó]mo\s+|qu[eé]\s+)?', '', q.strip(), flags=re.I)
+    return q[0].lower() + q[1:] if q else q
+
 def celda(t, n=None):
     t = (t or '').replace('|', '/').replace('\n', ' ').strip()
     return t if n is None or len(t) <= n else t[:n - 1].rstrip() + '…'
@@ -99,6 +104,14 @@ def main():
         pct, (nombre, sim) = cat_res[cat]
         dist = ' / '.join(str(sum(1 for i in its if i['va'] == v)) for v in (4, 3, 2, 1, 0))
         L.append(f'| {cat} | {sim} {nombre} | {pct if pct is not None else "—"} | {len(its)} | {dist} | <!-- conclusion: {cat} --> |')
+    L += ['', '### Por qué cada color', '', 'Lista automática, tomada de la matriz: para cada categoría, los ítems que suman (calificados 4) con el tema de su pregunta, y los que restan (3, 2, 1 o 0) con el sustento que escribió el evaluador. Sin interpretación.', '']
+    for cat, its in cats.items():
+        pct, (nombre, sim) = cat_res[cat]
+        suman = [i for i in its if i['va'] == 4]; restan = [i for i in its if i['va'] is not None and i['va'] < 4]
+        partes = []
+        if suman: partes.append(f'**suman** {len(suman)} en Completamente Cubierto (4): ' + '; '.join(f'{i["id"]} {celda(tema(i["q"]).rstrip(". :"), 70)}' for i in sorted(suman, key=lambda x: int(x["id"][1:]))))
+        if restan: partes.append(f'**restan** {len(restan)}: ' + '; '.join(f'{i["id"]} {i["eval"]} ({i["va"]}){" [Indispensable]" if "indispensable" in i["crit"].lower() else ""} — {celda(i["sust"].rstrip(". "), 110) or "sin sustento del evaluador"}' for i in sorted(restan, key=lambda x: int(x["id"][1:]))))
+        L.append(f'- **{cat} — {sim} {nombre} ({pct if pct is not None else "—"})**: ' + '. '.join(partes) + '.')
     L += ['', '## Sustento por categoría', '', 'Para cada categoría: su color y puntaje, el «Sustento» de la conclusión (lo redacta el agente semaforo-t5 condensando solo la pregunta, la respuesta del proveedor y el sustento del evaluador de la matriz, sin añadir hechos) y, como anexo, sus ítems con la calificación del Banco tal como está en la matriz. El color por ítem (4 🟢 · 3 y 2 🟡 · 1 y 0 🔴) es solo de apoyo para localizar qué ítems sostienen o restan al color de la categoría.', '']
     for cat, its in cats.items():
         v = sum(1 for i in its if COLOR[i['va']][0] == 'VERDE'); a = sum(1 for i in its if COLOR[i['va']][0] == 'AMARILLO'); r = sum(1 for i in its if COLOR[i['va']][0] == 'ROJO')
@@ -114,7 +127,18 @@ def main():
         L += ['']
     L += ['## Nota', '', 'Documento generado por scripts/09_semaforo_t5.py a partir de la matriz; sin ranking ni recomendación. Las verificaciones (verif/T5.md) no intervienen en el color.']
     out = base / 'informes' / '9_semaforo_T5.md'; out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text('\n'.join(L) + '\n', encoding='utf-8')
+    texto = '\n'.join(L) + '\n'
+    if out.exists():   # conserva lo ya redactado por el agente (conclusiones, sustentos y resumen) para la misma categoría
+        prev = out.read_text(encoding='utf-8-sig'); conservados = 0
+        for cat in cats:
+            m = re.search(r'^\| ' + re.escape(cat) + r' \|(?:[^|\n]*\|){4}\s*(?!<!--)([^|\n]+?)\s*\|\s*$', prev, re.M)
+            if m: texto = texto.replace(f'<!-- conclusion: {cat} -->', m.group(1).strip(), 1); conservados += 1
+            m = re.search(r'\*\*(?:Sustento|Detalle|Lectura)\*\*\n\n(?!<!--)(.+?)\n\n\*\*Ítems \(anexo\)\*\*', prev[prev.find(f'### {cat} —'):] if f'### {cat} —' in prev else '', re.S)
+            if m: texto = texto.replace(f'<!-- lectura: {cat} -->', m.group(1).strip(), 1); conservados += 1
+        m = re.search(r'\*\*Resumen ejecutivo\*\*\n\n(?!<!--)(.+?)\n\n## ', prev, re.S)
+        if m: texto = texto.replace('<!-- resumen -->', m.group(1).strip(), 1); conservados += 1
+        if conservados: print(f'(se conservaron {conservados} textos ya redactados por el agente)')
+    out.write_text(texto, encoding='utf-8')
     print(f'{out}\n{len(items)} ítems en {len(cats)} categorías · categorías 🟢 {tot["VERDE"]} · 🟡 {tot["AMARILLO"]} · 🔴 {tot["ROJO"]}' + (f' · ⚪ {tot["SIN CALIFICAR"]}' if tot['SIN CALIFICAR'] else ''))
 
 if __name__ == '__main__':
