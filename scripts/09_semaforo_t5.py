@@ -130,7 +130,7 @@ def main():
     if out.exists():   # conserva lo ya redactado por el agente (conclusiones, sustentos y resumen) para la misma categoría
         prev = out.read_text(encoding='utf-8-sig'); conservados = 0
         for cat in cats:
-            m = re.search(r'^\| \*?\*?' + re.escape(cat) + r'\*?\*?[^|\n]*\|(?:[^|\n]*\|){1,4}\s*(?!<!--)([^|\n]+?)\s*\|\s*$', prev, re.M)
+            m = re.search(r'^\| \*?\*?' + re.escape(cat) + r'\*?\*?(?: \(\d+ ítems\))? \|(?:[^|\n]*\|){1,4}\s*(?!<!--)([^|\n]+?)\s*\|\s*$', prev, re.M)
             if m: texto = texto.replace(f'<!-- conclusion: {cat} -->', m.group(1).strip(), 1); conservados += 1
             m = re.search(r'\*\*(?:Sustento|Detalle|Lectura)\*\*\n\n(?!<!--)(.+?)\n\n\*\*Ítems \(anexo\)\*\*', prev[prev.find(f'### {cat} —'):] if f'### {cat} —' in prev else '', re.S)
             if m: texto = texto.replace(f'<!-- lectura: {cat} -->', m.group(1).strip(), 1); conservados += 1
