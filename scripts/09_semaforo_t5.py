@@ -98,18 +98,17 @@ def main():
           '- Ítems de criticidad Indispensable calificados 1 o 0: ' + ('; '.join(ind_bajos) if ind_bajos else 'ninguno') + '.',
           '', '**Resumen ejecutivo**', '', '<!-- resumen -->', '',
           '## Semáforo por categoría', '',
-         'Una fila por categoría de la hoja T5: color, puntaje, conteo de calificaciones y la conclusión redactada («es verde porque, de acuerdo con los criterios evaluados, cumple con…»), que escribe el agente semaforo-t5 a partir de la pregunta, la respuesta del proveedor y el sustento del evaluador de los ítems de esa categoría.', '',
-         '| Categoría | Color | Puntaje 0–100 | Ítems | Calificaciones (4 / 3 / 2 / 1 / 0) | Conclusión |', '|---|---|---:|---:|---|---|']
+         'Una fila por categoría de la hoja T5: semáforo (color y puntaje) y la conclusión, un párrafo que escribe el agente semaforo-t5 a partir de la pregunta, la respuesta del proveedor y el sustento del evaluador de los ítems de esa categoría. El detalle de calificaciones por categoría está en el sustento y en el anexo final.', '',
+         '| Categoría | Semáforo | Conclusión |', '|---|---|---|']
     for cat, its in cats.items():
         pct, (nombre, sim) = cat_res[cat]
-        dist = ' / '.join(str(sum(1 for i in its if i['va'] == v)) for v in (4, 3, 2, 1, 0))
-        L.append(f'| {cat} | {sim} {nombre} | {pct if pct is not None else "—"} | {len(its)} | {dist} | <!-- conclusion: {cat} --> |')
+        L.append(f'| **{cat}** ({len(its)} ítems) | {sim} **{nombre}** · {pct if pct is not None else "—"} | <!-- conclusion: {cat} --> |')
     L += ['', '## Sustento por categoría', '', 'Para cada categoría: su color y puntaje, el «Sustento» de la conclusión (lo redacta el agente semaforo-t5 condensando solo la pregunta, la respuesta del proveedor y el sustento del evaluador de la matriz, sin añadir hechos) y, como anexo, sus ítems con la calificación del Banco tal como está en la matriz. El color por ítem (4 🟢 · 3 y 2 🟡 · 1 y 0 🔴) es solo de apoyo para localizar qué ítems sostienen o restan al color de la categoría.', '']
     for cat, its in cats.items():
         v = sum(1 for i in its if COLOR[i['va']][0] == 'VERDE'); a = sum(1 for i in its if COLOR[i['va']][0] == 'AMARILLO'); r = sum(1 for i in its if COLOR[i['va']][0] == 'ROJO')
         pct, (nombre, sim) = cat_res[cat]
         ind = sum(1 for i in its if 'indispensable' in i['crit'].lower())
-        L += [f'### {cat} — {sim} {nombre} ({pct if pct is not None else "—"})', '', f'{len(its)} ítems ({ind} Indispensables) · calificaciones del Banco: 🟢 (4) {v} · 🟡 (3 y 2) {a} · 🔴 (1 y 0) {r}', '',
+        L += [f'### {cat} — {sim} {nombre} ({pct if pct is not None else "—"})', '', f'{len(its)} ítems ({ind} Indispensables) · calificaciones del Banco: ' + ' · '.join(f'{sum(1 for i in its if i["va"] == x)} × ({x})' for x in (4, 3, 2, 1, 0) if sum(1 for i in its if i["va"] == x)), '',
               '**Sustento**', '', f'<!-- lectura: {cat} -->', '', '**Ítems (anexo)**', '',
               '| Ítem | Crit | Evaluación Banco | Color del ítem | Pregunta | Respuesta del proveedor | Sustento del evaluador |', '|---|---|---|---|---|---|---|']
         for it in sorted(its, key=lambda i: int(i['id'][1:])):
@@ -131,7 +130,7 @@ def main():
     if out.exists():   # conserva lo ya redactado por el agente (conclusiones, sustentos y resumen) para la misma categoría
         prev = out.read_text(encoding='utf-8-sig'); conservados = 0
         for cat in cats:
-            m = re.search(r'^\| ' + re.escape(cat) + r' \|(?:[^|\n]*\|){4}\s*(?!<!--)([^|\n]+?)\s*\|\s*$', prev, re.M)
+            m = re.search(r'^\| \*?\*?' + re.escape(cat) + r'\*?\*?[^|\n]*\|(?:[^|\n]*\|){1,4}\s*(?!<!--)([^|\n]+?)\s*\|\s*$', prev, re.M)
             if m: texto = texto.replace(f'<!-- conclusion: {cat} -->', m.group(1).strip(), 1); conservados += 1
             m = re.search(r'\*\*(?:Sustento|Detalle|Lectura)\*\*\n\n(?!<!--)(.+?)\n\n\*\*Ítems \(anexo\)\*\*', prev[prev.find(f'### {cat} —'):] if f'### {cat} —' in prev else '', re.S)
             if m: texto = texto.replace(f'<!-- lectura: {cat} -->', m.group(1).strip(), 1); conservados += 1
