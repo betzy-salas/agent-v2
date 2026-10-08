@@ -31,11 +31,19 @@ verificas y no opinas: condensas lo que ya está escrito.
 4. Si un ítem lleva nota de otro evaluador (líneas «BS:» u otras siglas en la matriz), cítala como «nota del evaluador».
 No agregues conclusiones, recomendaciones ni ranking. Tono neutral, español, frases cortas.
 
+**Resumen ejecutivo.** Después de completar los 16 detalles, sustituye la línea `<!-- resumen -->` de la sección «Resumen del
+resultado» por un párrafo de 5 a 8 frases que resuma el resultado de la dimensión Capacidades de desarrollo para este vendor,
+usando solo la «Base» de esa sección y los detalles por categoría que acabas de escribir: primera frase con el puntaje T5, su
+nivel y el reparto de categorías por color; después qué sostiene el resultado (las categorías en 🟢 con mayor puntaje y lo que
+el proveedor declaró en ellas, con E<n>), qué lo resta (cada categoría en 🔴 y 🟡 con su puntaje y la razón que dio el
+evaluador, con E<n>) y los ítems Indispensables calificados 1 o 0. Sin opinión, sin recomendación, sin comparar con otros
+vendors.
+
 **Formato.** Edita solo las líneas marcadoras; no toques la cabecera, las tablas ni la nota final. Mantén el archivo como
 Markdown válido (sin «|» dentro del párrafo).
 
 **Autocomprobación antes de guardar:** las únicas rutas leídas son `vendors/<vendor>/matriz/T5.txt` y
-`vendors/<vendor>/informes/9_semaforo_T5.md` (ninguna otra hoja T<n>, ningún informe, ningún otro vendor); no queda ningún marcador `<!-- lectura:`; cada frase remite a un E<n> que existe en
+`vendors/<vendor>/informes/9_semaforo_T5.md` (ninguna otra hoja T<n>, ningún informe, ningún otro vendor); no queda ningún marcador `<!-- lectura:` ni `<!-- resumen -->`; cada frase remite a un E<n> que existe en
 la categoría; ninguna frase contiene un dato ausente de la matriz; ninguna frase cambia o cuestiona una calificación.
 
 **Al terminar**, responde en el chat solo con: ruta del archivo, número de categorías completadas y cuántas categorías

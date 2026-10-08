@@ -77,7 +77,22 @@ def main():
          '- Puntaje de la categoría: media de las calificaciones del Banco (0–4) de sus ítems, sobre 4, en escala 0–100 (misma fórmula del consolidado). Los ítems sin calificar no entran en la media.',
          '- Color de la categoría según los niveles de cumplimiento oficiales (CLAUDE.md, «Niveles de cumplimiento»): 🟢 VERDE positivo ≥ 70 (Cumple / Cumple plenamente) · 🟡 AMARILLO parcial 50–69 (Parcial) · 🔴 ROJO negativo < 50 (No cumple).',
          f'- Categorías: 🟢 {tot["VERDE"]} · 🟡 {tot["AMARILLO"]} · 🔴 {tot["ROJO"]}' + (f' · ⚪ {tot["SIN CALIFICAR"]}' if tot['SIN CALIFICAR'] else ''),
-         '', '## Semáforo por categoría', '',
+         '', '## Resumen del resultado', '']
+    vas = [i['va'] for i in items if i['va'] is not None]
+    pct_t5 = round(sum(vas) / (4 * len(vas)) * 100, 1) if vas else None
+    nivel = 'Cumple plenamente' if pct_t5 is not None and pct_t5 >= 85 else 'Cumple' if pct_t5 is not None and pct_t5 >= 70 else 'Parcial' if pct_t5 is not None and pct_t5 >= 50 else 'No cumple' if pct_t5 is not None else '—'
+    dist_t5 = ' · '.join(f'{n} × {t} ({v})' for v, t, n in ((4, 'Completamente Cubierto', sum(1 for x in vas if x == 4)), (3, 'Cubierto: Modificación Menor', sum(1 for x in vas if x == 3)), (2, 'Cubierto: Modificación Mayor', sum(1 for x in vas if x == 2)), (1, 'Parcialmente Cubierto', sum(1 for x in vas if x == 1)), (0, 'No Cubierto', sum(1 for x in vas if x == 0))) if n)
+    rojas = [c for c in cats if cat_res[c][1][0] == 'ROJO']; amarillas = [c for c in cats if cat_res[c][1][0] == 'AMARILLO']; verdes = [c for c in cats if cat_res[c][1][0] == 'VERDE']
+    ind_bajos = [f"{i['id']} ({i['cat']})" for i in items if 'indispensable' in i['crit'].lower() and i['va'] is not None and i['va'] <= 1]
+    L += ['**Base (calificación del Banco en la hoja T5, sin recalificar)**', '',
+          f'- Puntaje T5 de {vendor}: **{pct_t5 if pct_t5 is not None else "—"} / 100** (media de las {len(vas)} calificaciones sobre 4) → nivel **{nivel}** según los niveles de cumplimiento oficiales (≥ 85 Cumple plenamente · 70–84 Cumple · 50–69 Parcial · < 50 No cumple).',
+          f'- Distribución de calificaciones: {dist_t5}.',
+          f'- Categorías: 🟢 {len(verdes)} verdes · 🟡 {len(amarillas)} amarillas · 🔴 {len(rojas)} rojas, de {len(cats)}.',
+          '- Categorías en 🔴: ' + ('; '.join(f'{c} ({cat_res[c][0]})' for c in rojas) if rojas else 'ninguna') + '.',
+          '- Categorías en 🟡: ' + ('; '.join(f'{c} ({cat_res[c][0]})' for c in amarillas) if amarillas else 'ninguna') + '.',
+          '- Ítems de criticidad Indispensable calificados 1 o 0: ' + ('; '.join(ind_bajos) if ind_bajos else 'ninguno') + '.',
+          '', '**Resumen ejecutivo**', '', '<!-- resumen -->', '',
+          '## Semáforo por categoría', '',
          '| Categoría | Color | Puntaje 0–100 | Ítems | Calificaciones del Banco (4 / 3 / 2 / 1 / 0) | Criticidad Indispensable |', '|---|---|---:|---:|---|---|']
     for cat, its in cats.items():
         pct, (nombre, sim) = cat_res[cat]
