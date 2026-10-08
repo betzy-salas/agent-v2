@@ -179,7 +179,7 @@ python scripts/04_ingesta.py <vendor>             # 01 PDF→txt, 01a .toc.md, 0
 # comparativos entre vendors: analista-despliegue → vendors/COMPARATIVO_DESPLIEGUE.md;
 #   comparador-implementacion (tras verificar y redactar la implementación de cada vendor) → vendors/COMPARATIVO_IMPLEMENTACION.md;
 #   comparador-t5 (tras el informe ejecutivo de T5 de cada vendor) → vendors/COMPARATIVO_T5.md
-python scripts/09_semaforo_t5.py <vendor>     # informes/9_semaforo_T5.md: color fijo por ítem desde la calificación del Banco en T5; luego el agente semaforo-t5 redacta la lectura
+python scripts/09_semaforo_t5.py <vendor>     # informes/9_semaforo_T5.md: color por categoría (media de la calificación del Banco en T5 y niveles oficiales); luego el agente semaforo-t5 redacta el detalle
 python scripts/06_validar_verif.py <vendor>       # valida filas, formato, VA y citas de cada verif/T<n>.md
 python scripts/03_consolidar.py <vendor>          # verif/00_consolidado.md
 # lanzar los agentes redactores y el revisor con el vendor

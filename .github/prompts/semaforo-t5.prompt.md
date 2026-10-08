@@ -1,10 +1,10 @@
 ---
 mode: 'agent'
 agent: 'semaforo-t5'
-description: 'Completa la Lectura por categoría del semáforo T5 de un vendor en vendors/<vendor>/informes/9_semaforo_T5.md (antes: scripts/09_semaforo_t5.py <vendor>)'
+description: 'Completa el Detalle por categoría del semáforo T5 de un vendor en vendors/<vendor>/informes/9_semaforo_T5.md (antes: scripts/09_semaforo_t5.py <vendor>)'
 tools: ['codebase', 'search', 'editFiles']
 ---
-Completa la «Lectura» de cada categoría del semáforo T5 del vendor ${input:vendor:nombre de la carpeta en vendors/}.
+Completa el «Detalle» de cada categoría del semáforo T5 del vendor ${input:vendor:nombre de la carpeta en vendors/}.
 
 Sigue .github/copilot-instructions.md y tu definición de agente. Fuentes exclusivas: vendors/${input:vendor}/informes/9_semaforo_T5.md
 (generado por scripts/09_semaforo_t5.py) y vendors/${input:vendor}/matriz/T5.txt. No abras docs/ ni verif/. No cambies ni
