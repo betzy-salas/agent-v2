@@ -131,8 +131,8 @@ y fuente, tabla por bloque temático, diferencias transversales y preguntas. Sin
 ## Paso 7e — Semáforo de la hoja T5 por categoría (por vendor)
 Un color por categoría de la hoja T5, sin recalificar: el puntaje de la categoría es la media de las calificaciones del
 Banco (columna VA) de sus ítems sobre 4, en 0–100, y el color sigue los niveles oficiales (≥ 70 🟢 verde, 50–69 🟡 amarillo,
-< 50 🔴 rojo). El script genera la tabla y el anexo de ítems; luego el agente redacta el «Detalle» de cada categoría
-condensando pregunta, respuesta del proveedor y sustento del evaluador, sin añadir hechos. Solo requiere la ingesta (matriz/T5.txt).
+< 50 🔴 rojo). El script genera la tabla y el anexo de ítems; luego el agente escribe, por categoría, una conclusión en una frase y su sustento, y el resumen
+ejecutivo, condensando pregunta, respuesta del proveedor y sustento del evaluador, sin añadir hechos. Solo requiere la ingesta (matriz/T5.txt).
 ```
 .venv\Scripts\python scripts\09_semaforo_t5.py <vendor>
 /semaforo-t5 <vendor>

@@ -93,18 +93,19 @@ def main():
           '- Ítems de criticidad Indispensable calificados 1 o 0: ' + ('; '.join(ind_bajos) if ind_bajos else 'ninguno') + '.',
           '', '**Resumen ejecutivo**', '', '<!-- resumen -->', '',
           '## Semáforo por categoría', '',
-         '| Categoría | Color | Puntaje 0–100 | Ítems | Calificaciones del Banco (4 / 3 / 2 / 1 / 0) | Criticidad Indispensable |', '|---|---|---:|---:|---|---|']
+         'Una fila por categoría de la hoja T5: color, puntaje, conteo de calificaciones y la conclusión en una frase (la redacta el agente semaforo-t5 a partir de la pregunta, la respuesta del proveedor y el sustento del evaluador de los ítems de esa categoría).', '',
+         '| Categoría | Color | Puntaje 0–100 | Ítems | Calificaciones (4 / 3 / 2 / 1 / 0) | Conclusión |', '|---|---|---:|---:|---|---|']
     for cat, its in cats.items():
         pct, (nombre, sim) = cat_res[cat]
         dist = ' / '.join(str(sum(1 for i in its if i['va'] == v)) for v in (4, 3, 2, 1, 0))
-        ind = sum(1 for i in its if 'indispensable' in i['crit'].lower())
-        L.append(f'| {cat} | {sim} {nombre} | {pct if pct is not None else "—"} | {len(its)} | {dist} | {ind} de {len(its)} |')
-    L += ['', '## Detalle por categoría', '', 'Para cada categoría: su color y puntaje, el «Detalle» (lo redacta el agente semaforo-t5 condensando solo la pregunta, la respuesta del proveedor y el sustento del evaluador de la matriz, sin añadir hechos) y, como anexo, sus ítems con la calificación del Banco tal como está en la matriz. El color por ítem (4 🟢 · 3 y 2 🟡 · 1 y 0 🔴) es solo de apoyo para localizar qué ítems sostienen o restan al color de la categoría.', '']
+        L.append(f'| {cat} | {sim} {nombre} | {pct if pct is not None else "—"} | {len(its)} | {dist} | <!-- conclusion: {cat} --> |')
+    L += ['', '## Sustento por categoría', '', 'Para cada categoría: su color y puntaje, el «Sustento» de la conclusión (lo redacta el agente semaforo-t5 condensando solo la pregunta, la respuesta del proveedor y el sustento del evaluador de la matriz, sin añadir hechos) y, como anexo, sus ítems con la calificación del Banco tal como está en la matriz. El color por ítem (4 🟢 · 3 y 2 🟡 · 1 y 0 🔴) es solo de apoyo para localizar qué ítems sostienen o restan al color de la categoría.', '']
     for cat, its in cats.items():
         v = sum(1 for i in its if COLOR[i['va']][0] == 'VERDE'); a = sum(1 for i in its if COLOR[i['va']][0] == 'AMARILLO'); r = sum(1 for i in its if COLOR[i['va']][0] == 'ROJO')
         pct, (nombre, sim) = cat_res[cat]
-        L += [f'### {cat} — {sim} {nombre} ({pct if pct is not None else "—"})', '', f'{len(its)} ítems · calificaciones del Banco: 🟢 (4) {v} · 🟡 (3 y 2) {a} · 🔴 (1 y 0) {r}', '',
-              '**Detalle**', '', f'<!-- lectura: {cat} -->', '', '**Ítems (anexo)**', '',
+        ind = sum(1 for i in its if 'indispensable' in i['crit'].lower())
+        L += [f'### {cat} — {sim} {nombre} ({pct if pct is not None else "—"})', '', f'{len(its)} ítems ({ind} Indispensables) · calificaciones del Banco: 🟢 (4) {v} · 🟡 (3 y 2) {a} · 🔴 (1 y 0) {r}', '',
+              '**Sustento**', '', f'<!-- lectura: {cat} -->', '', '**Ítems (anexo)**', '',
               '| Ítem | Crit | Evaluación Banco | Color del ítem | Pregunta | Respuesta del proveedor | Sustento del evaluador |', '|---|---|---|---|---|---|---|']
         for it in sorted(its, key=lambda i: int(i['id'][1:])):
             nombre, sim = COLOR[it['va']]
