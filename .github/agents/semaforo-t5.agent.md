@@ -23,8 +23,9 @@ verificas y no opinas: condensas lo que ya está escrito.
 
 **Qué escribes.** Dos cosas por categoría.
 
-**A. Conclusión de la categoría (lo principal).** En la tabla «Semáforo por categoría», sustituye el marcador
-`<!-- conclusion: <categoría> -->` por un párrafo de 3 a 5 frases (60 a 110 palabras) que resuma, en prosa natural de comité,
+**A. Conclusión de la categoría (lo principal).** En la tabla «Semáforo por categoría», la celda Conclusión de cada fila contiene el
+marcador `<!-- conclusion: <categoría> -->` seguido de un texto automático que termina en «(Texto automático a partir de la
+matriz; …)». Sustituye **todo el contenido de esa celda** (marcador y texto automático) por un párrafo de 3 a 5 frases (60 a 110 palabras) que resuma, en prosa natural de comité,
 qué determinó la hoja T5 para esa categoría: qué propone o declara el proveedor para cubrirla (tomado de sus respuestas), en
 qué medida eso responde a lo que pide el Banco (tomado de las preguntas) y qué observó el evaluador que falta, queda
 condicionado o sin sustento (tomado de su sustento). El color y el puntaje ya están en la fila: no hace falta repetir «es

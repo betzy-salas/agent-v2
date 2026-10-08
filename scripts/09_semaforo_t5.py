@@ -53,6 +53,25 @@ def tema(q):
     q = re.sub(r'^(?:indi(?:que|car)|describ(?:a|ir)|detall(?:e|ar)|adjunt(?:e|ar)|especifi(?:que|car)|confirm(?:e|ar)|señal(?:e|ar)|listar|liste|mencion(?:e|ar)|explicar|explique)\s+(?:si\s+|cu[aá]l(?:es)?\s+(?:es|son)\s+|c[oó]mo\s+|qu[eé]\s+)?', '', q.strip(), flags=re.I)
     return q[0].lower() + q[1:] if q else q
 
+def primera_frase(t, n=130):
+    t = re.sub(r'^\s*(?:Definir si se debe volver Killer|Depende de la respuesta de E\d+)\s*\|\s*', '', (t or '').strip())
+    t = t.split(' | ')[-1].strip() if ' | ' in t[:80] else t
+    f = re.split(r'(?<=[.;])\s+', t)[0].strip()
+    return celda(f, n)
+
+def texto_automatico(its, nombre, sim, pct):
+    """Descripción automática de la categoría: qué declara el proveedor en lo cubierto y qué observó el evaluador en lo demás. Sin interpretación."""
+    cubiertos = sorted([i for i in its if i['va'] == 4], key=lambda x: int(x['id'][1:]))
+    restan = sorted([i for i in its if i['va'] is not None and i['va'] < 4], key=lambda x: int(x['id'][1:]))
+    partes = [f'{sim} {nombre} ({pct}).']
+    if cubiertos:
+        partes.append('Cubierto según el Banco: ' + ' '.join(f'{i["id"]}, {celda(tema(i["q"]).rstrip(". :"), 60)}: «{primera_frase(i["prov"])}»' + ('.' if not primera_frase(i["prov"]).endswith('.') else '') for i in cubiertos[:5]) + (f' Y {len(cubiertos) - 5} ítems más cubiertos.' if len(cubiertos) > 5 else ''))
+    if restan:
+        partes.append('Observado por el evaluador: ' + ' '.join(f'{i["id"]} ({i["eval"]} {i["va"]}{", Indispensable" if "indispensable" in i["crit"].lower() else ""}): {celda(i["sust"].rstrip(". "), 130) or "sin sustento escrito"}.' for i in restan))
+    else:
+        partes.append('El evaluador no dejó observaciones que resten en esta categoría.')
+    return ' '.join(partes) + ' (Texto automático a partir de la matriz; el agente semaforo-t5 lo sustituye por la conclusión redactada.)'
+
 def celda(t, n=None):
     t = (t or '').replace('|', '/').replace('\n', ' ').strip()
     return t if n is None or len(t) <= n else t[:n - 1].rstrip() + '…'
@@ -102,7 +121,7 @@ def main():
          '| Categoría | Semáforo | Conclusión |', '|---|---|---|']
     for cat, its in cats.items():
         pct, (nombre, sim) = cat_res[cat]
-        L.append(f'| **{cat}** ({len(its)} ítems) | {sim} **{nombre}** · {pct if pct is not None else "—"} | <!-- conclusion: {cat} --> |')
+        L.append(f'| **{cat}** ({len(its)} ítems) | {sim} **{nombre}** · {pct if pct is not None else "—"} | <!-- conclusion: {cat} -->{texto_automatico(its, nombre, sim, pct if pct is not None else "—")} |')
     L += ['', '## Sustento por categoría', '', 'Para cada categoría: su color y puntaje, el «Sustento» de la conclusión (lo redacta el agente semaforo-t5 condensando solo la pregunta, la respuesta del proveedor y el sustento del evaluador de la matriz, sin añadir hechos) y, como anexo, sus ítems con la calificación del Banco tal como está en la matriz. El color por ítem (4 🟢 · 3 y 2 🟡 · 1 y 0 🔴) es solo de apoyo para localizar qué ítems sostienen o restan al color de la categoría.', '']
     for cat, its in cats.items():
         v = sum(1 for i in its if COLOR[i['va']][0] == 'VERDE'); a = sum(1 for i in its if COLOR[i['va']][0] == 'AMARILLO'); r = sum(1 for i in its if COLOR[i['va']][0] == 'ROJO')
@@ -131,7 +150,9 @@ def main():
         prev = out.read_text(encoding='utf-8-sig'); conservados = 0
         for cat in cats:
             m = re.search(r'^\| \*?\*?' + re.escape(cat) + r'\*?\*?(?: \(\d+ ítems\))? \|(?:[^|\n]*\|){1,4}\s*(?!<!--)([^|\n]+?)\s*\|\s*$', prev, re.M)
-            if m: texto = texto.replace(f'<!-- conclusion: {cat} -->', m.group(1).strip(), 1); conservados += 1
+            if m:
+                import re as _re
+                texto = _re.sub(r'<!-- conclusion: ' + _re.escape(cat) + r' -->[^|\n]*', lambda _m: m.group(1).strip(), texto, count=1); conservados += 1
             m = re.search(r'\*\*(?:Sustento|Detalle|Lectura)\*\*\n\n(?!<!--)(.+?)\n\n\*\*Ítems \(anexo\)\*\*', prev[prev.find(f'### {cat} —'):] if f'### {cat} —' in prev else '', re.S)
             if m: texto = texto.replace(f'<!-- lectura: {cat} -->', m.group(1).strip(), 1); conservados += 1
         m = re.search(r'\*\*Resumen ejecutivo\*\*\n\n(?!<!--)(.+?)\n\n## ', prev, re.S)
