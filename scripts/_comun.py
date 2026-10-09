@@ -35,7 +35,7 @@ COLUMNAS = {
     'pregunta': 'Descripción',
     'criticidad': 'Nivel de criticidad',
     'criticidad_nueva': 'Nuevo Nivel',
-    'estado': 'Nuevo / Modificado',              # Eliminar / Omitir Respuesta descartan el ítem
+    'estado': 'Nuevo / Modificado',              # solo «Eliminar» descarta el ítem; «Omitir Respuesta» se conserva
     'respuesta': ('Respuesta del Proveedor', 'Comentario'),   # prefijos de las columnas de respuesta del proveedor (v1, v2…)
     'evaluador': 'Evaluador',                    # nombre del evaluador (prefijo)
     'eval_texto': 'Eval',                        # clasificación textual (exacto)

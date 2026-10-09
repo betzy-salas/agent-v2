@@ -28,7 +28,7 @@ for s in ['T1','T2','T3','T4','T5','T6','T7','T8']:
         o.write(f'# Hoja {s}\n')
         for r in rows[h+1:]:
             if not r[iN] or not str(r[iN]).startswith('E'): continue
-            if iEst is not None and str(r[iEst]) in ('Eliminar', 'Omitir Respuesta'): continue
+            if iEst is not None and str(r[iEst]).strip() == 'Eliminar': continue   # solo «Eliminar» descarta; «Omitir Respuesta» se conserva (el Banco la califica y entra en su consolidado)
             if r[iQ] and str(r[iQ]).strip().lower().startswith(('se elimin', 'se elemin')): continue  # p.ej. T7-E32 «Se eleminó requerimiento» con estado vacío
             crit = (r[iCrit2] if iCrit2 is not None and r[iCrit2] else r[iCrit]) or ''
             resp = ' | '.join(str(r[i]) for i in iResp if r[i] and str(r[i]).strip() not in ('Sin cambios.', 'None', 'nan'))
