@@ -23,6 +23,7 @@ SIM = {'VERDE': '🟢', 'AMARILLO': '🟡', 'ROJO': '🔴', 'SIN CALIFICAR': '�
 def nivel_de(pct): return 'Cumple plenamente' if pct >= 85 else 'Cumple' if pct >= 70 else 'Parcial' if pct >= 50 else 'No cumple'
 def color_de(pct): return 'VERDE' if pct >= 70 else 'AMARILLO' if pct >= 50 else 'ROJO'
 def esc(t): return html.escape(str(t or ''))
+def codigos(t): return re.findall(r'E\d+', t or '')
 def dist_corta(t): return re.sub(r' × [^()]*\((\d)\)', r' × \1', t or '')
 
 # ----------------------------------------------------------------------------- lectura de los semáforos
@@ -141,15 +142,15 @@ def chip(color, pct, big=False):
 
 def svg_final(V):
     """Barras horizontales del puntaje T5 por vendor, color por nivel; etiquetas directas."""
-    w, fila, top = 560, 40, 14; h = top + fila * len(V) + 26
+    w, fila, top = 640, 40, 14; h = top + fila * len(V) + 26
     S = [f'<svg viewBox="0 0 {w} {h}" width="100%" role="img" aria-label="Puntaje T5 por vendor"><style>text{{font-family:Source Sans 3,sans-serif}}</style>']
     for x in (0, 25, 50, 70, 85, 100):
-        px = 150 + x * 3.8; S.append(f'<line x1="{px}" y1="{top - 4}" x2="{px}" y2="{h - 22}" stroke="#e3e2de" stroke-width="1"/><text x="{px}" y="{h - 8}" font-size="10" text-anchor="middle" fill="#6b6f76">{x}</text>')
+        px = 150 + x * 3.3; S.append(f'<line x1="{px}" y1="{top - 4}" x2="{px}" y2="{h - 22}" stroke="#e3e2de" stroke-width="1"/><text x="{px}" y="{h - 8}" font-size="10" text-anchor="middle" fill="#6b6f76">{x}</text>')
     for i, d in enumerate(V):
         y = top + i * fila; bg, _ = NIVEL_COLOR[color_de(d['pct'])]
         S.append(f'<text x="142" y="{y + 20}" font-size="13" font-weight="700" text-anchor="end" fill="#1b1b1b">{esc(m.nombre(d["vendor"]))}</text>')
-        S.append(f'<rect x="150" y="{y + 6}" width="{d["pct"] * 3.8:.1f}" height="22" rx="5" fill="{bg}"/>')
-        S.append(f'<text x="{150 + d["pct"] * 3.8 + 8:.1f}" y="{y + 21}" font-size="12" font-family="JetBrains Mono,monospace" fill="#1b1b1b">{d["pct"]} · {esc(d["nivel"])}</text>')
+        S.append(f'<rect x="150" y="{y + 6}" width="{d["pct"] * 3.3:.1f}" height="22" rx="5" fill="{bg}"/>')
+        S.append(f'<text x="{150 + d["pct"] * 3.3 + 8:.1f}" y="{y + 21}" font-size="12" font-family="JetBrains Mono,monospace" fill="#1b1b1b">{d["pct"]} · {esc(d["nivel"])}</text>')
     return ''.join(S) + '</svg>'
 
 def construir_presentacion(V, base, hoy):
@@ -177,8 +178,8 @@ def construir_presentacion(V, base, hoy):
         com = por_vendor.get(m.nombre(d['vendor'])) or por_vendor.get(d['vendor']) or ''
         H.append(f'<section class="slide"><p class="slide-kicker">Vendor</p><h2 style="border-top:6px solid {col};padding-top:8px">{esc(m.nombre(d["vendor"]))} · {d["pct"]} / 100 · {esc(d["nivel"])}</h2><p class="sub">{n["VERDE"]} categorías en verde · {n["AMARILLO"]} en amarillo · {n["ROJO"]} en rojo · {d["items"] or "—"} ítems calificados.</p><div class="vslide"><div><div class="bars">{barras}</div></div><div>'
                  + (f'<div class="coment" style="--vc:{col}"><h4>Comentario</h4>' + m.md_to_html(com) + '</div>' if com else '')
-                 + (f'<div class="coment" style="--vc:{col};margin-top:10px"><h4>Resumen del semáforo</h4>' + m.md_to_html(d["resumen"]) + '</div>' if d['resumen'] else '')
-                 + (f'<p class="small" style="margin-top:8px">Indispensables calificados 1 o 0: {esc(d["indispensables"])}.</p>' if d['indispensables'] and d['indispensables'] != 'ninguno' else '') + '</div></div></section>')
+                 + (f'<div class="coment" style="--vc:{col};margin-top:10px"><h4>Resumen del semáforo</h4>' + m.md_to_html(d["resumen"]) + '</div>' if d['resumen'] and not com else '')
+                 + (f'<p class="small" style="margin-top:8px">Ítems de criticidad Indispensable calificados 1 o 0 ({len(codigos(d["indispensables"]))}): {esc(", ".join(codigos(d["indispensables"])))}.</p>' if d['indispensables'] and d['indispensables'] != 'ninguno' else '') + '</div></div></section>')
     # 5 comentarios por categoría (dos diapositivas)
     if any(por_cat.get(c) for c in cats):
         mitad = (len(cats) + 1) // 2
