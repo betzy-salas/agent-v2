@@ -140,7 +140,8 @@ ejecutivo, condensando pregunta, respuesta del proveedor y sustento del evaluado
 
 ## Paso 7f — Presentación de la hoja T5 (ranking, puntajes por categoría, fichas por vendor y comentarios)
 Un solo agente lo hace todo, en una carpeta aparte para no mezclar con el expediente (`presentacion_t5/`): regenera la matriz T5
-de cada vendor desde su Excel (`02_matriz_a_texto.py <vendor> --hoja T5`, ingesta corregida), genera el semáforo
+de cada vendor desde su Excel (`02_matriz_a_texto.py <vendor> --hoja T5`, ingesta corregida), verifica la hoja T5 contra los documentos del vendor si aún no existe `verif/T5.md` (los sustentos
+de la presentación salen de esas evidencias) y la valida con 06, genera el semáforo
 de cada vendor con el script 09 (puntaje ponderado por criticidad, igual al consolidado del Banco), redacta sus conclusiones,
 escribe la ficha de cada vendor (fortalezas, debilidades, pendientes, contradicciones, resumen por categoría; usa `verif/T5.md`
 y `2_ejecutivo_T5.md` si existen), arma el comparativo con el script 10, redacta los comentarios y genera las diapositivas
