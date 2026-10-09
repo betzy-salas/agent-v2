@@ -10,8 +10,8 @@ definiciones de los agentes `semaforo-t5`, `redactor-ficha-t5` y `comparador-sem
 son las reglas de redacción que debes aplicar en cada paso).
 
 **Entradas.** Una carpeta base (por defecto `presentacion_t5/`, para no mezclar con el expediente) y la lista de vendors
-(por defecto, todas las carpetas de `vendors/`). Para cada vendor necesitas su matriz T5 en texto: `vendors/<vendor>/matriz/T5.txt`
-(generada por la ingesta) o un archivo indicado por la usuaria, p. ej. `vendors/<vendor>/matriz/T5_<VENDOR>.txt`. Si existen,
+(por defecto, todas las carpetas de `vendors/`). Para cada vendor necesitas su Excel de evaluación en `vendors/<vendor>/docs/raw/` (la ingesta genera la matriz T5 en el paso 0)
+o, si no está, una matriz T5 en texto indicada por la usuaria, p. ej. `vendors/<vendor>/matriz/T5_<VENDOR>.txt`. Si existen,
 también usas `vendors/<vendor>/verif/T5.md` y `vendors/<vendor>/informes/2_ejecutivo_T5.md`; si no existen, lo anotas y sigues.
 
 **Reglas que no se negocian.** Las calificaciones son las del Banco en la matriz; nada se recalifica. Los puntajes los calculan
@@ -21,6 +21,10 @@ fuente. Sin conocimiento general ni internet. Los textos van escritos en los arc
 el chat.
 
 **Procedimiento (en este orden; no saltes pasos):**
+0. Por cada vendor, regenera su matriz T5 desde el Excel de evaluación del Banco con la ingesta corregida (conserva las filas
+   «Omitir Respuesta»; solo descarta «Eliminar»): `.venv\Scripts\python scripts/02_matriz_a_texto.py <vendor> --hoja T5`. Usa el archivo
+   resultante `vendors/<vendor>/matriz/T5.txt`. Si el Excel no está en `vendors/<vendor>/docs/raw/`, usa la matriz que la
+   usuaria indique y deja constancia en el informe final. Verifica el número de ítems (80 en la hoja T5 actual).
 1. Por cada vendor, genera el semáforo: `.venv\Scripts\python scripts/09_semaforo_t5.py <vendor> --matriz <ruta de su T5> --salida <base>/<vendor>`.
    Verifica en la salida el número de ítems y categorías.
 2. Por cada vendor, completa `<base>/<vendor>/9_semaforo_T5.md` como lo haría `semaforo-t5`: sustituye el contenido de cada

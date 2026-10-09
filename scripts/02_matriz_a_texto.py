@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 """F1 · Matriz de evaluación del Banco (xlsx) → vendors/<vendor>/matriz/T1..T8.txt
 
-Uso: python scripts/02_matriz_a_texto.py <vendor> [ruta_al_xlsx]
+Uso: python scripts/02_matriz_a_texto.py <vendor> [ruta_al_xlsx] [--hoja T5]
 Si no se da la ruta, busca en vendors/<vendor>/docs/raw el xlsx que tenga la hoja de método o hojas T1–T8 con columna VA
-(cabeceras configurables en scripts/_comun.py, COLUMNAS).
+(cabeceras configurables en scripts/_comun.py, COLUMNAS). Con --hoja solo se regenera esa hoja (p. ej. T5 para la presentación),
+sin tocar las demás.
 """
 from _comun import arg_vendor, vendor_dir, buscar_matriz_evaluacion, COLUMNAS as K, requiere
 requiere('openpyxl')
 import openpyxl, pathlib, sys
+solo_hoja = None
+if '--hoja' in sys.argv:
+    i = sys.argv.index('--hoja'); solo_hoja = sys.argv[i + 1].upper(); del sys.argv[i:i + 2]
 v = arg_vendor(); d = vendor_dir(v)
 xlsx = sys.argv[2] if len(sys.argv) > 2 else buscar_matriz_evaluacion(d / 'docs' / 'raw')
 print('Matriz:', xlsx)
 out = d / 'matriz'; out.mkdir(exist_ok=True)
 wb = openpyxl.load_workbook(xlsx, data_only=True)
-for s in ['T1','T2','T3','T4','T5','T6','T7','T8']:
+for s in ([solo_hoja] if solo_hoja else ['T1','T2','T3','T4','T5','T6','T7','T8']):
     if s not in wb.sheetnames: print(s, 'NO EXISTE en el Excel'); continue
     ws = wb[s]; rows = list(ws.iter_rows(values_only=True))
     h = next(i for i, r in enumerate(rows) if r and K['numero'] in [str(c).strip() for c in r if c])
