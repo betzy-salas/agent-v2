@@ -121,7 +121,7 @@ def leer_comentarios(base):
 # ----------------------------------------------------------------------------- presentación
 CSS_SLIDES = """
 .slide{page-break-after:always;break-after:page;min-height:160mm;display:flex;flex-direction:column;gap:12px;padding-top:6px}
-.slide:last-child{page-break-after:auto} .slide h2{margin:.2rem 0 .2rem;font-size:1.7rem} .slide .sub{color:var(--ink-2);font-size:.92rem;margin:0;max-width:70ch}
+.slide:last-of-type{page-break-after:auto;break-after:auto;min-height:0} .slide h2{margin:.2rem 0 .2rem;font-size:1.7rem} .slide .sub{color:var(--ink-2);font-size:.92rem;margin:0;max-width:70ch}
 .slide-kicker{font-family:var(--display);font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:800;margin:0}
 .portada-t5{justify-content:center;gap:18px} .portada-t5 h1{font-size:2.8rem;margin:0} .portada-t5 .lead{font-size:1.05rem;max-width:72ch;color:var(--ink-2)}
 .kpis-t5{display:grid;grid-template-columns:repeat(6,1fr);gap:10px} .kpi-t5{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;border-top:6px solid var(--vc)} .kpi-t5 .v{font-family:var(--display);font-size:1.25rem;font-weight:800} .kpi-t5 .n{font-family:var(--display);font-size:1.9rem;font-weight:800;color:var(--lc);line-height:1.1} .kpi-t5 .l{font-size:.76rem;color:var(--ink-3)}
@@ -134,7 +134,7 @@ CSS_SLIDES = """
 .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px} .cat-item{font-size:.82rem;line-height:1.45;border-bottom:1px solid var(--line);padding-bottom:8px} .cat-item b{display:block;font-family:var(--display);margin-bottom:2px} .cat-item .dots{float:right;font-size:.74rem;letter-spacing:.04em}
 .final{display:grid;grid-template-columns:6fr 6fr;gap:20px;align-items:start} .final>*{min-width:0}
 .pend{display:grid;grid-template-columns:repeat(3,1fr);gap:12px} .pend .vbox{background:var(--panel);border:1px solid var(--line);border-top:6px solid var(--vc);border-radius:10px;padding:10px 14px;font-size:.8rem} .pend h4{margin:0 0 6px;font-size:1rem} .pend ul{margin:0;padding-left:1rem} .pend li{margin:.15rem 0} .pend .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.7rem;color:var(--ink-3)}
-@media print{html{font-size:10.5px} .slide{min-height:160mm} .slide:first-of-type{min-height:150mm} .kpis-t5{grid-template-columns:repeat(6,1fr)} .vslide{grid-template-columns:5fr 7fr} .cat-grid{grid-template-columns:1fr 1fr} .pend{grid-template-columns:repeat(3,1fr)} .final{grid-template-columns:6fr 6fr}}
+@media print{html{font-size:10.5px} .slide{min-height:160mm} .slide:first-of-type{min-height:150mm} .slide:last-of-type{min-height:0} .kpis-t5{grid-template-columns:repeat(6,1fr)} .vslide{grid-template-columns:5fr 7fr} .cat-grid{grid-template-columns:1fr 1fr} .pend{grid-template-columns:repeat(3,1fr)} .final{grid-template-columns:6fr 6fr}}
 """
 
 def chip(color, pct, big=False):
