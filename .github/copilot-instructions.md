@@ -135,7 +135,7 @@ Cada vendor es un expediente independiente. Para una tarea sobre `<vendor>`:
   nombra un documento que está en `vendors/<vendor>/NOMBRES.md`; ninguna afirmación carece de cita o de la marca
   SIN EVIDENCIA / NO ENCONTRADO. Si algo no cumple, corrígelo antes de escribir el archivo.
 
-**Excepción comparativa.** Los agentes `analista-despliegue`, `comparador-implementacion` y `comparador-t5` (y cualquier otro declarado
+**Excepción comparativa.** Los agentes `analista-despliegue`, `comparador-implementacion`, `comparador-t5` y `comparador-semaforo-t5` (y cualquier otro declarado
 explícitamente como comparativo) lee varios vendors. Lo hace uno por uno: mientras analiza un vendor, solo lee `vendors/<ese vendor>/`; nunca
 usa lo concluido de un vendor para inferir o completar a otro; la tabla comparativa final solo agrega lo ya escrito y
 citado en el archivo de cada vendor. Un agente no comparativo sigue limitado a un solo vendor.
@@ -180,6 +180,7 @@ python scripts/04_ingesta.py <vendor>             # 01 PDF→txt, 01a .toc.md, 0
 #   comparador-implementacion (tras verificar y redactar la implementación de cada vendor) → vendors/COMPARATIVO_IMPLEMENTACION.md;
 #   comparador-t5 (tras el informe ejecutivo de T5 de cada vendor) → vendors/COMPARATIVO_T5.md
 python scripts/09_semaforo_t5.py <vendor>     # informes/9_semaforo_T5.md: color por categoría (media de la calificación del Banco en T5 y niveles oficiales); luego el agente semaforo-t5 redacta el detalle
+python scripts/10_presentacion_t5.py [--base carpeta]   # COMPARATIVO_SEMAFORO_T5.md (tablas) → agente comparador-semaforo-t5 (comentarios) → --pdf: PRESENTACION_T5.pdf
 python scripts/06_validar_verif.py <vendor>       # valida filas, formato, VA y citas de cada verif/T<n>.md
 python scripts/03_consolidar.py <vendor>          # verif/00_consolidado.md
 # lanzar los agentes redactores y el revisor con el vendor

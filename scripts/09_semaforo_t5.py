@@ -10,7 +10,9 @@ Lee vendors/<vendor>/matriz/T5.txt y escribe vendors/<vendor>/informes/9_semafor
 El agente semaforo-t5 completa después, en el mismo archivo, el «Detalle» de cada categoría condensando solo lo que ya
 dicen la pregunta, la respuesta del proveedor y el sustento del evaluador.
 
-Uso:  python scripts/09_semaforo_t5.py <vendor>
+Uso:  python scripts/09_semaforo_t5.py <vendor> [--matriz ruta/T5.txt] [--salida carpeta_o_archivo.md]
+      Por defecto lee vendors/<vendor>/matriz/T5.txt y escribe vendors/<vendor>/informes/9_semaforo_T5.md.
+      Con --matriz y --salida se puede trabajar fuera del expediente (p. ej. una carpeta aparte para una presentación).
 """
 import datetime, re, sys
 from collections import OrderedDict
@@ -82,9 +84,14 @@ def barra(v, a, r, g):
     return ''.join(s * n for s, n in (('🟢', v), ('🟡', a), ('🔴', r), ('⚪', g)))
 
 def main():
-    if len(sys.argv) < 2: sys.exit('Uso: python scripts/09_semaforo_t5.py <vendor>')
-    vendor = sys.argv[1]; base = RAIZ / 'vendors' / vendor
-    matriz = base / 'matriz' / 'T5.txt'
+    args = sys.argv[1:]
+    def opc(nombre):
+        if nombre in args:
+            i = args.index(nombre); v = args[i + 1]; del args[i:i + 2]; return v
+    ruta_matriz = opc('--matriz'); ruta_salida = opc('--salida')
+    if not args: sys.exit('Uso: python scripts/09_semaforo_t5.py <vendor> [--matriz ruta] [--salida ruta]')
+    vendor = args[0]; base = RAIZ / 'vendors' / vendor
+    matriz = Path(ruta_matriz) if ruta_matriz else base / 'matriz' / 'T5.txt'
     if not matriz.exists(): sys.exit(f'No existe {matriz}. Corre antes la ingesta (04_ingesta.py {vendor}).')
     items = [it for it in leer_items(matriz) if not descartable(it)]
     if not items: sys.exit('La matriz T5 no tiene ítems legibles.')
@@ -96,7 +103,7 @@ def main():
     hoy = datetime.date.today().strftime('%Y-%m-%d')
     L = [f'# 9. Semáforo T5 (Capacidades de desarrollo) por categoría — {vendor}', '',
          '## Cabecera', '',
-         f'- Vendor: {vendor}', f'- Fuente única de las calificaciones: Matriz del Banco, hoja T5 (vendors/{vendor}/matriz/T5.txt, columna VA y clasificación textual del evaluador). No se recalifica ningún ítem.',
+         f'- Vendor: {vendor}', f'- Fuente única de las calificaciones: Matriz del Banco, hoja T5 ({matriz.relative_to(RAIZ) if str(matriz).startswith(str(RAIZ)) else matriz}, columna VA y clasificación textual del evaluador). No se recalifica ningún ítem.',
          f'- Ítems: {len(items)} · Categorías: {len(cats)} · Fecha: {hoy}',
          '- Puntaje de la categoría: media de las calificaciones del Banco (0–4) de sus ítems, sobre 4, en escala 0–100 (misma fórmula del consolidado). Los ítems sin calificar no entran en la media.',
          '- Color de la categoría según los niveles de cumplimiento oficiales (CLAUDE.md, «Niveles de cumplimiento»): 🟢 VERDE positivo ≥ 70 (Cumple / Cumple plenamente) · 🟡 AMARILLO parcial 50–69 (Parcial) · 🔴 ROJO negativo < 50 (No cumple).',
@@ -144,7 +151,9 @@ def main():
         if restan: partes.append(f'**restan** {len(restan)}: ' + '; '.join(f'{i["id"]} {i["eval"]} ({i["va"]}){" [Indispensable]" if "indispensable" in i["crit"].lower() else ""} — {celda(i["sust"].rstrip(". "), 110) or "sin sustento del evaluador"}' for i in sorted(restan, key=lambda x: int(x["id"][1:]))))
         L.append(f'- **{cat} — {sim} {nombre} ({pct if pct is not None else "—"})**: ' + '. '.join(partes) + '.')
     L += ['', '## Nota', '', 'Documento generado por scripts/09_semaforo_t5.py a partir de la matriz; sin ranking ni recomendación. Las verificaciones (verif/T5.md) no intervienen en el color.']
-    out = base / 'informes' / '9_semaforo_T5.md'; out.parent.mkdir(parents=True, exist_ok=True)
+    out = Path(ruta_salida) if ruta_salida else base / 'informes' / '9_semaforo_T5.md'
+    if ruta_salida and (out.is_dir() or not out.suffix): out = out / '9_semaforo_T5.md'
+    out.parent.mkdir(parents=True, exist_ok=True)
     texto = '\n'.join(L) + '\n'
     if out.exists():   # conserva lo ya redactado por el agente (conclusiones, sustentos y resumen) para la misma categoría
         prev = out.read_text(encoding='utf-8-sig'); conservados = 0

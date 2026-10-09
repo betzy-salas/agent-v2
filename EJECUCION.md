@@ -138,6 +138,18 @@ ejecutivo, condensando pregunta, respuesta del proveedor y sustento del evaluado
 /semaforo-t5 <vendor>
 ```
 
+## Paso 7f — Presentación de la hoja T5 (puntajes por categoría, resultado final y comentarios)
+Requiere el semáforo T5 (Paso 7e) de cada vendor. Puede hacerse en una carpeta aparte para no mezclar con el expediente
+(`--base presentacion_t5`, con `presentacion_t5/<vendor>/9_semaforo_T5.md`, generables con
+`09_semaforo_t5.py <vendor> --matriz <ruta> --salida presentacion_t5/<vendor>`). Tres pasos: el script arma el comparativo
+(tablas categorías × vendors y resultado final, sin recalcular), el agente redacta los comentarios y el script genera las
+diapositivas (HTML + PDF apaisado). Sin ranking.
+```
+.venv\Scripts\python scripts\10_presentacion_t5.py --base presentacion_t5
+/comparar-semaforo-t5 presentacion_t5
+.venv\Scripts\python scripts\10_presentacion_t5.py --base presentacion_t5 --pdf
+```
+
 ## Paso 8 — Documento final de estrategias de implementación (HTML + PDF)
 Requiere, por vendor, `informes/7_implementacion_pros_contras.md`; si además existe `verif/IMPL.md`, incluye la rúbrica
 puntuada (barras por bloque, mapa de calor de los 12 criterios y anexo con los 61 criterios). Genera
