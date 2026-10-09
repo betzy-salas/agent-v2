@@ -138,13 +138,20 @@ ejecutivo, condensando pregunta, respuesta del proveedor y sustento del evaluado
 /semaforo-t5 <vendor>
 ```
 
-## Paso 7f — Presentación de la hoja T5 (puntajes por categoría, resultado final y comentarios)
-Requiere el semáforo T5 (Paso 7e) de cada vendor. Puede hacerse en una carpeta aparte para no mezclar con el expediente
-(`--base presentacion_t5`, con `presentacion_t5/<vendor>/9_semaforo_T5.md`, generables con
-`09_semaforo_t5.py <vendor> --matriz <ruta> --salida presentacion_t5/<vendor>`). Tres pasos: el script arma el comparativo
-(tablas categorías × vendors y resultado final, sin recalcular), el agente redacta los comentarios y el script genera las
-diapositivas (HTML + PDF apaisado). Sin ranking.
+## Paso 7f — Presentación de la hoja T5 (ranking, puntajes por categoría, fichas por vendor y comentarios)
+Un solo agente lo hace todo, en una carpeta aparte para no mezclar con el expediente (`presentacion_t5/`): genera el semáforo
+de cada vendor con el script 09 (puntaje ponderado por criticidad, igual al consolidado del Banco), redacta sus conclusiones,
+escribe la ficha de cada vendor (fortalezas, debilidades, pendientes, contradicciones, resumen por categoría; usa `verif/T5.md`
+y `2_ejecutivo_T5.md` si existen), arma el comparativo con el script 10, redacta los comentarios y genera las diapositivas
+(ranking en portada, dos diapositivas por vendor, comentarios por categoría, resultado final y pendientes).
 ```
+/presentacion-t5   (base: presentacion_t5 · vendors: todos · matriz: vendors/<vendor>/matriz/T5.txt)
+```
+Ruta manual, paso a paso, si se prefiere controlar cada etapa:
+```
+.venv\Scripts\python scripts\09_semaforo_t5.py <vendor> --matriz vendors\<vendor>\matriz\T5.txt --salida presentacion_t5\<vendor>   # por vendor
+/semaforo-t5 <vendor>   (archivo: presentacion_t5/<vendor>/9_semaforo_T5.md)
+/ficha-t5 <vendor> presentacion_t5
 .venv\Scripts\python scripts\10_presentacion_t5.py --base presentacion_t5
 /comparar-semaforo-t5 presentacion_t5
 .venv\Scripts\python scripts\10_presentacion_t5.py --base presentacion_t5 --pdf

@@ -2,8 +2,9 @@
 """Semáforo de la hoja T5 (Capacidades de desarrollo) por categoría, a partir de la calificación del Banco en la matriz.
 
 Lee vendors/<vendor>/matriz/T5.txt y escribe vendors/<vendor>/informes/9_semaforo_T5.md. No reclasifica nada:
-- Puntaje de la categoría = media de las calificaciones del Banco (columna VA, 0–4) de sus ítems, sobre 4, en 0–100
-  (la misma fórmula del consolidado). Los ítems sin calificar no entran en la media.
+- Puntaje de la categoría = media ponderada por criticidad (Indispensable/Killer 3, Deseable/No killer 1, hoja «Listas»)
+  de las calificaciones del Banco (columna VA, 0–4) de sus ítems, sobre 4, en 0–100: la fórmula del consolidado del Banco.
+  Los ítems sin calificar no entran en la media.
 - Color de la categoría según los niveles de cumplimiento oficiales de CLAUDE.md: ≥ 70 → VERDE (positivo: cumple o cumple
   plenamente) · 50–69 → AMARILLO (parcial) · < 50 → ROJO (negativo: no cumple).
 - Como apoyo, cada ítem lleva el color de su propia calificación (4 verde · 3 y 2 amarillo · 1 y 0 rojo) en el anexo.
@@ -19,13 +20,19 @@ from collections import OrderedDict
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
+PESO_CRIT = {'indispensable': 3, 'killer': 3, 'deseable': 1, 'no killer': 1}   # pesos por criticidad de la hoja «Listas» del Excel del Banco
+def peso(it): return PESO_CRIT.get((it.get('crit') or '').strip().lower(), 1)
+def puntaje(its):
+    """Media ponderada por criticidad de las calificaciones del Banco (0–4) sobre 4, en 0–100; los ítems sin calificar no entran."""
+    vas = [(peso(i), i['va']) for i in its if i['va'] is not None]
+    return round(sum(p * v for p, v in vas) / (4 * sum(p for p, _ in vas)) * 100, 1) if vas else None
+
 COLOR = {4: ('VERDE', '🟢'), 3: ('AMARILLO', '🟡'), 2: ('AMARILLO', '🟡'), 1: ('ROJO', '🔴'), 0: ('ROJO', '🔴'), None: ('SIN CALIFICAR', '⚪')}
 
 def color_categoria(its):
     """Media de VA sobre 4 en 0–100 y color por los niveles oficiales (≥70 verde, 50–69 amarillo, <50 rojo)."""
-    vas = [i['va'] for i in its if i['va'] is not None]
-    if not vas: return None, ('SIN CALIFICAR', '⚪')
-    pct = round(sum(vas) / (4 * len(vas)) * 100, 1)
+    pct = puntaje(its)
+    if pct is None: return None, ('SIN CALIFICAR', '⚪')
     return pct, ('VERDE', '🟢') if pct >= 70 else ('AMARILLO', '🟡') if pct >= 50 else ('ROJO', '🔴')
 
 def leer_items(ruta):
@@ -105,18 +112,18 @@ def main():
          '## Cabecera', '',
          f'- Vendor: {vendor}', f'- Fuente única de las calificaciones: Matriz del Banco, hoja T5 ({matriz.relative_to(RAIZ) if str(matriz).startswith(str(RAIZ)) else matriz}, columna VA y clasificación textual del evaluador). No se recalifica ningún ítem.',
          f'- Ítems: {len(items)} · Categorías: {len(cats)} · Fecha: {hoy}',
-         '- Puntaje de la categoría: media de las calificaciones del Banco (0–4) de sus ítems, sobre 4, en escala 0–100 (misma fórmula del consolidado). Los ítems sin calificar no entran en la media.',
+         '- Puntaje de la categoría: media de las calificaciones del Banco (0–4) de sus ítems, ponderada por criticidad (Indispensable y Killer peso 3, Deseable y No killer peso 1, según la hoja «Listas» del Excel), sobre 4, en escala 0–100: la misma fórmula del consolidado del Banco. Los ítems sin calificar no entran.',
          '- Color de la categoría según los niveles de cumplimiento oficiales (CLAUDE.md, «Niveles de cumplimiento»): 🟢 VERDE positivo ≥ 70 (Cumple / Cumple plenamente) · 🟡 AMARILLO parcial 50–69 (Parcial) · 🔴 ROJO negativo < 50 (No cumple).',
          f'- Categorías: 🟢 {tot["VERDE"]} · 🟡 {tot["AMARILLO"]} · 🔴 {tot["ROJO"]}' + (f' · ⚪ {tot["SIN CALIFICAR"]}' if tot['SIN CALIFICAR'] else ''),
          '', '## Resumen del resultado', '']
     vas = [i['va'] for i in items if i['va'] is not None]
-    pct_t5 = round(sum(vas) / (4 * len(vas)) * 100, 1) if vas else None
+    pct_t5 = puntaje(items)
     nivel = 'Cumple plenamente' if pct_t5 is not None and pct_t5 >= 85 else 'Cumple' if pct_t5 is not None and pct_t5 >= 70 else 'Parcial' if pct_t5 is not None and pct_t5 >= 50 else 'No cumple' if pct_t5 is not None else '—'
     dist_t5 = ' · '.join(f'{n} × {t} ({v})' for v, t, n in ((4, 'Completamente Cubierto', sum(1 for x in vas if x == 4)), (3, 'Cubierto: Modificación Menor', sum(1 for x in vas if x == 3)), (2, 'Cubierto: Modificación Mayor', sum(1 for x in vas if x == 2)), (1, 'Parcialmente Cubierto', sum(1 for x in vas if x == 1)), (0, 'No Cubierto', sum(1 for x in vas if x == 0))) if n)
     rojas = [c for c in cats if cat_res[c][1][0] == 'ROJO']; amarillas = [c for c in cats if cat_res[c][1][0] == 'AMARILLO']; verdes = [c for c in cats if cat_res[c][1][0] == 'VERDE']
     ind_bajos = [f"{i['id']} ({i['cat']})" for i in items if 'indispensable' in i['crit'].lower() and i['va'] is not None and i['va'] <= 1]
     L += ['**Base (calificación del Banco en la hoja T5, sin recalificar)**', '',
-          f'- Puntaje T5 de {vendor}: **{pct_t5 if pct_t5 is not None else "—"} / 100** (media de las {len(vas)} calificaciones sobre 4) → nivel **{nivel}** según los niveles de cumplimiento oficiales (≥ 85 Cumple plenamente · 70–84 Cumple · 50–69 Parcial · < 50 No cumple).',
+          f'- Puntaje T5 de {vendor}: **{pct_t5 if pct_t5 is not None else "—"} / 100** (media de las {len(vas)} calificaciones sobre 4, ponderada por criticidad: Indispensable 3, Deseable 1, como en el consolidado del Banco) → nivel **{nivel}** según los niveles de cumplimiento oficiales (≥ 85 Cumple plenamente · 70–84 Cumple · 50–69 Parcial · < 50 No cumple).',
           f'- Distribución de calificaciones: {dist_t5}.',
           f'- Categorías: 🟢 {len(verdes)} verdes · 🟡 {len(amarillas)} amarillas · 🔴 {len(rojas)} rojas, de {len(cats)}.',
           '- Categorías en 🔴: ' + ('; '.join(f'{c} ({cat_res[c][0]})' for c in rojas) if rojas else 'ninguna') + '.',
