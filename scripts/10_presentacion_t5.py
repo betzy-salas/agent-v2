@@ -129,7 +129,10 @@ def distribucion_items(ruta):
         mm = re.match(r'^### (.+?) — ', l)
         if mm: cat = mm.group(1); por_cat.setdefault(cat, {}); continue
         mm = re.match(r'^\| (E\d+) \| [^|]* \| [^|(]*\((\d)\) \|', l)
-        if mm and cat: por_cat[cat][int(mm.group(2))] = por_cat[cat].get(int(mm.group(2)), 0) + 1
+        if mm and cat: por_cat[cat][int(mm.group(2))] = por_cat[cat].get(int(mm.group(2)), 0) + 1; continue
+        mm = re.match(r'^\d+ ítems? .*calificaciones del Banco: (.+)$', l)   # semáforo sin anexo por ítem: «2 × (4) · 1 × (3)»
+        if mm and cat and not por_cat[cat]:
+            for n, va in re.findall(r'(\d+) × \((\d)\)', mm.group(1)): por_cat[cat][int(va)] = int(n)
     total = {}
     for d in por_cat.values():
         for k, n in d.items(): total[k] = total.get(k, 0) + n
@@ -179,7 +182,7 @@ table.cat-t{width:100%;border-collapse:collapse;font-size:.74rem} table.cat-t th
 .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px} .cat-item{font-size:.8rem;line-height:1.42;border-bottom:1px solid var(--line);padding-bottom:7px} .cat-item b{display:block;font-family:var(--display);margin-bottom:2px} .cat-item .dots{float:right;font-size:.72rem;letter-spacing:.04em}
 .final{display:grid;grid-template-columns:6fr 6fr;gap:20px;align-items:start} .final>*{min-width:0}
 .pend{display:grid;grid-template-columns:repeat(3,1fr);gap:12px} .pend .vbox{background:var(--panel);border:1px solid var(--line);border-top:6px solid var(--vc);border-radius:10px;padding:10px 14px;font-size:.78rem} .pend h4{margin:0 0 6px;font-size:1rem} .pend ul{margin:0;padding-left:1rem} .pend li{margin:.15rem 0}
-@media print{html{font-size:10.2px} .slide{min-height:160mm} .slide.flow{min-height:0;display:block} .slide.flow .ficha{margin-top:10px} .fbox{page-break-inside:auto} .fbox li{page-break-inside:avoid} .slide:first-of-type{min-height:150mm} .slide:last-of-type{min-height:0} .rank{grid-template-columns:repeat(6,1fr)} .va-grid{grid-template-columns:2fr 5fr} .ficha{grid-template-columns:1fr 1fr} .cat-grid{grid-template-columns:1fr 1fr} .pend{grid-template-columns:repeat(3,1fr)} .final{grid-template-columns:6fr 6fr} .fbox,.coment,tr{page-break-inside:avoid}}
+@media print{html{font-size:13px} table.cat-t{font-size:.67rem} table.cat-t td{padding:2px 5px} .coment{font-size:.8rem} .pend .vbox{font-size:.74rem;padding:8px 12px} .cat-item{font-size:.82rem} .slide{min-height:160mm} .slide.flow{min-height:0;display:block} .slide.flow .ficha{margin-top:10px} .fbox{page-break-inside:auto} .fbox li{page-break-inside:avoid} .slide:first-of-type{min-height:150mm} .slide:last-of-type{min-height:0} .rank{grid-template-columns:repeat(6,1fr)} .va-grid{grid-template-columns:2fr 5fr} .ficha{grid-template-columns:1fr 1fr} .cat-grid{grid-template-columns:1fr 1fr} .pend{grid-template-columns:repeat(3,1fr)} .final{grid-template-columns:6fr 6fr} .fbox,.coment,tr{page-break-inside:avoid}}
 """
 
 def chip(color, pct): bg, _ = NIVEL_COLOR[color]; return f'<span class="cell" style="background:{bg}">{pct if pct is not None else "—"}</span>'
@@ -250,13 +253,13 @@ def construir_presentacion(V, base, hoy):
                      + (caja('Declarado sin sustento', f['sin_sustento'], '#8a8f98', 8, wide=True) if f['sin_sustento'] else '') + '</div></section>')
     # 5 comentarios por categoría
     if any(por_cat.get(c) for c in cats):
-        mitad = (len(cats) + 1) // 2
-        for k, grupo in enumerate((cats[:mitad], cats[mitad:]), 1):
+        grupos = [cats[i:i + 6] for i in range(0, len(cats), 6)]
+        for k, grupo in enumerate(grupos, 1):
             items = ''
             for cat in grupo:
                 dots = ' '.join(f'{SIM[c["color"]]}' for d in orden for c in d['cats'] if c['cat'] == cat)
                 items += f'<div class="cat-item"><b>{esc(cat)} <span class="dots">{dots}</span></b>{m.inline(esc(por_cat.get(cat, "")))}</div>'
-            H.append(f'<section class="slide"><p class="slide-kicker">Comentarios por categoría ({k} de 2)</p><h2>Dónde coinciden y dónde se separan los vendors</h2><p class="sub">Los puntos muestran el color de cada vendor en la categoría, en orden de ranking: ' + ' · '.join(f'#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}' for d in orden) + f'.</p><div class="cat-grid">{items}</div></section>')
+            H.append(f'<section class="slide"><p class="slide-kicker">Comentarios por categoría ({k} de {len(grupos)})</p><h2>Dónde coinciden y dónde se separan los vendors</h2><p class="sub">Los puntos muestran el color de cada vendor en la categoría, en orden de ranking: ' + ' · '.join(f'#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}' for d in orden) + f'.</p><div class="cat-grid">{items}</div></section>')
     # 6 resultado final
     H.append('<section class="slide"><p class="slide-kicker">Resultado final</p><h2>Ranking por puntaje T5</h2><div class="final"><div><div class="panel">' + svg_final(orden) + '</div><table class="score-table" style="margin-top:10px"><thead><tr><th>#</th><th>Vendor</th><th>Puntaje</th><th>Nivel</th><th>🟢</th><th>🟡</th><th>🔴</th><th>Calificaciones 4 · 3 · 2 · 1 · 0</th></tr></thead><tbody>'
              + ''.join((lambda n: f'<tr style="--vc:{m.vcolor(d["_i"])}"><td>{pos[d["vendor"]]}</td><td>{esc(m.nombre(d["vendor"]))}</td><td class="num">{d["pct"]}</td><td>{esc(d["nivel"])}</td><td>{n["VERDE"]}</td><td>{n["AMARILLO"]}</td><td>{n["ROJO"]}</td><td class="small">{mini_dist(d["dist"])}</td></tr>')({k: sum(1 for c in d['cats'] if c['color'] == k) for k in ('VERDE', 'AMARILLO', 'ROJO')}) for d in orden)
