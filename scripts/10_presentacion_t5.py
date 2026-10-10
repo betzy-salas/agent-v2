@@ -9,6 +9,8 @@ Dos pasos sobre una carpeta base (por defecto vendors/, o una carpeta aparte con
      conserva los comentarios ya escritos.
   2) python scripts/10_presentacion_t5.py [--base carpeta] --pdf
      Genera <base>/PRESENTACION_T5.html (diapositivas apaisadas, mismo diseño de los informes) y el PDF.
+     Con --estilo coe genera PRESENTACION_T5_COE.html/.pdf: diapositivas 16:9 con el diseño del deck corporativo (barra azul,
+     numerales naranja, pie «Datos elaborados por BCP para uso Interno»); si existen <base>/assets/logo.png y portada.jpg los usa en la portada.
 Sin ranking: los vendors van en orden alfabético. La fuente de todos los puntajes es la calificación del Banco en la hoja T5.
 """
 import datetime, html, importlib.util, re, sys
@@ -270,8 +272,150 @@ def construir_presentacion(V, base, hoy):
     H.append(f'<footer>Presentación generada el {hoy} a partir de los semáforos y fichas T5 de cada vendor (calificación del Banco en la hoja T5; verificación documental cuando existe). Ranking por puntaje T5.</footer></div></body></html>')
     return '\n'.join(H)
 
+# ----------------------------------------------------------------------------- estilo CoE (deck corporativo 16:9: barra azul, numerales naranja, pie «Datos elaborados por BCP para uso Interno»)
+import base64, mimetypes
+CSS_COE = """
+@page{size:960pt 540pt;margin:0}
+html{font-size:12.5px} body{margin:0;background:#fff;color:#171f2a;font-family:Aptos,"Segoe UI","Source Sans 3",Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.s{position:relative;width:960pt;min-height:540pt;page-break-after:always;break-after:page;box-sizing:border-box;padding:0;overflow:visible;background:#fff}
+.s:last-of-type{page-break-after:auto;break-after:auto}
+.bar{background:#003b70;color:#fff;height:46pt;display:flex;align-items:center;justify-content:space-between;padding:0 32pt 0 34pt}
+.bar h2{margin:0;font-size:17pt;font-weight:800;letter-spacing:.01em} .bar .r{font-size:8pt;color:#dce8f6}
+.body{padding:13pt 34pt 0}
+.pie{position:absolute;left:0;right:0;bottom:0;height:28pt;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 32pt 0 34pt;font-size:6.8pt;color:#5f6b7a}
+.pie .c{color:#5b9bd5;position:absolute;left:0;right:0;text-align:center;bottom:6pt} .pie .n{color:#00529b;font-weight:700;font-size:7.5pt}
+.num{display:inline-flex;align-items:center;gap:10pt;font-weight:800;color:#ff6400;letter-spacing:.14em;text-transform:uppercase;font-size:10.5pt}
+.num b{display:inline-flex;align-items:center;justify-content:center;width:26pt;height:26pt;border-radius:50%;background:#ff6400;color:#fff;font-size:11pt;letter-spacing:0}
+.sec{padding:26pt 42pt 0} .sec h1{margin:12pt 0 4pt;font-size:26pt;color:#00205b;font-weight:800;letter-spacing:-.01em} .sec .sub{margin:0 0 14pt;color:#3d4a5c;font-size:10.5pt}
+table.t{width:100%;border-collapse:collapse;font-size:8.6pt} table.t th{background:#003b70;color:#fff;text-align:left;padding:6pt 8pt;font-weight:700;font-size:8.2pt;border:1px solid #fff}
+table.t td{padding:4pt 8pt;border:1px solid #e3e6ec;vertical-align:top;line-height:1.35;background:#fff} table.t tr:nth-child(even) td{background:#f6f8fb}
+table.t td.k{font-weight:700;background:#e3e8f5} table.t td.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:8.2pt;white-space:nowrap}
+table.dom{font-size:10pt} table.dom th{font-size:11pt;padding:7pt 10pt} table.dom td{padding:3.4pt 10pt;text-align:center;font-family:"JetBrains Mono",Consolas,monospace;font-weight:600;font-size:9.6pt;border:1px solid #fff}
+table.dom td.k{text-align:left;font-family:inherit;font-weight:600;font-size:9.4pt;background:#e3e8f5} table.dom tr.total td{background:#c7d1ed;font-weight:700;font-size:10.5pt} table.dom tr.total td.k{background:#003b70;color:#fff;font-size:12pt}
+.V,table.t td.V{background:#b8d680!important} .A,table.t td.A{background:#fcc97d!important} .R,table.t td.R{background:#f7786e!important} .pill{display:inline-block;padding:2pt 7pt;border-radius:4pt;font-weight:700;font-size:8pt;white-space:nowrap}
+.pV{background:#dcebd4;color:#276221} .pA{background:#fbe4cc;color:#9c5700} .pR{background:#f5cccc;color:#b02a2a}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:16pt;margin:12pt 0 16pt} .tile{border-radius:8pt;padding:12pt 14pt;display:flex;align-items:baseline;gap:12pt;min-height:52pt}
+.tile b{font-size:22pt;font-weight:800} .tile span{font-size:8.6pt;font-weight:700;line-height:1.2}
+.t4{background:#dcebd4} .t4 *{color:#276221} .t3{background:#e8f1f8} .t3 *{color:#00529b} .t2{background:#fbe4cc} .t2 *{color:#9c5700} .t1{background:#fbe4cc} .t1 *{color:#9c5700} .t0{background:#f5cccc} .t0 *{color:#b02a2a}
+h3.az{color:#00529b;font-size:15pt;margin:0 0 4pt;font-weight:800} .lead{font-size:10.2pt;line-height:1.4;margin:0;color:#171f2a}
+table.lay{width:100%;border-collapse:separate;border-spacing:14pt 0;margin:0 -14pt;table-layout:fixed} table.lay td{vertical-align:top;padding:0 0 12pt}
+.box{border:1px solid #e3e6ec;border-radius:4pt;overflow:hidden} .box h4{margin:0;background:#003b70;color:#fff;font-size:9pt;padding:6pt 10pt;font-weight:700} .box.g h4{background:#276221} .box.r h4{background:#b02a2a} .box.o h4{background:#9c5700} .box.p h4{background:#00529b} .box.gr h4{background:#5f6b7a}
+.box ul{margin:0;padding:6pt 10pt 6pt 20pt;font-size:7.7pt;line-height:1.34} .box li{margin:0 0 3.5pt} .box li b{color:#00205b} .box .fuente{display:block;color:#5f6b7a;font-size:6.6pt;margin-top:1pt}
+.box.wide{grid-column:1 / -1} .box.wide ul{columns:2;column-gap:22pt} .box.wide li{break-inside:avoid}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:12pt 26pt} .ci{font-size:8.8pt;line-height:1.4;border-bottom:1px solid #e3e6ec;padding-bottom:8pt} .ci b{display:block;color:#00205b;font-size:9.6pt;margin-bottom:2pt} .ci .dots{float:right;font-size:8pt;letter-spacing:.05em}
+.div{display:flex;align-items:center;min-height:540pt} .div .arc{position:absolute;left:-150pt;top:-40pt;width:620pt;height:620pt;border-radius:50%;border:30pt solid #eef1f4;box-sizing:border-box} .div img{position:absolute;left:60pt;top:236pt;width:260pt}
+.div .nm{position:absolute;left:526pt;top:300pt;color:#0e2841} .div .nm small{display:block;font-size:14pt;font-weight:700} .div .nm big{display:block;font-size:34pt;font-weight:800;line-height:1.1} .div .nm em{display:block;font-style:normal;color:#5f6b7a;font-size:10pt;margin-top:8pt}
+.cover{min-height:540pt;background:#1b2a4a;overflow:hidden} .cover img.f{position:absolute;inset:0;width:100%;height:100%;object-fit:cover} .cover .sh{position:absolute;left:-330pt;top:-180pt;width:920pt;height:920pt;border-radius:50%;background:linear-gradient(160deg,#ee6a1f 0%,#d9471f 45%,#7b3a4a 80%,#3b3a6a 100%);opacity:.93}
+.cover .tx{position:absolute;left:71pt;top:190pt;color:#fff} .cover .tx h1{margin:0;font-size:32pt;line-height:1.2;font-weight:800} .cover .tx p{margin:6pt 0 0;font-size:21pt;font-style:italic;font-weight:700} .cover .tx .d{position:absolute;top:200pt;font-size:12pt;font-style:normal;font-weight:400;white-space:nowrap}
+.cover img.l{position:absolute;right:27pt;bottom:17pt;width:119pt}
+.svgbox{border:1px solid #e3e6ec;border-radius:4pt;padding:8pt}
+.pend3 .box ul{font-size:8pt} .pend3 h4 span{opacity:.75;font-weight:400}
+.leg{font-size:8pt;color:#5f6b7a;margin-top:8pt} .leg i{display:inline-block;width:10pt;height:10pt;border-radius:2pt;vertical-align:middle;margin:0 4pt 0 10pt}
+"""
+def _data_uri(p):
+    if not p or not p.exists(): return ''
+    return f'data:{mimetypes.guess_type(p.name)[0] or "image/png"};base64,' + base64.b64encode(p.read_bytes()).decode()
+
+def _cls(color): return {'VERDE': 'V', 'AMARILLO': 'A', 'ROJO': 'R'}.get(color, '')
+
+def construir_presentacion_coe(V, base, hoy):
+    por_cat, por_vendor, final = leer_comentarios(base)
+    cats = []
+    for d in V:
+        for c in d['cats']:
+            if c['cat'] not in cats: cats.append(c['cat'])
+    for i, d in enumerate(V):
+        d['_i'] = i; d['dist_cat'], d['dist'] = distribucion_items(d['ruta']); d['ficha'] = leer_ficha(d['ruta'].parent / '10_ficha_T5.md')
+    orden = sorted(V, key=lambda d: -(d['pct'] or 0)); pos = {d['vendor']: k + 1 for k, d in enumerate(orden)}
+    logo = _data_uri(base / 'assets' / 'logo.png'); foto = _data_uri(base / 'assets' / 'portada.jpg')
+    MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+    t = datetime.date.today(); mes = f'{MESES[t.month - 1].capitalize()} {t.year}'
+    FUENTE = 'Fuente: Matriz técnica del Banco, hoja T5 · semáforo y ficha T5 de cada vendor'
+    n_pag = [0]
+    def pie(fuente=FUENTE):
+        n_pag[0] += 1
+        return f'<div class="pie"><span>{esc(fuente)}</span><span class="c">Datos elaborados por BCP para uso Interno</span><span class="n">{n_pag[0]}</span></div>'
+    def bar(titulo, derecha=''): return f'<div class="bar"><h2>{esc(titulo)}</h2><span class="r">{esc(derecha)}</span></div>'
+    def sem(d): return {k: sum(1 for c in d['cats'] if c['color'] == k) for k in ('VERDE', 'AMARILLO', 'ROJO')}
+    def pill(color, txt): return f'<span class="pill p{_cls(color)}">{esc(txt)}</span>'
+    def vineta_coe(v):
+        v = v.strip(); mm = re.match(r'^\*\*(.+?)\*\*\s*:?\s*(.*)$', v, re.S)
+        titulo, resto = (mm.group(1), mm.group(2)) if mm else ('', v)
+        partes = re.split(r'\s(?=(?:Fuente|Confianza|Impacto|Ítems?)\s*:)', resto)
+        cuerpo = partes[0].strip(); meta = ' · '.join(p.strip().rstrip('.') for p in partes[1:])
+        return f'<li>{("<b>" + esc(titulo) + "</b> " if titulo else "")}{m.inline(esc(cuerpo))}' + (f'<span class="fuente">{esc(meta)}</span>' if meta else '') + '</li>'
+    def lay(*celdas, ancho=None):
+        tds = ''.join('<td' + (' style="width:%s"' % ancho[i] if ancho else '') + '>' + c + '</td>' for i, c in enumerate(celdas))
+        return '<table class="lay"><tr>' + tds + '</tr></table>'
+    def box(titulo, items, cls, n_max=None, wide=False):
+        its = items[:n_max] if n_max else items
+        return f'<div class="box {cls}{" wide" if wide else ""}"><h4>{esc(titulo)}' + (f' ({len(items)})' if items else '') + '</h4>' + (f'<ul>{"".join(vineta_coe(v) for v in its)}</ul>' if its else '<ul><li>—</li></ul>') + '</div>'
+    H = [f'<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Presentación T5 · CoE</title>{m.FONTS}<style>{CSS_COE}</style></head><body>']
+    # 0 portada (textos de la portada del deck corporativo; fecha = mes de generación)
+    H.append('<section class="s cover">' + (f'<img class="f" src="{foto}" alt="">' if foto else '') + '<div class="sh"></div><div class="tx"><h1>Proyecto Transformación<br>Nuevo Core Cuentas</h1><p>Revisión Técnica Resultados T5</p>'
+             + f'<span class="d">{esc(mes)}</span></div>' + (f'<img class="l" src="{logo}" alt="">' if logo else '') + '</section>')
+    # 1 ranking
+    filas = ''
+    for d in orden:
+        n = sem(d); c = color_de(d['pct'])
+        filas += f'<tr><td class="mono" style="text-align:center;font-weight:700">{pos[d["vendor"]]}</td><td class="k">{esc(m.nombre(d["vendor"]))}</td><td class="mono {_cls(c)}" style="text-align:center;font-size:10pt">{d["pct"]}</td><td class="{_cls(c)}" style="font-weight:700">{esc(d["nivel"])}</td><td style="text-align:center">{n["VERDE"]}</td><td style="text-align:center">{n["AMARILLO"]}</td><td style="text-align:center">{n["ROJO"]}</td><td class="mono">{mini_dist(d["dist"])}</td></tr>'
+    H.append('<section class="s"><div class="sec"><span class="num"><b>01</b>Evaluación técnica</span><h1>Ranking T5: capacidades de desarrollo</h1><p class="sub">Puntaje T5 = media de las calificaciones del Banco (0–4 por ítem) ponderada por criticidad (Indispensable 3, Deseable 1), en escala 0–100 · 16 categorías · 80 ítems por vendor · nada se recalifica</p>'
+             + '<table class="t dom" style="font-size:9.5pt"><thead><tr><th style="width:5%">#</th><th style="width:22%">Vendor</th><th style="width:11%">Puntaje T5</th><th style="width:18%">Nivel</th><th style="width:7%">🟢</th><th style="width:7%">🟡</th><th style="width:7%">🔴</th><th>Calificaciones 4 · 3 · 2 · 1 · 0</th></tr></thead><tbody>' + filas + '</tbody></table>'
+             + '<p class="leg">Nivel por puntaje: <i class="V"></i>Verde ≥ 70 (Cumple; ≥ 85 Cumple plenamente) <i class="A"></i>Amarillo 50–69 (Parcial) <i class="R"></i>Rojo &lt; 50 (No cumple) · 🟢 🟡 🔴 = categorías del vendor en cada color.</p></div>' + pie() + '</section>')
+    # 2 categorías × vendors
+    filas = ''
+    for cat in cats:
+        filas += f'<tr><td class="k">{esc(cat)}</td>' + ''.join((lambda c: f'<td class="{_cls(c["color"])}">{c["pct"]}</td>' if c else '<td>—</td>')(next((x for x in d['cats'] if x['cat'] == cat), None)) for d in orden) + '</tr>'
+    filas += '<tr class="total"><td class="k">Puntaje T5</td>' + ''.join(f'<td class="{_cls(color_de(d["pct"]))}">{d["pct"]}</td>' for d in orden) + '</tr>'
+    H.append('<section class="s"><div class="sec"><span class="num"><b>02</b>Evaluación técnica</span><h1>Puntaje por categoría</h1><p class="sub">Cada celda es el puntaje 0–100 de la categoría para ese vendor; el color es su nivel. Vendors en orden de ranking.</p>'
+             + '<table class="t dom" style="font-size:8.4pt"><thead><tr><th>Categoría</th>' + ''.join(f'<th style="text-align:center">#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}</th>' for d in orden) + '</tr></thead><tbody>' + filas + '</tbody></table></div>' + pie() + '</section>')
+    # 3 cómo leer
+    H.append('<section class="s"><div class="sec"><span class="num"><b>03</b>Cómo leer</span><h1>Qué mide cada número</h1><div style="margin-top:14pt">' + lay('<div class="box"><h4>Fuente y puntaje</h4><ul><li>La fuente es la calificación del Banco en la hoja T5 de la matriz técnica de cada vendor (0–4 por ítem: Completamente Cubierto 4, Modificación Menor 3, Modificación Mayor 2, Parcialmente Cubierto 1, No Cubierto 0). Nada se recalifica.</li><li>El puntaje de una categoría es la media de las calificaciones de sus ítems ponderada por criticidad (Indispensable 3, Deseable 1, como en el consolidado del Banco), sobre 4 y en escala 0–100. El puntaje T5 es la misma media sobre todos los ítems del vendor.</li></ul></div>',
+             '<div class="box"><h4>Colores, fichas y comentarios</h4><ul><li>Verde ≥ 70, amarillo 50–69, rojo &lt; 50: son los niveles de cumplimiento oficiales del proceso.</li><li>Las fortalezas, debilidades, pendientes y contradicciones de cada vendor salen de su matriz (respuesta del proveedor y sustento del evaluador) y, cuando existe, de la verificación documental de T5. Cada punto nombra su ítem y su fuente; nada proviene de información externa.</li></ul></div>') + '</div></div>' + pie() + '</section>')
+    # 4 vendors en orden de ranking
+    for d in orden:
+        nom = m.nombre(d['vendor']); n = sem(d); c = color_de(d['pct']); f = d['ficha'] or {}; k = pos[d['vendor']]
+        H.append(f'<section class="s div"><div class="arc"></div>' + (f'<img src="{logo}" alt="">' if logo else '') + f'<div class="nm"><small>Vendor #{k} de {len(V)}</small><big>{esc(nom)}</big><em>T5 · {d["pct"]} · {esc(d["nivel"])}</em></div></section>')
+        # resumen ejecutivo
+        tiles = ''.join(f'<div class="tile t{v}"><b>{d["dist"].get(v, 0)}</b><span>{esc(nm)}</span></div>' for v, nm in ((4, 'Completamente cubiertas'), (3, 'Modificación menor'), (2, 'Modificación mayor'), (1, 'Parcialmente cubiertas'), (0, 'No cubiertas')))
+        lectura = f.get('lectura') or d['resumen']
+        listas = {col: [x for x in d['cats'] if x['color'] == col] for col in ('VERDE', 'AMARILLO', 'ROJO')}
+        celda = lambda col: '<br>'.join(f'{esc(x["cat"])} <span class="mono" style="color:#5f6b7a">{x["pct"]}</span>' for x in listas[col]) or '—'
+        H.append(f'<section class="s">{bar("Resumen ejecutivo " + nom.upper(), "T5 | " + d["nivel"] + " | Ranking #" + str(k) + " de " + str(len(V)))}<div class="body"><h3 class="az">Lectura general</h3>{m.md_to_html(lectura).replace("<p>", "<p class=lead>")}<div class="tiles">{tiles}</div>'
+                 + f'<table class="t"><thead><tr><th style="width:16%">Resultado T5</th><th>Categorías en verde ({n["VERDE"]})</th><th>Categorías en amarillo ({n["AMARILLO"]})</th><th>Categorías en rojo ({n["ROJO"]})</th></tr></thead><tbody><tr><td class="{_cls(c)}" style="font-weight:700;font-size:10pt">{d["pct"]} · {esc(d["nivel"])}</td><td>{celda("VERDE")}</td><td>{celda("AMARILLO")}</td><td>{celda("ROJO")}</td></tr></tbody></table></div>' + pie() + '</section>')
+        # matriz por categoría
+        filas = ''
+        for x in d['cats']:
+            dist = d['dist_cat'].get(x['cat'], {}); dem, falta = (f.get('tabla') or {}).get(x['cat'], ('', ''))
+            filas += f'<tr><td class="k">{esc(x["cat"])}</td><td class="mono" style="text-align:center">{x["pct"]}</td><td class="mono">{mini_dist(dist)}</td><td>{esc(dem) or esc(d["conclusiones"].get(x["cat"], ""))}</td><td>{esc(falta)}</td><td class="{_cls(x["color"])}" style="font-weight:700;white-space:nowrap">{esc(x["color"].capitalize())}</td></tr>'
+        H.append(f'<section class="s">{bar("Matriz por categoría · " + nom, "Puntaje, calificaciones del Banco y lectura por categoría")}<div class="body"><table class="t" style="font-size:7.3pt"><thead><tr><th style="width:17%">Categoría</th><th style="width:6%">Puntaje</th><th style="width:9%">4 · 3 · 2 · 1 · 0</th><th>Lo que demuestra</th><th>Lo que falta</th><th style="width:7%">Resultado</th></tr></thead><tbody>{filas}</tbody></table></div>' + pie() + '</section>')
+        if f:
+            H.append(f'<section class="s">{bar("Fortalezas y debilidades · " + nom, "T5 | " + str(d["pct"]) + " · " + d["nivel"])}<div class="body">' + lay(box('Fortalezas', f['fortalezas'], 'g'), box('Debilidades', f['debilidades'], 'r')) + '</div>' + pie() + '</section>')
+            H.append(f'<section class="s">{bar("Pendientes, contradicciones y declarado sin sustento · " + nom, "T5 | " + str(d["pct"]) + " · " + d["nivel"])}<div class="body">' + lay(box('Pendientes', f['pendientes'], 'o'), box('Contradicciones', f['contradicciones'], 'p'))
+                     + (box('Declarado sin sustento', f['sin_sustento'], 'gr', wide=True) if f['sin_sustento'] else '') + '</div>' + pie() + '</section>')
+    # 5 comentarios por categoría
+    if any(por_cat.get(c) for c in cats):
+        grupos = [cats[i:i + 6] for i in range(0, len(cats), 6)]
+        for g, grupo in enumerate(grupos, 1):
+            items = ''
+            for cat in grupo:
+                dots = ' '.join(SIM[c['color']] for d in orden for c in d['cats'] if c['cat'] == cat)
+                items += f'<div class="ci"><b>{esc(cat)} <span class="dots">{dots}</span></b>{m.inline(esc(por_cat.get(cat, "")))}</div>'
+            H.append(f'<section class="s">{bar("Comentarios por categoría (" + str(g) + " de " + str(len(grupos)) + ")", "Dónde coinciden y dónde se separan los vendors")}<div class="body"><p class="lead" style="font-size:8.6pt;color:#5f6b7a;margin-bottom:10pt">Los puntos muestran el color de cada vendor en la categoría, en orden de ranking: ' + ' · '.join(f'#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}' for d in orden) + f'.</p><div class="cg">{items}</div></div>' + pie() + '</section>')
+    # 6 resultado final
+    filas = ''.join((lambda n: f'<tr><td class="mono" style="text-align:center;font-weight:700">{pos[d["vendor"]]}</td><td class="k">{esc(m.nombre(d["vendor"]))}</td><td class="mono {_cls(color_de(d["pct"]))}" style="text-align:center">{d["pct"]}</td><td class="{_cls(color_de(d["pct"]))}">{esc(d["nivel"])}</td><td style="text-align:center">{n["VERDE"]}</td><td style="text-align:center">{n["AMARILLO"]}</td><td style="text-align:center">{n["ROJO"]}</td></tr>')(sem(d)) for d in orden)
+    H.append(f'<section class="s">{bar("Resultado final", "Ranking por puntaje T5")}<div class="body">' + lay(f'<div class="svgbox">{svg_final(orden)}</div><table class="t" style="margin-top:10pt"><thead><tr><th>#</th><th>Vendor</th><th>Puntaje</th><th>Nivel</th><th>🟢</th><th>🟡</th><th>🔴</th></tr></thead><tbody>{filas}</tbody></table>',
+             '<div class="box p"><h4>Comentario final</h4><ul style="list-style:none;padding-left:10pt;font-size:9pt;line-height:1.45"><li>' + (m.inline(esc(final)) if final else 'Pendiente de redacción.') + '</li></ul></div>') + '</div>' + pie() + '</section>')
+    # 7 lo pendiente
+    cajas = [f'<div class="box"><h4>#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))} <span>· categorías en rojo y amarillo</span></h4><ul>' + (''.join(f'<li>{SIM[c["color"]]} {esc(c["cat"])} · {c["pct"]}</li>' for c in sorted([c for c in d['cats'] if c['color'] in ('ROJO', 'AMARILLO')], key=lambda x: x['pct'] or 0)) or '<li>Ninguna categoría en rojo ni amarillo.</li>') + '</ul></div>' for d in orden]
+    cajas = ''.join(lay(*cajas[i:i + 3]) for i in range(0, len(cajas), 3))
+    H.append(f'<section class="s">{bar("Lo pendiente", "Categorías en rojo y amarillo por vendor")}<div class="body"><p class="lead" style="font-size:9pt;color:#5f6b7a;margin-bottom:10pt">Lo que cada vendor dejó sin cubrir o sin sustento según la calificación del Banco; el detalle por ítem está en el semáforo y la ficha de cada vendor.</p><div class="pend3">{cajas}</div></div>' + pie(f'Presentación generada el {hoy} · ' + FUENTE) + '</section>')
+    H.append('</body></html>')
+    return '\n'.join(H)
+
 def main():
     args = sys.argv[1:]; pdf = '--pdf' in args
+    estilo = args[args.index('--estilo') + 1] if '--estilo' in args else ''
     base = Path(args[args.index('--base') + 1]) if '--base' in args else RAIZ / 'vendors'
     if not base.is_absolute(): base = RAIZ / base
     V = cargar(base)
@@ -281,8 +425,11 @@ def main():
         out, cats = construir_comparativo(V, base, hoy)
         print(f'{out}\n{len(V)} vendors: ' + ', '.join(f'{m.nombre(d["vendor"])} {d["pct"]}' for d in V) + f' · {len(cats)} categorías. Ahora: agente comparador-semaforo-t5 para los comentarios; luego --pdf.')
     else:
-        out = base / 'PRESENTACION_T5.html'; out.write_text(construir_presentacion(V, base, hoy), encoding='utf-8'); print(f'HTML: {out}')
-        m.a_pdf(out, out.with_suffix('.pdf'))
+        if estilo == 'coe':
+            out = base / 'PRESENTACION_T5_COE.html'; out.write_text(construir_presentacion_coe(V, base, hoy), encoding='utf-8')
+        else:
+            out = base / 'PRESENTACION_T5.html'; out.write_text(construir_presentacion(V, base, hoy), encoding='utf-8')
+        print(f'HTML: {out}'); m.a_pdf(out, out.with_suffix('.pdf'))
 
 if __name__ == '__main__':
     main()
