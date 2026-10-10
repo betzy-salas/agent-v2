@@ -376,13 +376,21 @@ def construir_presentacion_coe(V, base, hoy):
     for d in orden:
         nom = m.nombre(d['vendor']); n = sem(d); c = color_de(d['pct']); f = d['ficha'] or {}; k = pos[d['vendor']]
         H.append(f'<section class="s div"><div class="arc"></div>' + (f'<img src="{logo}" alt="">' if logo else '') + f'<div class="nm"><small>Vendor #{k} de {len(V)}</small><big>{esc(nom)}</big><em>T5 · {d["pct"]} · {esc(d["nivel"])}</em></div></section>')
-        # resumen ejecutivo
+        # resumen ejecutivo: lectura general + lo que dice la ficha (fortalezas, debilidades, contradicciones y pendientes), no solo conteos
         tiles = ''.join(f'<div class="tile t{v}"><b>{d["dist"].get(v, 0)}</b><span>{esc(nm)}</span></div>' for v, nm in ((4, 'Completamente cubiertas'), (3, 'Modificación menor'), (2, 'Modificación mayor'), (1, 'Parcialmente cubiertas'), (0, 'No cubiertas')))
         lectura = f.get('lectura') or d['resumen']
-        listas = {col: [x for x in d['cats'] if x['color'] == col] for col in ('VERDE', 'AMARILLO', 'ROJO')}
-        celda = lambda col: '<br>'.join(f'{esc(x["cat"])} <span class="mono" style="color:#5f6b7a">{x["pct"]}</span>' for x in listas[col]) or '—'
-        H.append(f'<section class="s">{bar("Resumen ejecutivo " + nom.upper(), "T5 | " + d["nivel"] + " | Ranking #" + str(k) + " de " + str(len(V)))}<div class="body"><h3 class="az">Lectura general</h3>{m.md_to_html(lectura).replace("<p>", "<p class=lead>")}<div class="tiles">{tiles}</div>'
-                 + f'<table class="t"><thead><tr><th style="width:16%">Resultado T5</th><th>Categorías en verde ({n["VERDE"]})</th><th>Categorías en amarillo ({n["AMARILLO"]})</th><th>Categorías en rojo ({n["ROJO"]})</th></tr></thead><tbody><tr><td class="{_cls(c)}" style="font-weight:700;font-size:10pt">{d["pct"]} · {esc(d["nivel"])}</td><td>{celda("VERDE")}</td><td>{celda("AMARILLO")}</td><td>{celda("ROJO")}</td></tr></tbody></table></div>' + pie() + '</section>')
+        def titulos(items, n_max=8):
+            out = []
+            for v in items[:n_max]:
+                mm = re.match(r'^\*\*(.+?)\*\*', v.strip()); out.append(esc(mm.group(1)) if mm else esc(re.split(r'\s(?=Fuente\s*:)', v)[0])[:160])
+            return '<br>'.join(f'• {x}' for x in out) or '—'
+        def cuerpo_corto(v):
+            v = re.sub(r'^\*\*(.+?)\*\*\s*:?\s*', '', v.strip()); return esc(re.split(r'\s(?=(?:Fuente|Ítems?)\s*:)', v)[0].strip())
+        pend = '<br>'.join(f'• {cuerpo_corto(v)}' for v in (f.get('pendientes') or [])[:4]) or '—'
+        contr = f.get('contradicciones') or []
+        contr_txt = (f'{len(contr)} entre la calificación del Banco y la verificación documental: ' + ', '.join(sorted({c for v in contr for c in codigos(v)}, key=lambda c: int(c[1:]))) + '. Detalle en la hoja de pendientes y contradicciones.') if contr else 'Sin contradicciones registradas en la ficha.'
+        H.append(f'<section class="s">{bar("Resumen ejecutivo " + nom.upper(), "T5 | " + d["nivel"] + " | Ranking #" + str(k) + " de " + str(len(V)))}<div class="body"><h3 class="az">Lectura general</h3>{m.md_to_html(lectura).replace("<p>", "<p class=lead>")}<div class="tiles" style="margin:10pt 0 12pt">{tiles}</div>'
+                 + f'<table class="t"><thead><tr><th style="width:14%">Resultado T5</th><th style="width:27%">Fortalezas dominantes ({len(f.get("fortalezas") or [])})</th><th style="width:27%">Debilidades dominantes ({len(f.get("debilidades") or [])})</th><th>Pendientes clave ({len(f.get("pendientes") or [])})</th></tr></thead><tbody><tr><td class="{_cls(c)}" style="font-weight:700;font-size:10pt">{d["pct"]} · {esc(d["nivel"])}<div style="font-weight:400;font-size:8pt;margin-top:6pt">🟢 {n["VERDE"]} · 🟡 {n["AMARILLO"]} · 🔴 {n["ROJO"]} de 16 categorías</div><div style="font-weight:400;font-size:7.6pt;margin-top:6pt">Contradicciones: {contr_txt}</div></td><td>{titulos(f.get("fortalezas") or [])}</td><td>{titulos(f.get("debilidades") or [])}</td><td>{pend}</td></tr></tbody></table></div>' + pie() + '</section>')
         # matriz por categoría
         filas = ''
         for x in d['cats']:
