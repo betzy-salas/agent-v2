@@ -76,6 +76,18 @@ Cada viñeta nombra al menos un ítem E<n>. No inventes documentos ni páginas: 
 dilo. No cambies puntajes ni colores. Sin ranking ni recomendación. Sin «|» dentro de las celdas de la tabla. Español,
 tono neutral de comité, frases cortas.
 
+**Qué es sustancial y qué no.** Una viñeta describe el contenido: qué mecanismo, herramienta, cifra o compromiso propone el
+vendor y qué encontró el evaluador o la verificación. Nunca se limita a decir que cumple o no cumple un criterio.
+- MAL (se rechaza): «Cumple con el criterio E3.» · «Fortaleza en pruebas (E28, E32).» · «Declara seguridad de APIs. Fuente: E1.»
+- BIEN: «**Seguridad de APIs con mTLS, OAuth2 y API Gateway**: el vendor describe TLS/mTLS, OAuth/OpenID Connect y JWT para
+  consumir y exponer APIs, con rate limiting en el gateway; el evaluador lo dio por cubierto y la verificación lo ubica en la
+  propuesta. Fuente: E1, E3 · Propuesta Técnica p.44 · Confianza: ALTA.»
+- BIEN (debilidad): «**Sin reporte de cobertura de pruebas automatizadas (Indispensable)**: el Banco pidió la cobertura por tipo
+  sobre flujos críticos y contables con el reporte adjunto; el vendor dice que se mide por línea y función pero no lo entregó,
+  y el evaluador lo dejó en Parcialmente Cubierto. Fuente: E14 · respuesta del proveedor en la matriz · Confianza: MEDIA.»
+Antes de guardar, pasa `python scripts/11_validar_ficha.py <vendor> [--base <base>]` (en Windows `.venv\Scripts\python …`) y
+corrige todo lo que marque; la ficha no está terminada hasta que el validador diga OK.
+
 **Autocomprobación:** las únicas rutas leídas son las tres indicadas para este vendor; toda viñeta tiene ítem y fuente; la tabla
 tiene las 16 categorías; ninguna cifra difiere del semáforo.
 

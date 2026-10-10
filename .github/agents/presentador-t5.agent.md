@@ -49,6 +49,10 @@ el chat.
    exactos (Cabecera, Lectura general, Fortalezas, Debilidades, Pendientes, Contradicciones, Declarado sin sustento, Resumen
    por categoría), usando el semáforo, `verif/T5.md` (obligatorio tras el paso 0b: de ahí salen las evidencias con documento
    y página, las contradicciones y lo declarado sin sustento) y, si existe, `2_ejecutivo_T5.md` de ese vendor.
+   Después de cada ficha corre `.venv\Scripts\python scripts/11_validar_ficha.py <vendor> --base <base>` y corrige lo que marque (viñetas
+   vacías del tipo «cumple con el criterio E3», sin fuente, sin ítem o demasiado cortas) hasta que diga OK. Escribe la ficha de
+   cada vendor en una pasada propia, releyendo su semáforo y su verif/T5.md justo antes: no reutilices lo escrito para otro
+   vendor ni resumas de memoria.
 4. Arma el comparativo: `.venv\Scripts\python scripts/10_presentacion_t5.py --base <base>`. Luego completa `<base>/COMPARATIVO_SEMAFORO_T5.md`
    como lo haría `comparador-semaforo-t5`: comentario por categoría, por vendor y final, leyendo los semáforos uno por uno.
 5. Genera la presentación: `.venv\Scripts\python scripts/10_presentacion_t5.py --base <base> --pdf`. Comprueba que el PDF existe y cuántas
