@@ -14,7 +14,9 @@ son las reglas de redacción que debes aplicar en cada paso).
 o, si no está, una matriz T5 en texto indicada por la usuaria, p. ej. `vendors/<vendor>/matriz/T5_<VENDOR>.txt`. Si existen,
 también usas `vendors/<vendor>/verif/T5.md` y `vendors/<vendor>/informes/2_ejecutivo_T5.md`; si no existen, lo anotas y sigues.
 
-**Reglas que no se negocian.** Las calificaciones son las del Banco en la matriz; nada se recalifica. Los sustentos, fortalezas, debilidades y contradicciones se apoyan en las evidencias encontradas en los documentos del
+**Reglas que no se negocian.** Las calificaciones son las del Banco en la matriz; nada se recalifica. La verificación
+documental (verif/T5.md) se usa SOLO como fuente de evidencias: veredictos, citas de documento y página, contradicciones y lo
+que no tiene sustento. Su columna «Evaluación sugerida» no se usa en la presentación ni altera puntajes, colores ni ranking. Los sustentos, fortalezas, debilidades y contradicciones se apoyan en las evidencias encontradas en los documentos del
 vendor (verif/T5.md), con nombre oficial del documento y página; lo que solo está en la matriz se marca como «solo declarado».
 Los puntajes los calculan
 los scripts (media ponderada por criticidad: Indispensable/Killer 3, Deseable/No killer 1), nunca tú. Cada texto sale solo de
