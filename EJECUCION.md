@@ -150,7 +150,7 @@ y `2_ejecutivo_T5.md` si existen), arma el comparativo con el script 10, redacta
 /presentacion-t5   (base: presentacion_t5 · vendors: todos · matriz: desde el Excel)
 ```
 Si Copilot entrega fichas pobres («cumple con el criterio E3»), lanza `/ficha-t5 <vendor> presentacion_t5` vendor por vendor y
-valida cada una con `.venv\Scripts\python scripts/11_validar_ficha.py <vendor> --base presentacion_t5`; luego `/presentacion-t5` reutiliza las fichas válidas.
+valida cada una con `.venv\Scripts\python scripts/11_validar_ficha.py <vendor> --base presentacion_t5`; luego `/presentacion-t5` reutiliza las fichas válidas. Para corregir una ficha ya escrita sin rehacerla: `/mejorar-ficha-t5 <vendor> presentacion_t5`.
 
 Ruta manual, paso a paso, si se prefiere controlar cada etapa:
 ```
