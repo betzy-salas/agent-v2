@@ -156,8 +156,7 @@ def vineta_html(v, n=None):
     v = v.strip(); mm = re.match(r'^\*\*(.+?)\*\*\s*:?\s*(.*)$', v, re.S)
     titulo, resto = (mm.group(1), mm.group(2)) if mm else ('', v)
     partes = re.split(r'\s(?=(?:Fuente|Confianza|Impacto|Ítems?)\s*:)', resto)
-    cuerpo = partes[0].strip(); meta = ' · '.join(m.recorta(p.strip().rstrip('.'), 90) for p in partes[1:])
-    if n: cuerpo = m.recorta(cuerpo, n)
+    cuerpo = partes[0].strip(); meta = ' · '.join(p.strip().rstrip('.') for p in partes[1:])
     return f'<li>{("<b>" + esc(titulo) + "</b> " if titulo else "")}{m.inline(esc(cuerpo))}' + (f'<span class="fuente">{esc(meta)}</span>' if meta else '') + '</li>'
 
 # ----------------------------------------------------------------------------- presentación
@@ -176,11 +175,11 @@ CSS_SLIDES = """
 .stack{display:flex;height:22px;border-radius:7px;overflow:hidden;background:var(--track)} .stack i{display:block;height:100%} .stack-leg{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font-size:.74rem;margin-top:8px} .stack-leg b{font-family:var(--mono);font-weight:600} .stack-leg s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle;text-decoration:none}
 .coment{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--vc,var(--accent));border-radius:10px;padding:10px 14px;font-size:.84rem;line-height:1.45} .coment h4{margin:0 0 5px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)} .coment p{margin:0 0 6px} .coment p:last-child{margin:0}
 table.cat-t{width:100%;border-collapse:collapse;font-size:.74rem} table.cat-t th{font-family:var(--display);font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);text-align:left;padding:3px 6px;border-bottom:2px solid var(--line)} table.cat-t td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.35} table.cat-t td.c{white-space:nowrap;font-weight:600} table.cat-t .pill{display:inline-block;min-width:44px;text-align:center;border-radius:6px;padding:2px 6px;color:#fff;font-family:var(--mono);font-size:.72rem;font-weight:600} table.cat-t .mini{font-family:var(--mono);font-size:.68rem;color:var(--ink-3);white-space:nowrap} table.cat-t td.txt{color:var(--ink-2)}
-.ficha{display:grid;grid-template-columns:1fr 1fr;gap:9px} .ficha>*{min-width:0} .fbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;border-top:5px solid var(--bc)} .fbox h4{margin:0 0 6px;font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)} .fbox ul{margin:0;padding-left:1rem;font-size:.72rem;line-height:1.35} .fbox li{margin:.18rem 0} .fbox .fuente{display:block;color:var(--ink-3);font-size:.62rem;margin-top:1px} .fbox.wide ul{columns:2;column-gap:20px} .fbox.wide li{break-inside:avoid} .fbox.wide{grid-column:1 / -1}
+.ficha{display:grid;grid-template-columns:1fr 1fr;gap:9px} .ficha>*{min-width:0} .fbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;border-top:5px solid var(--bc)} .fbox h4{margin:0 0 6px;font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)} .fbox ul{margin:0;padding-left:1rem;font-size:.76rem;line-height:1.4} .fbox li{margin:.18rem 0} .fbox .fuente{display:block;color:var(--ink-3);font-size:.62rem;margin-top:1px} .fbox.wide ul{columns:2;column-gap:20px} .fbox.wide li{break-inside:avoid} .fbox.wide{grid-column:1 / -1}
 .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px} .cat-item{font-size:.8rem;line-height:1.42;border-bottom:1px solid var(--line);padding-bottom:7px} .cat-item b{display:block;font-family:var(--display);margin-bottom:2px} .cat-item .dots{float:right;font-size:.72rem;letter-spacing:.04em}
 .final{display:grid;grid-template-columns:6fr 6fr;gap:20px;align-items:start} .final>*{min-width:0}
 .pend{display:grid;grid-template-columns:repeat(3,1fr);gap:12px} .pend .vbox{background:var(--panel);border:1px solid var(--line);border-top:6px solid var(--vc);border-radius:10px;padding:10px 14px;font-size:.78rem} .pend h4{margin:0 0 6px;font-size:1rem} .pend ul{margin:0;padding-left:1rem} .pend li{margin:.15rem 0}
-@media print{html{font-size:10.2px} .slide{min-height:160mm} .slide:first-of-type{min-height:150mm} .slide:last-of-type{min-height:0} .rank{grid-template-columns:repeat(6,1fr)} .va-grid{grid-template-columns:2fr 5fr} .ficha{grid-template-columns:1fr 1fr} .cat-grid{grid-template-columns:1fr 1fr} .pend{grid-template-columns:repeat(3,1fr)} .final{grid-template-columns:6fr 6fr} .fbox,.coment,tr{page-break-inside:avoid}}
+@media print{html{font-size:10.2px} .slide{min-height:160mm} .slide.flow{min-height:0;display:block} .slide.flow .ficha{margin-top:10px} .fbox{page-break-inside:auto} .fbox li{page-break-inside:avoid} .slide:first-of-type{min-height:150mm} .slide:last-of-type{min-height:0} .rank{grid-template-columns:repeat(6,1fr)} .va-grid{grid-template-columns:2fr 5fr} .ficha{grid-template-columns:1fr 1fr} .cat-grid{grid-template-columns:1fr 1fr} .pend{grid-template-columns:repeat(3,1fr)} .final{grid-template-columns:6fr 6fr} .fbox,.coment,tr{page-break-inside:avoid}}
 """
 
 def chip(color, pct): bg, _ = NIVEL_COLOR[color]; return f'<span class="cell" style="background:{bg}">{pct if pct is not None else "—"}</span>'
@@ -235,19 +234,20 @@ def construir_presentacion(V, base, hoy):
         for c in d['cats']:
             dist = d['dist_cat'].get(c['cat'], {}); dem, falta = (f.get('tabla') or {}).get(c['cat'], ('', ''))
             concl = d['conclusiones'].get(c['cat'], '')
-            filas += f'<tr><td class="c">{esc(c["cat"])}</td><td><span class="pill" style="background:{NIVEL_COLOR[c["color"]][0]}">{c["pct"]}</span></td><td class="mini">{mini_dist(dist)}</td><td class="txt">{esc(dem) if dem else esc(m.recorta(concl, 150))}</td><td class="txt">{esc(falta) if falta else ""}</td></tr>'
+            filas += f'<tr><td class="c">{esc(c["cat"])}</td><td><span class="pill" style="background:{NIVEL_COLOR[c["color"]][0]}">{c["pct"]}</span></td><td class="mini">{mini_dist(dist)}</td><td class="txt">{esc(dem) if dem else esc(concl)}</td><td class="txt">{esc(falta) if falta else ""}</td></tr>'
         lectura = f.get('lectura') or com or d['resumen']
         H.append(f'<section class="slide"><p class="slide-kicker">Vendor · resumen general y por categoría</p>{head}<div class="va-grid"><div><div class="coment" style="--vc:{col}"><h4>Calificaciones del Banco ({sum(d["dist"].values())} ítems)</h4>{stack_html(d["dist"])}</div>'
-                 + (f'<div class="coment" style="--vc:{col};margin-top:10px"><h4>Lectura general</h4>{m.md_to_html(m.recorta(lectura, 900))}</div>' if lectura else '') + '</div>'
+                 + (f'<div class="coment" style="--vc:{col};margin-top:10px"><h4>Lectura general</h4>{m.md_to_html(lectura)}</div>' if lectura else '') + '</div>'
                  + f'<div><table class="cat-t"><thead><tr><th>Categoría</th><th>Puntaje</th><th>4 · 3 · 2 · 1 · 0</th><th>Lo que demuestra</th><th>Lo que falta</th></tr></thead><tbody>{filas}</tbody></table></div></div></section>')
         if f:
-            def caja(titulo, items, color, n_max, wide=False, n_chars=230):
+            def caja(titulo, items, color, n_max, wide=False):
                 its = items[:n_max]
-                return f'<div class="fbox{" wide" if wide else ""}" style="--bc:{color}"><h4>{esc(titulo)}' + (f' ({len(items)})' if items else '') + '</h4>' + (f'<ul>{"".join(vineta_html(v, n_chars) for v in its)}</ul>' if its else '<p class="small">—</p>') + '</div>'
-            H.append(f'<section class="slide"><p class="slide-kicker">Vendor · fortalezas, debilidades, pendientes y contradicciones</p>{head}<div class="ficha">'
-                     + caja('Fortalezas', f['fortalezas'], '#1baf7a', 5, n_chars=150) + caja('Debilidades', f['debilidades'], '#e34948', 5, n_chars=150)
-                     + caja('Pendientes', f['pendientes'], '#eda100', 5, n_chars=105) + caja('Contradicciones', f['contradicciones'], '#4a3aa7', 4, n_chars=120)
-                     + (caja('Declarado sin sustento', f['sin_sustento'], '#8a8f98', 4, wide=True, n_chars=95) if f['sin_sustento'] else '') + '</div></section>')
+                return f'<div class="fbox{" wide" if wide else ""}" style="--bc:{color}"><h4>{esc(titulo)}' + (f' ({len(items)})' if items else '') + '</h4>' + (f'<ul>{"".join(vineta_html(v) for v in its)}</ul>' if its else '<p class="small">—</p>') + '</div>'
+            H.append(f'<section class="slide flow"><p class="slide-kicker">Vendor · fortalezas y debilidades</p>{head}<div class="ficha">'
+                     + caja('Fortalezas', f['fortalezas'], '#1baf7a', 8) + caja('Debilidades', f['debilidades'], '#e34948', 8) + '</div></section>')
+            H.append(f'<section class="slide flow"><p class="slide-kicker">Vendor · pendientes, contradicciones y declarado sin sustento</p>{head}<div class="ficha">'
+                     + caja('Pendientes', f['pendientes'], '#eda100', 10) + caja('Contradicciones', f['contradicciones'], '#4a3aa7', 8)
+                     + (caja('Declarado sin sustento', f['sin_sustento'], '#8a8f98', 8, wide=True) if f['sin_sustento'] else '') + '</div></section>')
     # 5 comentarios por categoría
     if any(por_cat.get(c) for c in cats):
         mitad = (len(cats) + 1) // 2

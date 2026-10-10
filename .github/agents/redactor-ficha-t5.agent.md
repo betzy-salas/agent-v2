@@ -69,7 +69,10 @@ verificación, en qué difiere lo verificado de lo calificado por el Banco. Con 
 (Las 16 categorías del semáforo, en su orden; frases de 8 a 20 palabras tomadas de la conclusión de cada categoría.)
 ```
 
-**Reglas.** Cada viñeta nombra al menos un ítem E<n>. No inventes documentos ni páginas: si la fuente es solo la matriz,
+**Reglas.** Cada viñeta es completa y breve: 25 a 45 palabras en el texto, sin puntos suspensivos ni frases cortadas, y la
+fuente en formato corto «Fuente: E75, E24 · Propuesta Técnica p.48 · Confianza: ALTA» (o «· respuesta del proveedor en la
+matriz · Confianza: BAJA»). Los textos se muestran completos en la presentación, así que lo que escribas es lo que se verá.
+Cada viñeta nombra al menos un ítem E<n>. No inventes documentos ni páginas: si la fuente es solo la matriz,
 dilo. No cambies puntajes ni colores. Sin ranking ni recomendación. Sin «|» dentro de las celdas de la tabla. Español,
 tono neutral de comité, frases cortas.
 
