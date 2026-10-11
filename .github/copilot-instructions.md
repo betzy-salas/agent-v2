@@ -182,6 +182,7 @@ python scripts/04_ingesta.py <vendor>             # 01 PDF→txt, 01a .toc.md, 0
 python scripts/09_semaforo_t5.py <vendor>     # informes/9_semaforo_T5.md: color por categoría (media de la calificación del Banco en T5 y niveles oficiales); luego el agente semaforo-t5 redacta el detalle
 python scripts/10_presentacion_t5.py [--base carpeta]   # COMPARATIVO_SEMAFORO_T5.md (tablas) → agente comparador-semaforo-t5 (comentarios) → --pdf: PRESENTACION_T5.pdf
 #   --pdf --estilo coe: PRESENTACION_T5_COE.pdf con el diseño del deck corporativo (16:9); python scripts/12_presentacion_t5_pptx.py --base carpeta → PRESENTACION_T5.pptx (PowerPoint, mismo diseño; requiere python-pptx)
+#   python scripts/13_laminas_correo.py --base carpeta → LAMINA_1_resultado_T5.png y LAMINA_2_implementacion.png (2560×1440) + LAMINAS_CORREO.pdf: dos láminas para adjuntar a un correo (ranking T5 y lectura por vendor; rúbrica de implementación, despliegue y veredictos)
 # todo lo anterior en un solo paso: agente presentador-t5 (ejecuta 09 y 10, redacta semáforos, fichas (redactor-ficha-t5) y comentarios)
 python scripts/06_validar_verif.py <vendor>       # valida filas, formato, VA y citas de cada verif/T<n>.md
 python scripts/03_consolidar.py <vendor>          # verif/00_consolidado.md

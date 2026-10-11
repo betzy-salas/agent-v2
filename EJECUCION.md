@@ -162,6 +162,7 @@ Ruta manual, paso a paso, si se prefiere controlar cada etapa:
 .venv\Scripts\python scripts\10_presentacion_t5.py --base presentacion_t5 --pdf
 .venv\Scripts\python scripts\10_presentacion_t5.py --base presentacion_t5 --pdf --estilo coe   # PDF 16:9 con el diseño del deck corporativo (logo y foto: presentacion_t5\assets\logo.png y portada.jpg)
 .venv\Scripts\python scripts\12_presentacion_t5_pptx.py --base presentacion_t5                 # PowerPoint con el mismo diseño (pip install python-pptx)
+.venv\Scripts\python scripts\13_laminas_correo.py --base presentacion_t5                     # dos láminas PNG (16:9, 2560×1440) + PDF para adjuntar a un correo
 ```
 
 ## Paso 8 — Documento final de estrategias de implementación (HTML + PDF)
