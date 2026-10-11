@@ -350,10 +350,10 @@ def datos_despliegue(V):
             cls, corto = m.chip_modelo(r[i_of]) if r else ('', '—')
             filas.append((nombre_m.split(' / ')[0], cls, corto, marcas))
         out.append((d['vendor'], d.get('_i', 0), filas))
-    return out, [pn for pn, _ in p08.PLATAFORMAS]
+    return out, [pn for pn, _ in p08.PLATAFORMAS_GRID]
 
 LEYENDA_NUBES = ('ofrecida para ese modelo', 'condicionada o solo compatibilidad declarada', 'mencionada, pero el modelo no se ofrece', 'no la asocia a ese modelo')
-NOTA_NUBES = '«Nube privada» incluye la nube privada del vendor (p. ej. FIS Private Cloud) o del cliente.'
+NOTA_NUBES = 'La fila «Nube privada» (del vendor, p. ej. FIS Private Cloud, o del cliente) no lleva columna propia: el modelo ya la implica; sus puntos muestran la plataforma sobre la que se ofrece.'
 
 # ----------------------------------------------------------------------------- estilo CoE (deck corporativo 16:9: barra azul, numerales naranja, pie «Datos elaborados por BCP para uso Interno»)
 import base64, mimetypes

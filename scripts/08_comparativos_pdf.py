@@ -128,8 +128,10 @@ def marcas_nubes(ofrecido, nubes):
 
 LEYENDA_DOTS = '<p class="small"><span class="dot of"></span> ofrecida para ese modelo · <span class="dot cond"></span> condicionada o solo compatibilidad declarada · <span class="dot no"></span> mencionada, pero el modelo no se ofrece · <span class="dot vacio"></span> no la asocia a ese modelo. «Nube privada» incluye la nube privada del vendor (p. ej. FIS Private Cloud) o del cliente.</p>'
 
+PLATAFORMAS_GRID = [p for p in PLATAFORMAS if p[0] != 'Nube privada']   # en la cuadrícula la fila «Nube privada» (modelo) ya la implica: sin columna propia (observación de la usuaria, 2026-10-10)
 def grids_nubes(V):
-    """Una cuadrícula por vendor: filas = modelos, columnas = plataformas; la celda marca si la plataforma se ofrece para ese modelo."""
+    """Una cuadrícula por vendor: filas = modelos, columnas = plataformas públicas u OpenShift; la celda marca si la plataforma se ofrece para ese modelo.
+    La nube privada no es columna: el modelo «Nube privada / IaaS dedicada» ya la implica; sus puntos muestran sobre qué plataforma se ofrece (p. ej. OpenShift)."""
     cards = []
     for d in V:
         lines = [l for l in str(d.get('desp_modelos', '')).split('\n') if l.strip().startswith('|')]
@@ -141,11 +143,11 @@ def grids_nubes(V):
             r = next((r for r in rows if clave in m._norm(r[0])), None)
             marcas = marcas_nubes(r[i_of], r[i_nu]) if r and i_of is not None and i_nu is not None else {}
             cls, corto = m.chip_modelo(r[i_of]) if r else ('', '—')
-            celdas = ''.join(f'<td class="c"><span class="dot {marcas[pn]}" title="{pn}"></span></td>' if pn in marcas else '<td class="c"><span class="dot vacio"></span></td>' for pn, _ in PLATAFORMAS)
+            celdas = ''.join(f'<td class="c"><span class="dot {marcas[pn]}" title="{pn}"></span></td>' if pn in marcas else '<td class="c"><span class="dot vacio"></span></td>' for pn, _ in PLATAFORMAS_GRID)
             filas.append(f'<tr><td>{esc(nombre_m.split(" / ")[0])}<span class="chip {cls} mini">{esc(corto)}</span></td>{celdas}</tr>')
-        cards.append(f'<div class="vbox grid-nubes" style="--vc:{m.vcolor(d["_i"])}"><h4>{esc(m.nombre(d["vendor"]))}</h4><div class="comp"><table><thead><tr><th>Modelo</th>' + ''.join(f'<th class="c">{esc(pn)}</th>' for pn, _ in PLATAFORMAS) + '</tr></thead><tbody>' + ''.join(filas) + '</tbody></table></div></div>')
+        cards.append(f'<div class="vbox grid-nubes" style="--vc:{m.vcolor(d["_i"])}"><h4>{esc(m.nombre(d["vendor"]))}</h4><div class="comp"><table><thead><tr><th>Modelo</th>' + ''.join(f'<th class="c">{esc(pn)}</th>' for pn, _ in PLATAFORMAS_GRID) + '</tr></thead><tbody>' + ''.join(filas) + '</tbody></table></div></div>')
     if not cards: return ''
-    leyenda = '<p class="small"><span class="dot of"></span> ofrecida para ese modelo · <span class="dot cond"></span> condicionada o solo compatibilidad declarada · <span class="dot no"></span> mencionada, pero el modelo no se ofrece · <span class="dot vacio"></span> no la asocia a ese modelo. «Nube privada» incluye la nube privada del vendor (p. ej. FIS Private Cloud) o del cliente.</p>'
+    leyenda = '<p class="small"><span class="dot of"></span> ofrecida para ese modelo · <span class="dot cond"></span> condicionada o solo compatibilidad declarada · <span class="dot no"></span> mencionada, pero el modelo no se ofrece · <span class="dot vacio"></span> no la asocia a ese modelo. La fila «Nube privada» (del vendor, p. ej. FIS Private Cloud, o del cliente) no lleva columna propia: el modelo ya la implica; sus puntos muestran la plataforma sobre la que se ofrece.</p>'
     return leyenda + '<div class="vgrid">' + ''.join(cards) + '</div>'
 
 ABREV_MODELO = {'saas': 'SaaS', 'paas': 'PaaS', 'privada': 'Priv', 'on-prem': 'OnP', 'hibrid': 'Híb'}
