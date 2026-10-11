@@ -24,16 +24,19 @@ CSS = p10.CSS_COE + """
 .rk{display:flex;align-items:center;gap:8pt;padding:8pt 0;border-bottom:1px solid #e3e6ec} .rk .pos{width:22pt;height:22pt;border-radius:50%;background:#ff6400;color:#fff;font-weight:800;font-size:10pt;display:flex;align-items:center;justify-content:center;flex:none}
 .rk .v{width:104pt;font-weight:800;color:#00205b;font-size:12pt;flex:none} .rk .n{font-family:"JetBrains Mono",Consolas,monospace;font-weight:700;font-size:16pt;width:40pt;text-align:right;flex:none}
 .rk .tr{flex:1;height:10pt;background:#eef1f4;border-radius:5pt;overflow:hidden} .rk .tr i{display:block;height:100%} .rk .lv{width:88pt;flex:none;text-align:center} .rk .sm{width:66pt;flex:none;font-size:7.6pt;color:#5f6b7a;text-align:right;white-space:nowrap}
-.lect{border-bottom:1px solid #e3e6ec;padding:4pt 0;font-size:8.2pt;line-height:1.32} .lect b{color:#00205b;font-size:8.8pt} .lect .fd{display:block;font-size:7.6pt;color:#3d4a5c;margin-top:1.5pt} .lect .fd i{font-style:normal;font-weight:800;margin-right:3pt} .lect .ok{color:#276221} .lect .ko{color:#b02a2a}
+.lect{border-bottom:1px solid #e3e6ec;padding:4.5pt 0;font-size:8.4pt;line-height:1.34} .lect b{color:#00205b;font-size:9pt} .lect .fd{display:block;font-size:7.8pt;color:#3d4a5c;margin-top:1.5pt} .lect .fd i{font-style:normal;font-weight:800;margin-right:3pt} .lect .ok{color:#276221} .lect .ko{color:#b02a2a}
 .franja{margin-top:10pt;background:#eef1f4;border-radius:5pt;padding:8pt 14pt;font-size:8pt;color:#3d4a5c;line-height:1.4} .franja b{color:#00205b}
 .ver{font-size:8.7pt;line-height:1.38;border-bottom:1px solid #e3e6ec;padding:4pt 0} .ver b{color:#00205b}
 .pie img{height:18pt}
 """
 
+NEGATIVO = re.compile(r'descuent|\brest[aá]|brecha|\bcae\b|riesgo|contradic|falta|pendiente|\bpero\b|no cumple|rojo|parcial|exposici|diferencia', re.I)
 def frase_sustento(texto):
-    """Primera frase de la lectura general que no repite cifras (sin dígitos): la idea que sustenta el resultado. Si todas traen cifras, la primera."""
+    """Frase en positivo de la lectura general: lo que el vendor ofrece y hace coherente su resultado. Se descartan las frases con descuentos,
+    brechas o «pero»; entre las positivas se prefiere la que no repite cifras. Si ninguna es positiva, la primera frase."""
     frases = [f.strip() for f in re.split(r'(?<=[.!?])\s+', (texto or '').strip()) if f.strip()]
-    return next((f for f in frases if not re.search(r'\d', f)), frases[0] if frases else '')
+    positivas = [f for f in frases if not NEGATIVO.search(f)]
+    return next((f for f in positivas if not re.search(r'\d', f)), positivas[0] if positivas else (frases[0] if frases else ''))
 
 def titulo_vineta(v, max_palabras=12):
     """Título en negrita de una viñeta de la ficha («**Título**: …»); recortado si el título arrastra texto («… en E6 y E7 la respuesta…»)."""
@@ -69,9 +72,9 @@ def construir(base):
     der = '<h3 class="az">Lo que sustenta cada resultado</h3>'
     for d in orden:
         f = d['ficha'] or {}
-        fort = ' · '.join(titulo_vineta(x) for x in (f.get('fortalezas') or [])[:3]); debi = ' · '.join(titulo_vineta(x) for x in (f.get('debilidades') or [])[:2])
+        fort = ' · '.join(titulo_vineta(x) for x in (f.get('fortalezas') or [])[:3])
         der += (f'<div class="lect"><b>#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}.</b> {esc(m.nombres_en_texto(frase_sustento(f.get("lectura", ""))) or "Sin lectura general en la ficha.")}'
-                + (f'<span class="fd"><i class="ok">✔</i> {esc(fort)}</span>' if fort else '') + (f'<span class="fd"><i class="ko">✖</i> {esc(debi)}</span>' if debi else '') + '</div>')
+                + (f'<span class="fd"><i class="ok">✔</i> {esc(fort)}</span>' if fort else '') + '</div>')
     n_cat = len(orden[0]['cats']); n_items = sum(orden[0]['dist'].values()) if orden[0]['dist'] else None
     franja = (f'<div class="franja"><b>Cómo leer.</b> Puntaje T5 = media de las calificaciones del Banco (0–4) en la hoja T5 ponderada por criticidad (Indispensable y Killer ×3, Deseable ×1), sobre 100. '
               f'Niveles: Cumple plenamente ≥ 85 · Cumple 70–84 · Parcial 50–69 · No cumple &lt; 50. Los círculos cuentan las {n_cat} categorías de T5 en verde (≥ 70), amarillo (50–69) y rojo (&lt; 50). '
