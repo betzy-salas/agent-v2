@@ -164,6 +164,7 @@ Ruta manual, paso a paso, si se prefiere controlar cada etapa:
 .venv\Scripts\python scripts\12_presentacion_t5_pptx.py --base presentacion_t5                 # PowerPoint con el mismo diseño (pip install python-pptx)
 .venv\Scripts\python scripts\13_laminas_correo.py --base presentacion_t5                     # dos láminas PNG (16:9, 2560×1440) + PDF para adjuntar a un correo
 .venv\Scripts\python scripts\14_laminas_correo_pptx.py --base presentacion_t5                # las mismas dos láminas en PowerPoint
+.venv\Scripts\python scripts\15_lamina_despliegue.py --base presentacion_t5     # LAMINA_3_despliegue.png / .pdf / .pptx (resumen de modelos de despliegue y nubes)
 ```
 
 ## Paso 8 — Documento final de estrategias de implementación (HTML + PDF)
