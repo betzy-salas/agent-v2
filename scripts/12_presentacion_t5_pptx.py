@@ -292,6 +292,78 @@ def construir(base, salida):
         items = [f'{SIM[c["color"]]} {c["cat"]} · {c["pct"]}' for c in sorted([c for c in d['cats'] if c['color'] in ('ROJO', 'AMARILLO')], key=lambda c: c['pct'] or 0)] or ['Ninguna categoría en rojo ni amarillo.']
         caja(s, x, y, 4.0, 2.8, f'#{pos[d["vendor"]]} {m.nombre(d["vendor"])} · categorías en rojo y amarillo', items, 'n', size=8.2)
     pie(s, num(), f'Presentación generada el {hoy.strftime("%d-%m-%Y")} · ' + FUENTE)
+    # 8 estrategia de implementación (general + por vendor), si existen los informes de implementación
+    IMP = p10.datos_implementacion(V); g = IMP['general']
+    if g:
+        FI = 'Fuente: rúbrica de implementación (verif/IMPL.md), informe de implementación (7_) y COMPARATIVO_IMPLEMENTACION.md'
+        hdr, rows = g['resumen']
+        if hdr:
+            col = {m._norm(h): i for i, h in enumerate(hdr)}
+            def ci(*pref): return next((i for h, i in col.items() if any(h.startswith(m._norm(p)) for p in pref)), None)
+            idx = [ci('vendor'), ci('enfoque'), ci('duraci'), ci('implementador'), ci('% estrategia', 'ei'), ci('% fabricante'), ci('% implementador'), ci('señales', 'senales')]
+            filas, fills = [], {}
+            for i, r in enumerate(rows):
+                r = r + [''] * (len(hdr) - len(r)); fila = [(m.nombre(r[j]) if k == 0 else r[j]) if j is not None else '' for k, j in enumerate(idx)]
+                for k in (4, 5, 6):
+                    mm = re.search(r'[\d.]+', fila[k] or ''); fills[(i, k)] = LEVEL_FILL.get(p10.nivel_pct(float(mm.group(0)) if mm else None), 'EEF1F4')
+                filas.append(fila)
+            s = nueva(); seccion(s, '04', 'Estrategia de implementación', 'Cómo propone implantar cada vendor', m.nombres_en_texto(g['titular']))
+            tabla(s, 0.5, 2.1, 12.3, [1.4, 2.6, 1.5, 2.4, 1.0, 1.0, 1.1, 0.9], ['Vendor', 'Enfoque de despliegue', 'Duración propuesta', 'Implementador', '% Estrategia (EI)', '% Fabricante (F)', '% Implementador (I)', 'Señales de alerta'], filas, size=8.2, head_size=8, fills=fills, mono_cols=(4, 5, 6, 7), center_cols=(4, 5, 6, 7), bold_cols=(4, 5, 6), row_h=0.42)
+            texto(s, 0.5, 5.6, 12.3, 0.5, [[('Rúbrica corporativa de implementación (0–5 por criterio, ponderada): EI estrategia de implementación · F perfil del fabricante · I perfil del implementador. Color por nivel: verde ≥ 70 · amarillo 50–69 · rojo < 50. Fuente: verificación de implementación y comparativo de implementación de cada vendor.', {'color': GREY, 'size': 8})]], ajustar=False)
+            pie(s, num(), FI)
+        hdr, rows = g['ei']
+        if hdr:
+            filas, fills = [], {}
+            for i, r in enumerate(rows):
+                r = r + [''] * (len(hdr) - len(r)); fila = [r[0]]
+                for j, c in enumerate(r[1:], 1):
+                    partes = c.split(); fila.append([(partes[0] + ' ', {'bold': True, 'font': MONO}), (' '.join(partes[1:]), {})] if partes else '—')
+                    if partes: fills[(i, j)] = LEVEL_FILL.get(p10.color_0_5(partes[0]), 'EEF1F4')
+                filas.append(fila)
+            s = nueva(); barra(s, 'Estrategia de implementación · criterio a criterio', 'Rúbrica EI-01 a EI-12, puntaje 0–5 con su descriptor')
+            tabla(s, 0.42, 0.82, 12.5, [2.4] + [1.68] * (len(hdr) - 1), ['Criterio EI'] + [m.nombre(h) for h in hdr[1:]], filas, size=7.4, head_size=7.8, fills=fills, row_h=0.3)
+            if g['diferencias']: caja(s, 0.42, 4.95, 12.5, 2.0, 'Criterios con mayor diferencia y por qué', [m.nombres_en_texto(x) for x in g['diferencias']], 'n', size=8)
+            pie(s, num(), 'Fuente: rúbrica de implementación de cada vendor (verif/IMPL.md) y COMPARATIVO_IMPLEMENTACION.md')
+        if g['transversal']:
+            s = nueva(); barra(s, 'Lo que cambia entre vendors en la implementación', 'Comparación transversal con la fuente documental de cada vendor')
+            for j, (t, fu) in enumerate(g['transversal']):
+                colm, fila = j % 2, j // 2; x = 0.42 + colm * 6.4; y = 0.85 + fila * 2.05
+                texto(s, x, y, 6.1, 1.95, [[(str(j + 1), {'bold': True, 'color': NAVY_T, 'size': 10})], [(t, {'size': 8.8})], [('Fuentes: ' + fu + '.', {'color': GREY, 'size': 6.6})]], size=8.8, min_size=6.2, espacio=3)
+                ln = s.shapes.add_connector(1, Inches(x), Inches(y + 1.98), Inches(x + 6.1), Inches(y + 1.98)); ln.line.color.rgb = rgb('E3E6EC'); ln.line.width = Pt(0.75)
+            pie(s, num(), 'Fuente: informes de implementación (7_), rúbricas (IMPL) y análisis de despliegue (8_) de cada vendor')
+        for d in orden:
+            x = IMP['vendors'].get(d['vendor'])
+            if not x: continue
+            nom = m.nombre(d['vendor']); rs = x.get('resumen') or {}; pv = g['por_vendor'].get(d['vendor'], {})
+            s = nueva(); barra(s, f'Estrategia de implementación · {nom}', 'Ficha resumen del informe de implementación')
+            y0 = 0.78
+            if x.get('titular'):
+                texto(s, 0.42, y0, 12.5, 0.6, [[('En una frase. ', {'bold': True, 'color': BLUE}), (m.nombres_en_texto(x['titular']), {})]], size=9.6, min_size=7.5); y0 += 0.66
+            for j, (k, nm) in enumerate((('EI', '% Estrategia de implementación'), ('F', '% Perfil del fabricante'), ('I', '% Perfil del implementador'))):
+                p = rs.get(k); lvl = p10.nivel_pct(p); fill, colr = PILL.get(lvl, ('EEF1F4', GREY)); xx = 0.42 + j * 2.54
+                rect(s, xx, y0, 2.34, 0.72, fill, shape=MSO_SHAPE.ROUNDED_RECTANGLE)
+                texto(s, xx + 0.1, y0, 1.0, 0.72, [[(str(p) if p is not None else '—', {'bold': True, 'color': colr, 'size': 20})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
+                texto(s, xx + 1.05, y0, 1.25, 0.72, [[(nm, {'bold': True, 'color': colr, 'size': 8})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
+            rect(s, 0.42 + 3 * 2.54, y0, 12.5 - 3 * 2.54, 0.72, 'EEF1F4', shape=MSO_SHAPE.ROUNDED_RECTANGLE)
+            texto(s, 0.42 + 3 * 2.54 + 0.1, y0, 12.3 - 3 * 2.54, 0.72, [[('Implementador(es)', {'bold': True, 'color': NAVY_T, 'size': 9})], [('; '.join(x.get('implementadores') or ['—']), {'size': 8.4})]], anchor=MSO_ANCHOR.MIDDLE, size=8.4, min_size=6.5)
+            y0 += 0.86
+            filas, fills = [], {}
+            for i, (e, qf, fu, c) in enumerate(p10.ficha_impl_filas(x)):
+                filas.append([e, qf, [(fu, {'color': GREY, 'size': 6.6})], c]); lvl = {'ALTA': 'VERDE', 'MEDIA': 'AMARILLO', 'BAJA': 'ROJO'}.get(c.strip().upper())
+                if lvl: fills[(i, 3)] = LEVEL_FILL[lvl]
+            tabla(s, 0.42, y0, 12.5, [1.9, 5.4, 4.3, 0.9], ['Elemento', 'Qué propone', 'Fuente', 'Confianza'], filas, size=7.6, head_size=7.8, fills=fills, center_cols=(3,), bold_cols=(3,), row_h=0.44)
+            pie(s, num(), f'Fuente: informe de implementación (7_) y rúbrica de implementación (verif/IMPL.md) de {nom}')
+            s = nueva(); barra(s, f'Pros, contras y veredicto de implementación · {nom}', 'Del informe de implementación y del comparativo entre vendors')
+            def it_box(items, lead):
+                return [f'**{i["afirmacion"]}**: {lead} {i.get("importa", "")} Fuente: {i["fuente"]} · Confianza: {i["confianza"]}' if i.get('importa') else f'**{i["afirmacion"]}**. Fuente: {i["fuente"]} · Confianza: {i["confianza"]}' for i in items]
+            abajo = [(t, next((v for k, v in pv.items() if m._norm(cl) in m._norm(k)), []), cls) for t, cl, cls in (('Veredicto en una frase', 'Veredicto', 'p'), ('Señales de alerta', 'Señales', 'o'), ('Lo que deja al Banco', 'deja al Banco', 'gr'))]
+            abajo = [a for a in abajo if a[1]]; h_sup = 4.3 if abajo else 6.1
+            caja(s, 0.42, 0.85, 6.15, h_sup, 'Pros (5)', it_box((x.get('pros_items') or [])[:5], 'Por qué importa:'), 'g', size=7.8)
+            caja(s, 6.77, 0.85, 6.15, h_sup, 'Contras (5)', it_box((x.get('contras_items') or [])[:5], 'Consecuencia:'), 'r', size=7.8)
+            if abajo:
+                wcaja = (12.5 - 0.2 * (len(abajo) - 1)) / len(abajo)
+                for j, (t, lst, cls) in enumerate(abajo): caja(s, 0.42 + j * (wcaja + 0.2), 5.3, wcaja, 1.65, t, [m.nombres_en_texto(z) for z in lst], cls, size=7.8)
+            pie(s, num(), f'Fuente: informe de implementación (7_) de {nom} y COMPARATIVO_IMPLEMENTACION.md')
     prs.save(salida); return len(prs.slides)
 
 def main():

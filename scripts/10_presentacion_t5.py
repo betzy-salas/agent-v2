@@ -272,6 +272,65 @@ def construir_presentacion(V, base, hoy):
     H.append(f'<footer>Presentación generada el {hoy} a partir de los semáforos y fichas T5 de cada vendor (calificación del Banco en la hoja T5; verificación documental cuando existe). Ranking por puntaje T5.</footer></div></body></html>')
     return '\n'.join(H)
 
+# ----------------------------------------------------------------------------- estrategia de implementación (informes 7_, rúbrica IMPL y COMPARATIVO_IMPLEMENTACION.md ya existentes)
+FICHA_IMPL = [('enfoque', 'Enfoque'), ('duración total', 'Duración total'), ('implementador', 'Implementador'), ('roles clave', 'Roles clave y dedicación'), ('migración', 'Migración de datos'),
+              ('pruebas', 'Pruebas y PoC'), ('hypercare', 'Hypercare'), ('responsabilidades del banco', 'Responsabilidades del Banco'), ('modalidad comercial', 'Modalidad comercial')]
+PILL = {'VERDE': ('#dcebd4', '#276221'), 'AMARILLO': ('#fbe4cc', '#9c5700'), 'ROJO': ('#f5cccc', '#b02a2a')}
+def nivel_pct(p):
+    """Color por nivel oficial sobre un porcentaje 0–100 (verde ≥ 70, amarillo 50–69, rojo < 50)."""
+    return color_de(p) if p is not None else 'SIN CALIFICAR'
+def color_0_5(n):
+    try: n = float(n)
+    except (TypeError, ValueError): return 'SIN CALIFICAR'
+    return 'VERDE' if n >= 4 else 'AMARILLO' if n >= 3 else 'ROJO'
+
+def _bloques_vendor_comparativo(body):
+    """Sección de un vendor en COMPARATIVO_IMPLEMENTACION.md: {Fortalezas: [...], Debilidades: [...], Lo que deja al Banco: [...], Señales de alerta: [...], Veredicto en una frase: [...]}."""
+    out = {}; cur = None
+    for l in body.split('\n'):
+        s = l.strip()
+        if not s: continue
+        if re.match(r'^[-*•]\s+', s):
+            if cur is not None: out.setdefault(cur, []).append(re.sub(r'^[-*•]\s+', '', s))
+        elif len(s) < 60 and not s.endswith('.'): cur = re.sub(r'^#+\s*', '', s).strip(': ')
+    return out
+
+def datos_implementacion(V):
+    """Datos de implementación por vendor (cargar_vendor de 07: ficha, pros, contras, rúbrica EI/F/I) y generales (comparativo), con fuentes reales."""
+    out = {'vendors': {}, 'general': None}; vd = []
+    for d in V:
+        x = m.cargar_vendor(d['vendor'])
+        if x.get('ok'): vd.append(x); out['vendors'][d['vendor']] = x
+    comp = RAIZ / 'vendors' / 'COMPARATIVO_IMPLEMENTACION.md'
+    if not vd or not comp.exists(): return out
+    md = m.leer_md(comp); secs = m.sections(md)
+    g = {'titular': next((l.strip() for l in md.split('\n') if l.strip() and not l.startswith('#')), ''), 'resumen': m.first_table(m.find_section(secs, 'Tabla resumen')),
+         'ei': m.first_table(m.find_section(secs, 'Tabla criterio')), 'diferencias': [], 'transversal': [], 'por_vendor': {}}
+    g['diferencias'] = [re.sub(r'^[-*•]\s+', '', l.strip()) for l in m.find_section(secs, 'Criterios con mayor diferencia').split('\n') if re.match(r'^\s*[-*•]\s+', l)]
+    items = []
+    for l in m.find_section(secs, 'Comparación transversal', 'Comparacion transversal').split('\n'):
+        if not l.strip(): continue
+        if re.match(r'^\s*\d+[.)]\s+', l): items.append([re.sub(r'^\s*\d+[.)]\s+', '', l).strip(), []])
+        elif items and re.match(r'^\s*[-*•]\s+', l): items[-1][1].append(re.sub(r'^\s*[-*•]\s+', '', l).strip())
+        elif items: items[-1][0] += ' ' + l.strip()
+    for texto, subs in items:
+        reales = m.fuentes_reales(texto, vd)
+        fuentes = ' · '.join(f'{v}: {c}' for v, c in reales) if reales else m.fuentes_legibles('; '.join(re.sub(r'^fuentes?\s*:\s*', '', x, flags=re.I).rstrip('.') for x in subs if re.match(r'^fuentes?\s*:', x, flags=re.I)))
+        g['transversal'].append((m.nombres_en_texto(texto), fuentes))
+    for lvl, t, b in secs:
+        if lvl == 2:
+            for d in V:
+                if m._norm(m.nombre(t.strip())) == m._norm(m.nombre(d['vendor'])): g['por_vendor'][d['vendor']] = _bloques_vendor_comparativo(b)
+    out['general'] = g; return out
+
+def ficha_impl_filas(x):
+    """Filas (etiqueta, qué propone, fuente, confianza) de la ficha resumen del informe 7_ en el orden de FICHA_IMPL."""
+    out = []
+    for clave, etiqueta in FICHA_IMPL:
+        for k, val in (x.get('ficha') or {}).items():
+            if m._norm(clave) in m._norm(k): out.append((etiqueta, val.get('que', ''), val.get('fuente', ''), val.get('conf', ''))); break
+    return out
+
 # ----------------------------------------------------------------------------- estilo CoE (deck corporativo 16:9: barra azul, numerales naranja, pie «Datos elaborados por BCP para uso Interno»)
 import base64, mimetypes
 CSS_COE = """
@@ -418,6 +477,50 @@ def construir_presentacion_coe(V, base, hoy):
     cajas = [f'<div class="box"><h4>#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))} <span>· categorías en rojo y amarillo</span></h4><ul>' + (''.join(f'<li>{SIM[c["color"]]} {esc(c["cat"])} · {c["pct"]}</li>' for c in sorted([c for c in d['cats'] if c['color'] in ('ROJO', 'AMARILLO')], key=lambda x: x['pct'] or 0)) or '<li>Ninguna categoría en rojo ni amarillo.</li>') + '</ul></div>' for d in orden]
     cajas = ''.join(lay(*cajas[i:i + 3]) for i in range(0, len(cajas), 3))
     H.append(f'<section class="s">{bar("Lo pendiente", "Categorías en rojo y amarillo por vendor")}<div class="body"><p class="lead" style="font-size:9pt;color:#5f6b7a;margin-bottom:10pt">Lo que cada vendor dejó sin cubrir o sin sustento según la calificación del Banco; el detalle por ítem está en el semáforo y la ficha de cada vendor.</p><div class="pend3">{cajas}</div></div>' + pie(f'Presentación generada el {hoy} · ' + FUENTE) + '</section>')
+    # 8 estrategia de implementación (general + por vendor), solo si existen los informes de implementación
+    IMP = datos_implementacion(V); g = IMP['general']
+    if g:
+        def pct_td(v):
+            p = re.search(r'[\d.]+', v or ''); p = float(p.group(0)) if p else None
+            return f'<td class="mono {_cls(nivel_pct(p))}" style="text-align:center;font-weight:700">{esc(v)}</td>'
+        hdr, rows = g['resumen']
+        if hdr:
+            col = {m._norm(h): i for i, h in enumerate(hdr)}
+            def ci(*pref): return next((i for h, i in col.items() if any(h.startswith(m._norm(p)) for p in pref)), None)
+            iv, ie, idu, ii, iei, if_, ii_, ial = ci('vendor'), ci('enfoque'), ci('duraci'), ci('implementador'), ci('% estrategia', 'ei'), ci('% fabricante'), ci('% implementador'), ci('señales', 'senales')
+            filas = ''
+            for r in rows:
+                r = r + [''] * (len(hdr) - len(r)); v = r[iv] if iv is not None else ''
+                filas += f'<tr><td class="k">{esc(m.nombre(v))}</td><td>{esc(r[ie]) if ie is not None else ""}</td><td>{esc(r[idu]) if idu is not None else ""}</td><td>{esc(r[ii]) if ii is not None else ""}</td>' + ''.join(pct_td(r[i]) if i is not None else '<td>—</td>' for i in (iei, if_, ii_)) + f'<td class="mono" style="text-align:center">{esc(r[ial]) if ial is not None else ""}</td></tr>'
+            H.append('<section class="s"><div class="sec"><span class="num"><b>04</b>Estrategia de implementación</span><h1>Cómo propone implantar cada vendor</h1><p class="sub">' + esc(m.nombres_en_texto(g['titular'])) + '</p>'
+                     + '<table class="t" style="font-size:8.4pt"><thead><tr><th style="width:12%">Vendor</th><th style="width:22%">Enfoque de despliegue</th><th style="width:13%">Duración propuesta</th><th style="width:20%">Implementador</th><th style="width:8%">% Estrategia (EI)</th><th style="width:8%">% Fabricante (F)</th><th style="width:9%">% Implementador (I)</th><th>Señales de alerta</th></tr></thead><tbody>' + filas + '</tbody></table>'
+                     + '<p class="leg">Rúbrica corporativa de implementación (0–5 por criterio, ponderada): EI estrategia de implementación · F perfil del fabricante · I perfil del implementador. Color por nivel: <i class="V"></i>≥ 70 <i class="A"></i>50–69 <i class="R"></i>&lt; 50. Fuente: verificación de implementación y comparativo de implementación de cada vendor.</p></div>' + pie('Fuente: rúbrica de implementación (verif/IMPL.md), informe de implementación (7_) y COMPARATIVO_IMPLEMENTACION.md') + '</section>')
+        hdr, rows = g['ei']
+        if hdr:
+            filas = ''
+            for r in rows:
+                r = r + [''] * (len(hdr) - len(r)); filas += f'<tr><td class="k">{esc(r[0])}</td>' + ''.join((lambda c: f'<td class="{_cls(color_0_5(c.split()[0] if c.split() else None))}"><b class="mono">{esc(c.split()[0]) if c.split() else "—"}</b> {esc(" ".join(c.split()[1:]))}</td>')(c) for c in r[1:]) + '</tr>'
+            H.append(f'<section class="s">{bar("Estrategia de implementación · criterio a criterio", "Rúbrica EI-01 a EI-12, puntaje 0–5 con su descriptor")}<div class="body"><table class="t" style="font-size:7.6pt"><thead><tr><th style="width:19%">Criterio EI</th>' + ''.join(f'<th>{esc(m.nombre(h))}</th>' for h in hdr[1:]) + f'</tr></thead><tbody>{filas}</tbody></table>'
+                     + ('<div class="box n" style="margin-top:10pt"><h4>Criterios con mayor diferencia y por qué</h4><ul>' + ''.join(f'<li>{esc(m.nombres_en_texto(x))}</li>' for x in g['diferencias']) + '</ul></div>' if g['diferencias'] else '') + '</div>' + pie('Fuente: rúbrica de implementación de cada vendor (verif/IMPL.md) y COMPARATIVO_IMPLEMENTACION.md') + '</section>')
+        if g['transversal']:
+            H.append(f'<section class="s">{bar("Lo que cambia entre vendors en la implementación", "Comparación transversal con la fuente documental de cada vendor")}<div class="body"><div class="cg">' + ''.join(f'<div class="ci"><b>{k}</b>{esc(t)}<span class="fuente" style="display:block;color:#5f6b7a;font-size:6.8pt;margin-top:3pt">Fuentes: {esc(f)}.</span></div>' for k, (t, f) in enumerate(g['transversal'], 1)) + '</div></div>' + pie('Fuente: informes de implementación (7_), rúbricas (IMPL) y análisis de despliegue (8_) de cada vendor') + '</section>')
+        for d in orden:
+            x = IMP['vendors'].get(d['vendor'])
+            if not x: continue
+            nom = m.nombre(d['vendor']); rs = x.get('resumen') or {}; pv = g['por_vendor'].get(d['vendor'], {})
+            tiles = ''.join((lambda p, col: f'<div class="tile" style="background:{PILL[col][0] if col != "SIN CALIFICAR" else "#eef1f4"}"><b style="color:{PILL[col][1] if col != "SIN CALIFICAR" else "#5f6b7a"}">{p if p is not None else "—"}</b><span style="color:{PILL[col][1] if col != "SIN CALIFICAR" else "#5f6b7a"}">{nm}</span></div>')(rs.get(k), nivel_pct(rs.get(k))) for k, nm in (('EI', '% Estrategia de implementación'), ('F', '% Perfil del fabricante'), ('I', '% Perfil del implementador')))
+            tiles += f'<div class="tile" style="background:#eef1f4;grid-column:span 2"><span style="color:#171f2a;font-weight:400"><b style="font-size:9pt;color:#00205b">Implementador(es)</b><br>{esc("; ".join(x.get("implementadores") or ["—"]))}</span></div>'
+            filas = ''.join(f'<tr><td class="k">{esc(e)}</td><td>{esc(q)}</td><td style="color:#5f6b7a;font-size:6.9pt">{esc(fu)}</td><td class="{_cls({"ALTA": "VERDE", "MEDIA": "AMARILLO", "BAJA": "ROJO"}.get(c.strip().upper(), ""))}" style="text-align:center;font-weight:700">{esc(c)}</td></tr>' for e, q, fu, c in ficha_impl_filas(x))
+            H.append(f'<section class="s">{bar("Estrategia de implementación · " + nom, "Ficha resumen del informe de implementación")}<div class="body">' + (f'<p class="lead" style="font-size:9.6pt"><b style="color:#00529b">En una frase.</b> {esc(x.get("titular", ""))}</p>' if x.get('titular') else '')
+                     + f'<div class="tiles" style="grid-template-columns:repeat(5,1fr);margin:8pt 0 10pt">{tiles}</div><table class="t" style="font-size:7.8pt"><thead><tr><th style="width:15%">Elemento</th><th style="width:43%">Qué propone</th><th style="width:34%">Fuente</th><th>Confianza</th></tr></thead><tbody>{filas}</tbody></table></div>' + pie('Fuente: informe de implementación (7_) y rúbrica de implementación (verif/IMPL.md) de ' + nom) + '</section>')
+            def it_box(items, lead):
+                return [f'**{i["afirmacion"]}**: {lead} {i.get("importa", "")} Fuente: {i["fuente"]} · Confianza: {i["confianza"]}' if i.get('importa') else f'**{i["afirmacion"]}**. Fuente: {i["fuente"]} · Confianza: {i["confianza"]}' for i in items]
+            abajo = ''
+            for titulo, clave, cls in (('Veredicto en una frase', 'Veredicto', 'p'), ('Señales de alerta', 'Señales', 'o'), ('Lo que deja al Banco', 'deja al Banco', 'gr')):
+                lst = next((v for k, v in pv.items() if m._norm(clave) in m._norm(k)), [])
+                if lst: abajo += box(titulo, [m.nombres_en_texto(z) for z in lst], cls)
+            H.append(f'<section class="s">{bar("Pros, contras y veredicto de implementación · " + nom, "Del informe de implementación y del comparativo entre vendors")}<div class="body">' + lay(box('Pros', it_box((x.get('pros_items') or [])[:5], 'Por qué importa:'), 'g'), box('Contras', it_box((x.get('contras_items') or [])[:5], 'Consecuencia:'), 'r'))
+                     + (f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12pt">{abajo}</div>' if abajo else '') + '</div>' + pie('Fuente: informe de implementación (7_) de ' + nom + ' y COMPARATIVO_IMPLEMENTACION.md') + '</section>')
     H.append('</body></html>')
     return '\n'.join(H)
 
