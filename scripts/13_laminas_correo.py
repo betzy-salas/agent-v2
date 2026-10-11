@@ -21,12 +21,14 @@ m = p10.m
 esc = html.escape
 
 CSS = p10.CSS_COE + """
+body{font-family:Aptos,"Segoe UI",Arial,Helvetica,sans-serif}  /* sin fuentes web: el render es el mismo con o sin red; Aptos/Segoe UI en Windows, Arial (más ancha) en otros equipos */
+.l2 table.t td{padding:3pt 5pt;line-height:1.28} .l2 table.t th{padding:4pt 5pt}
 .rk{display:flex;align-items:center;gap:7pt;padding:8pt 0;border-bottom:1px solid #e3e6ec} .rk .pos{width:22pt;height:22pt;border-radius:50%;background:#ff6400;color:#fff;font-weight:800;font-size:10pt;display:flex;align-items:center;justify-content:center;flex:none}
-.rk .v{width:92pt;font-weight:800;color:#00205b;font-size:12pt;flex:none} .rk .n{font-family:"JetBrains Mono",Consolas,monospace;font-weight:700;font-size:16pt;width:40pt;text-align:right;flex:none}
-.rk .tr{flex:1;height:10pt;background:#eef1f4;border-radius:5pt;overflow:hidden} .rk .tr i{display:block;height:100%} .rk .lv{width:80pt;flex:none;text-align:center} .rk .sm{width:60pt;flex:none;font-size:7.6pt;color:#5f6b7a;text-align:right;white-space:nowrap}
-.lect{border-bottom:1px solid #e3e6ec;padding:3pt 0 2.5pt} .lect .vn{display:block;color:#00205b;font-size:8.6pt;margin-bottom:.5pt} .lect ul{margin:0;padding-left:10pt;font-size:7.4pt;line-height:1.27} .lect li{margin:0} .lect li b{color:#00205b} .lect li i{font-style:normal;color:#5f6b7a;font-size:6.8pt}
+.rk .v{width:106pt;font-weight:800;color:#00205b;font-size:11.5pt;flex:none} .rk .n{font-family:"JetBrains Mono",Consolas,monospace;font-weight:700;font-size:16pt;width:40pt;text-align:right;flex:none}
+.rk .tr{flex:1;height:10pt;background:#eef1f4;border-radius:5pt;overflow:hidden} .rk .tr i{display:block;height:100%} .rk .lv{width:78pt;flex:none;text-align:center} .rk .sm{width:60pt;flex:none;font-size:7.6pt;color:#5f6b7a;text-align:right;white-space:nowrap}
+.lect{border-bottom:1px solid #e3e6ec;padding:2.5pt 0 2pt} .lect .vn{display:block;color:#00205b;font-size:8.4pt;margin-bottom:.5pt} .lect ul{margin:0;padding-left:10pt;font-size:7.2pt;line-height:1.25} .lect li{margin:0} .lect li b{color:#00205b} .lect li i{font-style:normal;color:#5f6b7a;font-size:6.8pt}
 .franja{margin-top:10pt;background:#eef1f4;border-radius:5pt;padding:8pt 14pt;font-size:8pt;color:#3d4a5c;line-height:1.4} .franja b{color:#00205b}
-.ver{font-size:8.7pt;line-height:1.38;border-bottom:1px solid #e3e6ec;padding:4pt 0} .ver b{color:#00205b}
+.ver{font-size:7.4pt;line-height:1.3;border-bottom:1px solid #e3e6ec;padding:3pt 0} .ver b{color:#00205b}
 .pie img{height:18pt}
 """
 
@@ -78,7 +80,7 @@ def construir(base):
     def lay(*celdas, ancho=None):
         tds = ''.join('<td' + (' style="width:%s"' % ancho[i] if ancho else '') + '>' + c + '</td>' for i, c in enumerate(celdas))
         return '<table class="lay"><tr>' + tds + '</tr></table>'
-    H = [f'<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Láminas T5 para correo</title>{m.FONTS}<style>{CSS}</style></head><body>']
+    H = [f'<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Láminas T5 para correo</title><style>{CSS}</style></head><body>']
 
     # ---- lámina 1 · resultado T5
     izq = '<h3 class="az">Ranking por puntaje T5</h3>'
@@ -106,39 +108,32 @@ def construir(base):
     IMP = p10.datos_implementacion(V); g = IMP['general']
     if g:
         DESP, PLAT = p10.datos_despliegue(orden); desp = {v: filas for v, _, filas in DESP}
-        hdr, rows = g['resumen']; filas = ''
-        if hdr:
-            col = {m._norm(h): i for i, h in enumerate(hdr)}
-            def ci(*pref): return next((i for h, i in col.items() if any(h.startswith(m._norm(p)) for p in pref)), None)
-            i_v, i_du, i_im, i_ei, i_f, i_i, i_se = ci('vendor'), ci('duraci'), ci('implementador'), ci('% estrategia', 'ei'), ci('% fabricante'), ci('% implementador'), ci('señales', 'senales')
-            por_v = {}
-            for r in rows:
-                r = r + [''] * (len(hdr) - len(r)); por_v[m._norm(m.nombre(r[i_v]))] = r
-            for d in orden:
-                r = por_v.get(m._norm(m.nombre(d['vendor'])))
-                if not r: continue
-                def pc(j):
-                    mm = re.search(r'[\d.]+', r[j] or '') if j is not None else None
-                    lvl = p10.nivel_pct(float(mm.group(0))) if mm else None
-                    return f'<td class="mono {p10._cls(lvl) if lvl else ""}" style="text-align:center;font-weight:700">{esc(r[j]) if j is not None else "—"}</td>'
-                fl = desp.get(d['vendor'], [])
-                ofrec = [nm for nm, cls, _, _ in fl if cls == 'si']; cond = [nm for nm, cls, _, _ in fl if cls == 'cond']
-                nubes = []
-                for _, _, _, marcas in fl:
-                    for pn, est in marcas.items():
-                        if est == 'of' and pn not in nubes and pn != 'Nube privada': nubes.append(pn)   # la nube privada ya va como modelo
-                dtxt = ('<b>Ofrece:</b> ' + esc(', '.join(ofrec)) if ofrec else '<b>Ofrece:</b> —') + (' · <b>Condicionado:</b> ' + esc(', '.join(cond)) if cond else '') + ('<br><b>Nubes ofrecidas:</b> ' + esc(', '.join(nubes)) if nubes else '<br><b>Nubes ofrecidas:</b> no especifica')
-                filas += (f'<tr><td class="k">#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}</td>{pc(i_ei)}{pc(i_f)}{pc(i_i)}<td>{esc(r[i_du]) if i_du is not None else "—"}</td><td>{esc(r[i_im]) if i_im is not None else "—"}</td>'
-                          f'<td style="font-size:7.6pt">{dtxt}</td><td class="mono" style="text-align:center">{esc(r[i_se]) if i_se is not None else "—"}</td></tr>')
-        vers = ''
+        filas = ''
         for d in orden:
-            pv = g['por_vendor'].get(d['vendor'], {}); lst = next((v for k, v in pv.items() if 'veredicto' in m._norm(k)), [])
-            if lst: vers += f'<div class="ver"><b>#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}.</b> {esc(m.nombres_en_texto(lst[0]))}</div>'
-        H.append(f'<section class="s">{bar("Revisión Técnica Resultados T5 · Implementación y despliegue", "Rúbrica corporativa de implementación y modelos de despliegue · " + mes)}<div class="body">'
-                 + '<table class="t" style="font-size:8.1pt"><thead><tr><th style="width:12%">Vendor (ranking T5)</th><th style="width:8%">% Estrategia (EI)</th><th style="width:8%">% Fabricante (F)</th><th style="width:11%">% Implementador (I)</th><th style="width:11%">Duración propuesta</th><th style="width:17%">Implementador</th><th>Modelos de despliegue y nubes ofrecidos</th><th style="width:6%">Señales de alerta</th></tr></thead><tbody>' + filas + '</tbody></table>'
-                 + '<p class="leg" style="margin:5pt 0 6pt;font-size:8pt">Rúbrica 0–5 por criterio, ponderada: EI estrategia de implementación · F perfil del fabricante · I perfil del implementador. Color por nivel: <i class="V"></i>≥ 70 <i class="A"></i>50–69 <i class="R"></i>&lt; 50. Despliegue: modelos que el vendor ofrece (Sí) o condiciona y nubes en firme para esos modelos, según sus documentos.</p>'
-                 + '<h3 class="az" style="font-size:12.5pt;margin-top:2pt">Veredicto de implementación en una frase</h3>' + vers + '</div>'
-                 + pie('Fuente: rúbrica de implementación (IMPL), informes 7_ y 8_ y comparativo de implementación de cada vendor') + '</section>')
+            x = IMP['vendors'].get(d['vendor'])
+            if not x: continue
+            fi = {e: q for e, q, _, _ in p10.ficha_impl_filas(x)}
+            fl = desp.get(d['vendor'], [])
+            ofrec = [nm for nm, cls, _, _ in fl if cls == 'si']; cond = [nm for nm, cls, _, _ in fl if cls == 'cond']
+            nubes = []
+            for _, _, _, marcas in fl:
+                for pn, est in marcas.items():
+                    if est == 'of' and pn not in nubes and pn != 'Nube privada': nubes.append(pn)   # la nube privada ya va como modelo
+            dtxt = ('<b>Ofrece:</b> ' + esc(', '.join(ofrec)) if ofrec else '<b>Ofrece:</b> —') + (' · <b>Condicionado:</b> ' + esc(', '.join(cond)) if cond else '') + ('<br><b>Nubes:</b> ' + esc(', '.join(nubes)) if nubes else '<br><b>Nubes:</b> no especifica')
+            celda = lambda k: esc(m.nombres_en_texto(fi.get(k, '—')))
+            filas += (f'<tr><td class="k">#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}</td><td>{celda("Enfoque")}</td><td>{celda("Duración total")}</td><td>{celda("Implementador")}</td>'
+                      f'<td>{celda("Migración de datos")}</td><td>{celda("Hypercare")}</td><td>{dtxt}</td></tr>')
+        pros = ''
+        for d in orden:
+            x = IMP['vendors'].get(d['vendor'])
+            if not x: continue
+            its = [m.nombres_en_texto(i['afirmacion']).rstrip('.') for i in (x.get('pros_items') or [])[:2]]
+            if its: pros += f'<div class="ver"><b>#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}.</b> ' + ' · '.join(esc(t) for t in its) + '</div>'
+        H.append(f'<section class="s l2">{bar("Revisión Técnica Resultados T5 · Implementación y despliegue", "Cómo propone implantar cada vendor y modelos de despliegue · " + mes)}<div class="body">'
+                 + '<table class="t" style="font-size:7.1pt"><thead><tr><th style="width:10%">Vendor (ranking T5)</th><th style="width:17%">Enfoque de implementación</th><th style="width:12%">Duración propuesta</th><th style="width:15%">Implementador</th><th style="width:17%">Migración de datos</th><th style="width:12%">Hypercare</th><th>Modelos de despliegue y nubes ofrecidos</th></tr></thead><tbody>' + filas + '</tbody></table>'
+                 + '<p class="leg" style="margin:4pt 0 5pt;font-size:7.4pt">Ficha de implementación de cada vendor, tomada de su propuesta y anexos. Despliegue: modelos que el vendor ofrece (Sí) o condiciona y nubes en firme para esos modelos, según sus documentos.</p>'
+                 + '<h3 class="az" style="font-size:12pt;margin-top:2pt">Lo que propone cada vendor para implantar</h3><div class="cg" style="gap:2pt 22pt">' + pros + '</div></div>'
+                 + pie('Fuente: informe de implementación (7_) y análisis de despliegue (8_) de cada vendor, sobre su propuesta y anexos') + '</section>')
     H.append('</body></html>')
     return '\n'.join(H)
 
