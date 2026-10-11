@@ -21,10 +21,10 @@ m = p10.m
 esc = html.escape
 
 CSS = p10.CSS_COE + """
-.rk{display:flex;align-items:center;gap:8pt;padding:8pt 0;border-bottom:1px solid #e3e6ec} .rk .pos{width:22pt;height:22pt;border-radius:50%;background:#ff6400;color:#fff;font-weight:800;font-size:10pt;display:flex;align-items:center;justify-content:center;flex:none}
-.rk .v{width:104pt;font-weight:800;color:#00205b;font-size:12pt;flex:none} .rk .n{font-family:"JetBrains Mono",Consolas,monospace;font-weight:700;font-size:16pt;width:40pt;text-align:right;flex:none}
-.rk .tr{flex:1;height:10pt;background:#eef1f4;border-radius:5pt;overflow:hidden} .rk .tr i{display:block;height:100%} .rk .lv{width:88pt;flex:none;text-align:center} .rk .sm{width:66pt;flex:none;font-size:7.6pt;color:#5f6b7a;text-align:right;white-space:nowrap}
-.lect{border-bottom:1px solid #e3e6ec;padding:4.5pt 0;font-size:8.4pt;line-height:1.34} .lect b{color:#00205b;font-size:9pt} .lect .fd{display:block;font-size:7.8pt;color:#3d4a5c;margin-top:1.5pt} .lect .fd i{font-style:normal;font-weight:800;margin-right:3pt} .lect .ok{color:#276221} .lect .ko{color:#b02a2a}
+.rk{display:flex;align-items:center;gap:7pt;padding:8pt 0;border-bottom:1px solid #e3e6ec} .rk .pos{width:22pt;height:22pt;border-radius:50%;background:#ff6400;color:#fff;font-weight:800;font-size:10pt;display:flex;align-items:center;justify-content:center;flex:none}
+.rk .v{width:92pt;font-weight:800;color:#00205b;font-size:12pt;flex:none} .rk .n{font-family:"JetBrains Mono",Consolas,monospace;font-weight:700;font-size:16pt;width:40pt;text-align:right;flex:none}
+.rk .tr{flex:1;height:10pt;background:#eef1f4;border-radius:5pt;overflow:hidden} .rk .tr i{display:block;height:100%} .rk .lv{width:80pt;flex:none;text-align:center} .rk .sm{width:60pt;flex:none;font-size:7.6pt;color:#5f6b7a;text-align:right;white-space:nowrap}
+.lect{border-bottom:1px solid #e3e6ec;padding:3pt 0 2.5pt} .lect .vn{display:block;color:#00205b;font-size:8.6pt;margin-bottom:.5pt} .lect ul{margin:0;padding-left:10pt;font-size:7.4pt;line-height:1.27} .lect li{margin:0} .lect li b{color:#00205b} .lect li i{font-style:normal;color:#5f6b7a;font-size:6.8pt}
 .franja{margin-top:10pt;background:#eef1f4;border-radius:5pt;padding:8pt 14pt;font-size:8pt;color:#3d4a5c;line-height:1.4} .franja b{color:#00205b}
 .ver{font-size:8.7pt;line-height:1.38;border-bottom:1px solid #e3e6ec;padding:4pt 0} .ver b{color:#00205b}
 .pie img{height:18pt}
@@ -37,6 +37,24 @@ def frase_sustento(texto):
     frases = [f.strip() for f in re.split(r'(?<=[.!?])\s+', (texto or '').strip()) if f.strip()]
     positivas = [f for f in frases if not NEGATIVO.search(f)]
     return next((f for f in positivas if not re.search(r'\d', f)), positivas[0] if positivas else (frases[0] if frases else ''))
+
+SUJETO = re.compile(r'^(?:(?:en\s+)?(?P<items>E\d+(?:\s*,\s*E\d+)*(?:\s*(?:y|e)\s*E\d+)?)\s+)?(?:(?:el|la)\s+(?:proveedor|vendor|propuesta|respuesta|verificación)\s+|se\s+)?(?:describe|describen|declara|declaran|propone|proponen|plantea|plantean|reporta|reportan|indica|indican|presenta|presentan|menciona|mencionan|documenta|documentan|ofrece|ofrecen|define|definen|muestra|muestran)\s+', re.I)
+CORTE = re.compile(r',?\s+(?:y|e)\s+(?:el\s+evaluador|la\s+verificaci[oó]n|el\s+banco)\b|,\s+(?:y\s+)?(?:lo\s+que|con\s+observaci[oó]n)\b|;', re.I)
+def lo_que_ofrece(v):
+    """De una fortaleza de la ficha («**Título**: en E38 y E49 el proveedor describe X, y el evaluador…») devuelve (título, X, ítems):
+    el contenido concreto que el vendor ofrece, sin la valoración del evaluador y sin recortar palabras del texto original."""
+    v = v.strip(); mm = re.match(r'^\*\*(.+?)\*\*\s*:?\s*(.*)$', v, re.S)
+    titulo, cuerpo = (mm.group(1), mm.group(2)) if mm else ('', v)
+    cuerpo = re.split(r'\s(?=(?:Fuente|Confianza)\s*:)', cuerpo)[0].strip()
+    items = ''
+    ms = SUJETO.match(cuerpo)
+    if ms:
+        items = ms.group('items') or ''; cuerpo = cuerpo[ms.end():]
+    cuerpo = CORTE.split(cuerpo)[0].strip(' .,;')
+    if not items:   # ítems solo en la «Fuente: E13, E18 - …» de la viñeta
+        mf = re.search(r'Fuente\s*:\s*((?:E\d+(?:\s*,\s*)?)+)', v); items = ', '.join(re.findall(r'E\d+', mf.group(1))) if mf else ''
+    if cuerpo: cuerpo = cuerpo[0].upper() + cuerpo[1:]
+    return titulo, cuerpo, re.sub(r'\s+', ' ', items)
 
 def titulo_vineta(v, max_palabras=12):
     """Título en negrita de una viñeta de la ficha («**Título**: …»); recortado si el título arrastra texto («… en E6 y E7 la respuesta…»)."""
@@ -68,18 +86,20 @@ def construir(base):
         n = sem(d); c = p10.color_de(d['pct']); fill, ink = p10.PILL[c]
         izq += (f'<div class="rk"><span class="pos">{pos[d["vendor"]]}</span><span class="v">{esc(m.nombre(d["vendor"]))}</span><span class="n" style="color:{ink}">{d["pct"]}</span>'
                 f'<span class="tr"><i style="width:{d["pct"]}%;background:{ {"VERDE": "#b8d680", "AMARILLO": "#fcc97d", "ROJO": "#f7786e"}[c] }"></i></span>'
-                f'<span class="lv"><span class="pill p{p10._cls(c)}">{esc(d["nivel"])}</span></span><span class="sm">🟢 {n["VERDE"]} · 🟡 {n["AMARILLO"]} · 🔴 {n["ROJO"]}</span></div>')
-    der = '<h3 class="az">Lo que sustenta cada resultado</h3>'
+                f'<span class="lv"><span class="pill p{p10._cls(c)}">{esc(d["nivel"])}</span></span></div>')
+    der = '<h3 class="az">Lo que ofrece cada propuesta y sustenta su resultado</h3>'
     for d in orden:
-        f = d['ficha'] or {}
-        fort = ' · '.join(titulo_vineta(x) for x in (f.get('fortalezas') or [])[:3])
-        der += (f'<div class="lect"><b>#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}.</b> {esc(m.nombres_en_texto(frase_sustento(f.get("lectura", ""))) or "Sin lectura general en la ficha.")}'
-                + (f'<span class="fd"><i class="ok">✔</i> {esc(fort)}</span>' if fort else '') + '</div>')
+        f = d['ficha'] or {}; puntos = ''
+        for x in (f.get('fortalezas') or [])[:3]:
+            tit, que, items = lo_que_ofrece(x)
+            if not que: continue
+            puntos += f'<li><b>{esc(tit)}</b>{": " if tit else ""}{esc(m.nombres_en_texto(que))}' + (f' <i>({esc(items)})</i>' if items else '') + '</li>'
+        der += f'<div class="lect"><b class="vn">#{pos[d["vendor"]]} {esc(m.nombre(d["vendor"]))}</b><ul>{puntos or "<li>Sin fortalezas en la ficha.</li>"}</ul></div>'
     n_cat = len(orden[0]['cats']); n_items = sum(orden[0]['dist'].values()) if orden[0]['dist'] else None
     franja = (f'<div class="franja"><b>Cómo leer.</b> Puntaje T5 = media de las calificaciones del Banco (0–4) en la hoja T5 ponderada por criticidad (Indispensable y Killer ×3, Deseable ×1), sobre 100. '
-              f'Niveles: Cumple plenamente ≥ 85 · Cumple 70–84 · Parcial 50–69 · No cumple &lt; 50. Los círculos cuentan las {n_cat} categorías de T5 en verde (≥ 70), amarillo (50–69) y rojo (&lt; 50). '
+              f'Niveles: Cumple plenamente ≥ 85 · Cumple 70–84 · Parcial 50–69 · No cumple &lt; 50. '
               'Las calificaciones son las del Banco y no se modifican; la verificación documental solo aporta la evidencia que sustenta fortalezas, debilidades y contradicciones.</div>')
-    H.append(f'<section class="s">{bar("Revisión Técnica Resultados T5 · Resultado por vendor", "Capacidades de desarrollo (hoja T5) · " + mes)}<div class="body">' + lay(izq, der, ancho=('42%', '58%')) + franja + '</div>'
+    H.append(f'<section class="s">{bar("Revisión Técnica Resultados T5 · Resultado por vendor", "Capacidades de desarrollo (hoja T5) · " + mes)}<div class="body">' + lay(izq, der, ancho=('40%', '60%')) + franja + '</div>'
              + pie('Fuente: Matriz técnica del Banco, hoja T5 · semáforo y ficha T5 de cada vendor') + '</section>')
 
     # ---- lámina 2 · implementación y despliegue
