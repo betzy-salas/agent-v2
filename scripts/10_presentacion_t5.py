@@ -331,6 +331,30 @@ def ficha_impl_filas(x):
             if m._norm(clave) in m._norm(k): out.append((etiqueta, val.get('que', ''), val.get('fuente', ''), val.get('conf', ''))); break
     return out
 
+def datos_despliegue(V):
+    """Cuadrícula modelos × plataformas por vendor: la misma de «Resumen por vendor: plataformas por modelo» del informe de comparativos
+    (scripts/08_comparativos_pdf.py, hoja 4). Reutiliza MODELOS_ORDEN, PLATAFORMAS y marcas_nubes de 08 sobre el informe 8_modelo_despliegue.md
+    de cada vendor (tabla «Modelos» cargada por cargar_vendor de 07). Devuelve ([(vendor, índice de color, [(modelo, clase chip, texto chip, {plataforma: estado})])], plataformas)."""
+    spec8 = importlib.util.spec_from_file_location('p08', AQUI / '08_comparativos_pdf.py'); p08 = importlib.util.module_from_spec(spec8); spec8.loader.exec_module(p08)
+    out = []
+    for d in V:
+        x = m.cargar_vendor(d['vendor'])
+        lines = [l for l in str(x.get('desp_modelos', '')).split('\n') if l.strip().startswith('|')]
+        hdr, rows = m.parse_table(lines) if lines else ([], [])
+        if not hdr: continue
+        col = {m._norm(h)[:6]: i for i, h in enumerate(hdr)}; i_of, i_nu = col.get('ofreci'), col.get('nubes ')
+        filas = []
+        for clave, nombre_m in p08.MODELOS_ORDEN:
+            r = next((r for r in rows if clave in m._norm(r[0])), None)
+            marcas = p08.marcas_nubes(r[i_of], r[i_nu]) if r and i_of is not None and i_nu is not None else {}
+            cls, corto = m.chip_modelo(r[i_of]) if r else ('', '—')
+            filas.append((nombre_m.split(' / ')[0], cls, corto, marcas))
+        out.append((d['vendor'], d.get('_i', 0), filas))
+    return out, [pn for pn, _ in p08.PLATAFORMAS]
+
+LEYENDA_NUBES = ('ofrecida para ese modelo', 'condicionada o solo compatibilidad declarada', 'mencionada, pero el modelo no se ofrece', 'no la asocia a ese modelo')
+NOTA_NUBES = '«Nube privada» incluye la nube privada del vendor (p. ej. FIS Private Cloud) o del cliente.'
+
 # ----------------------------------------------------------------------------- estilo CoE (deck corporativo 16:9: barra azul, numerales naranja, pie «Datos elaborados por BCP para uso Interno»)
 import base64, mimetypes
 CSS_COE = """
@@ -369,6 +393,12 @@ table.lay{width:100%;border-collapse:separate;border-spacing:14pt 0;margin:0 -14
 .cover img.l{position:absolute;right:27pt;bottom:17pt;width:119pt}
 .svgbox{border:1px solid #e3e6ec;border-radius:4pt;padding:8pt}
 .pend3 .box ul{font-size:8pt} .pend3 h4 span{opacity:.75;font-weight:400}
+.nb{border:1px solid #e3e6ec;border-top:4pt solid var(--vc);border-radius:4pt;padding:6pt 8pt 4pt} .nb h4{margin:0 0 4pt;font-size:10.5pt;color:#00205b;letter-spacing:.06em;text-transform:uppercase}
+table.nbt{width:100%;border-collapse:collapse;font-size:8.2pt} table.nbt th{font-size:6.2pt;color:#5f6b7a;text-transform:uppercase;letter-spacing:.03em;padding:2pt 1pt;text-align:center;border-bottom:1px solid #e3e6ec;background:#f6f8fb;font-weight:700} table.nbt th:first-child{text-align:left;padding-left:3pt}
+table.nbt td{padding:5pt 1pt;text-align:center;border-bottom:1px solid #eef1f4} table.nbt td:first-child{text-align:left;font-weight:600;white-space:nowrap;padding-left:3pt}
+.dot{display:inline-block;width:10pt;height:10pt;border-radius:50%;border:1.5pt solid transparent;vertical-align:middle;box-sizing:border-box} .dot.of{background:#2a78d6;border-color:#2a78d6} .dot.cond{border-color:#2a78d6} .dot.no{border-color:#8a8f98;border-style:dashed} .dot.vacio{background:#e3e6ec;width:5pt;height:5pt;border:0}
+.chipm{display:inline-block;padding:1pt 5pt;border-radius:3pt;font-size:6.8pt;font-weight:700;margin-left:4pt;vertical-align:middle;white-space:nowrap} .chipm.si{background:#e8f1f8;color:#00529b} .chipm.no{background:#eef1f4;color:#5f6b7a} .chipm.cond{background:#fbe4cc;color:#9c5700} .chipm.x{background:#eef1f4;color:#5f6b7a}
+.legn{font-size:8pt;color:#5f6b7a;margin:0 0 8pt} .legn .dot{margin:0 3pt 0 8pt}
 .leg{font-size:8pt;color:#5f6b7a;margin-top:8pt} .leg i{display:inline-block;width:10pt;height:10pt;border-radius:2pt;vertical-align:middle;margin:0 4pt 0 10pt}
 """
 def _data_uri(p):
@@ -504,6 +534,15 @@ def construir_presentacion_coe(V, base, hoy):
                      + ('<div class="box n" style="margin-top:10pt"><h4>Criterios con mayor diferencia y por qué</h4><ul>' + ''.join(f'<li>{esc(m.nombres_en_texto(x))}</li>' for x in g['diferencias']) + '</ul></div>' if g['diferencias'] else '') + '</div>' + pie('Fuente: rúbrica de implementación de cada vendor (verif/IMPL.md) y COMPARATIVO_IMPLEMENTACION.md') + '</section>')
         if g['transversal']:
             H.append(f'<section class="s">{bar("Lo que cambia entre vendors en la implementación", "Comparación transversal con la fuente documental de cada vendor")}<div class="body"><div class="cg">' + ''.join(f'<div class="ci"><b>{k}</b>{esc(t)}<span class="fuente" style="display:block;color:#5f6b7a;font-size:6.8pt;margin-top:3pt">Fuentes: {esc(f)}.</span></div>' for k, (t, f) in enumerate(g['transversal'], 1)) + '</div></div>' + pie('Fuente: informes de implementación (7_), rúbricas (IMPL) y análisis de despliegue (8_) de cada vendor') + '</section>')
+        DESP, PLAT = datos_despliegue(orden)
+        if DESP:
+            cards = []
+            for vend, i, filas in DESP:
+                trs = ''.join(f'<tr><td>{esc(nm)}<span class="chipm {cls or "x"}">{esc(corto)}</span></td>' + ''.join(f'<td><span class="dot {marcas[pn]}"></span></td>' if pn in marcas else '<td><span class="dot vacio"></span></td>' for pn in PLAT) + '</tr>' for nm, cls, corto, marcas in filas)
+                cards.append(f'<div class="nb" style="--vc:{m.vcolor(i)}"><h4>{esc(m.nombre(vend))}</h4><table class="nbt"><thead><tr><th>Modelo</th>' + ''.join(f'<th>{esc(pn)}</th>' for pn in PLAT) + f'</tr></thead><tbody>{trs}</tbody></table></div>')
+            leyenda = '<p class="legn">' + ' · '.join(f'<span class="dot {k}"></span> {t}' for k, t in zip(('of', 'cond', 'no', 'vacio'), LEYENDA_NUBES)) + '. ' + esc(NOTA_NUBES) + '</p>'
+            H.append(f'<section class="s">{bar("Modelos de despliegue · plataformas por modelo", "Resumen por vendor: una fila por modelo y una columna por nube o plataforma")}<div class="body"><p class="lead" style="font-size:9pt;margin-bottom:4pt">Solo marca lo que los documentos del vendor asocian a cada modelo de despliegue; la fuente de cada fila está en el análisis de despliegue del vendor.</p>'
+                     + leyenda + lay(*cards[:3]) + (lay(*cards[3:6]) if len(cards) > 3 else '') + '</div>' + pie('Fuente: análisis de despliegue de cada vendor (8_) · informe de comparativos, hoja 4') + '</section>')
         for d in orden:
             x = IMP['vendors'].get(d['vendor'])
             if not x: continue

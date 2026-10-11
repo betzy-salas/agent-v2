@@ -20,6 +20,7 @@ try:
     from pptx.dml.color import RGBColor
     from pptx.enum.shapes import MSO_SHAPE
     from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+    from pptx.enum.dml import MSO_LINE
     from pptx.oxml.ns import qn
     from lxml import etree
 except ImportError:
@@ -331,6 +332,39 @@ def construir(base, salida):
                 texto(s, x, y, 6.1, 1.95, [[(str(j + 1), {'bold': True, 'color': NAVY_T, 'size': 10})], [(t, {'size': 8.8})], [('Fuentes: ' + fu + '.', {'color': GREY, 'size': 6.6})]], size=8.8, min_size=6.2, espacio=3)
                 ln = s.shapes.add_connector(1, Inches(x), Inches(y + 1.98), Inches(x + 6.1), Inches(y + 1.98)); ln.line.color.rgb = rgb('E3E6EC'); ln.line.width = Pt(0.75)
             pie(s, num(), 'Fuente: informes de implementación (7_), rúbricas (IMPL) y análisis de despliegue (8_) de cada vendor')
+        DESP, PLAT = p10.datos_despliegue(orden)
+        if DESP:
+            s = nueva(); barra(s, 'Modelos de despliegue · plataformas por modelo', 'Resumen por vendor: una fila por modelo y una columna por nube o plataforma')
+            texto(s, 0.42, 0.74, 12.5, 0.3, [[('Solo marca lo que los documentos del vendor asocian a cada modelo de despliegue; la fuente de cada fila está en el análisis de despliegue del vendor.', {'size': 9})]], ajustar=False)
+            def punto(slide, cx, cy, est, r=0.065):
+                if est == 'vacio': return rect(slide, cx - 0.035, cy - 0.035, 0.07, 0.07, 'E3E6EC', shape=MSO_SHAPE.OVAL)
+                o = rect(slide, cx - r, cy - r, 2 * r, 2 * r, '2A78D6' if est == 'of' else None, '2A78D6' if est in ('of', 'cond') else '8A8F98', shape=MSO_SHAPE.OVAL, line_w=1.1)
+                if est == 'no': o.line.dash_style = MSO_LINE.DASH
+                return o
+            xl = 0.42
+            for k, t in zip(('of', 'cond', 'no', 'vacio'), p10.LEYENDA_NUBES):
+                punto(s, xl + 0.07, 1.16, k); texto(s, xl + 0.17, 1.02, 3.0, 0.28, [[(t, {'color': GREY, 'size': 7.6})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False); xl += 0.3 + len(t) * 0.052
+            texto(s, xl + 0.1, 1.02, 12.9 - xl, 0.28, [[(p10.NOTA_NUBES, {'color': GREY, 'size': 7.6})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
+            CHIP = {'si': ('E8F1F8', BLUE), 'no': ('EEF1F4', GREY), 'cond': ('FBE4CC', '9C5700'), '': ('EEF1F4', GREY)}
+            for q, (vend, i, filas) in enumerate(DESP[:6]):
+                colm, fila = q % 3, q // 3; x = 0.42 + colm * 4.2; y = 1.42 + fila * 2.8; w, h = 4.0, 2.66
+                rect(s, x, y, w, h, None, 'E3E6EC'); rect(s, x, y, w, 0.06, m.vcolor(i).lstrip('#'))
+                texto(s, x + 0.1, y + 0.1, w - 0.2, 0.28, [[(m.nombre(vend).upper(), {'bold': True, 'color': NAVY_T, 'size': 9.5})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
+                wl = 1.3; wc = (w - 0.2 - wl) / len(PLAT); yh = y + 0.42
+                rect(s, x + 0.1, yh, w - 0.2, 0.22, 'F6F8FB')
+                texto(s, x + 0.12, yh, wl, 0.22, [[('MODELO', {'bold': True, 'color': GREY, 'size': 5.6})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
+                for j, pn in enumerate(PLAT): texto(s, x + 0.1 + wl + j * wc - 0.05, yh, wc + 0.1, 0.22, [[(pn.upper(), {'bold': True, 'color': GREY, 'size': 5.4})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
+                rh = (h - 0.72) / len(filas)
+                for r_i, (nm, cls, corto, marcas) in enumerate(filas):
+                    ry = yh + 0.24 + r_i * rh
+                    texto(s, x + 0.12, ry, wl, 0.17, [[(nm, {'bold': True, 'size': 7})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
+                    fill, colr = CHIP.get(cls, CHIP['']); wchip = min(wl - 0.05, 0.16 + len(corto) * 0.045)
+                    rect(s, x + 0.12, ry + 0.18, wchip, 0.15, fill, shape=MSO_SHAPE.ROUNDED_RECTANGLE)
+                    texto(s, x + 0.12, ry + 0.18, wchip, 0.15, [[(corto, {'bold': True, 'color': colr, 'size': 5.6})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
+                    for j, pn in enumerate(PLAT): punto(s, x + 0.1 + wl + j * wc + wc / 2, ry + rh / 2 - 0.01, marcas.get(pn, 'vacio'))
+                    if r_i < len(filas) - 1:
+                        ln = s.shapes.add_connector(1, Inches(x + 0.1), Inches(ry + rh - 0.01), Inches(x + w - 0.1), Inches(ry + rh - 0.01)); ln.line.color.rgb = rgb('EEF1F4'); ln.line.width = Pt(0.5)
+            pie(s, num(), 'Fuente: análisis de despliegue de cada vendor (8_) · informe de comparativos, hoja 4')
         for d in orden:
             x = IMP['vendors'].get(d['vendor'])
             if not x: continue
