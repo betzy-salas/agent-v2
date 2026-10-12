@@ -345,16 +345,16 @@ def construir(base, salida):
             for k, t in zip(('of', 'cond', 'no', 'vacio'), p10.LEYENDA_NUBES):
                 punto(s, xl + 0.07, 1.16, k); texto(s, xl + 0.17, 1.02, 3.0, 0.28, [[(t, {'color': GREY, 'size': 7.6})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False); xl += 0.3 + len(t) * 0.052
             texto(s, xl + 0.1, 1.02, 12.9 - xl, 0.28, [[(p10.NOTA_NUBES, {'color': GREY, 'size': 7.6})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
-            CHIP = {'si': ('E8F1F8', BLUE), 'no': ('EEF1F4', GREY), 'cond': ('FBE4CC', '9C5700'), '': ('EEF1F4', GREY)}
+            CHIP = {'si': ('E8F1F8', BLUE), 'no': ('EEF1F4', GREY), 'cond': ('FBE4CC', '9C5700'), '': ('EEF1F4', GREY)}; notas = m.notas_despliegue()
             for q, (vend, i, filas) in enumerate(DESP[:6]):
-                colm, fila = q % 3, q // 3; x = 0.42 + colm * 4.2; y = 1.42 + fila * 2.8; w, h = 4.0, 2.66
+                colm, fila = q % 3, q // 3; x = 0.42 + colm * 4.2; y = 1.42 + fila * 2.8; w, h = 4.0, 2.72; nota = notas.get(m._norm(vend), '')
                 rect(s, x, y, w, h, None, 'E3E6EC'); rect(s, x, y, w, 0.06, m.vcolor(i).lstrip('#'))
                 texto(s, x + 0.1, y + 0.1, w - 0.2, 0.28, [[(m.nombre(vend).upper(), {'bold': True, 'color': NAVY_T, 'size': 9.5})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
                 wl = 1.3; wc = (w - 0.2 - wl) / len(PLAT); yh = y + 0.42
                 rect(s, x + 0.1, yh, w - 0.2, 0.22, 'F6F8FB')
                 texto(s, x + 0.12, yh, wl, 0.22, [[('MODELO', {'bold': True, 'color': GREY, 'size': 5.6})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
                 for j, pn in enumerate(PLAT): texto(s, x + 0.1 + wl + j * wc - 0.05, yh, wc + 0.1, 0.22, [[(pn.upper(), {'bold': True, 'color': GREY, 'size': 5.4})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
-                rh = (h - 0.72) / len(filas)
+                rh = (h - 0.72 - (0.52 if nota else 0)) / len(filas)
                 for r_i, (nm, cls, corto, marcas) in enumerate(filas):
                     ry = yh + 0.24 + r_i * rh
                     texto(s, x + 0.12, ry, wl, 0.17, [[(nm, {'bold': True, 'size': 7})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
@@ -364,6 +364,10 @@ def construir(base, salida):
                     for j, pn in enumerate(PLAT): punto(s, x + 0.1 + wl + j * wc + wc / 2, ry + rh / 2 - 0.01, marcas.get(pn, 'vacio'))
                     if r_i < len(filas) - 1:
                         ln = s.shapes.add_connector(1, Inches(x + 0.1), Inches(ry + rh - 0.01), Inches(x + w - 0.1), Inches(ry + rh - 0.01)); ln.line.color.rgb = rgb('EEF1F4'); ln.line.width = Pt(0.5)
+                if nota:   # nota del vendor (vendors/NOTAS_DESPLIEGUE.md): nubes en firme, compatibilidad declarada y contradicciones
+                    yn = yh + 0.24 + len(filas) * rh + 0.02
+                    ln = s.shapes.add_connector(1, Inches(x + 0.1), Inches(yn), Inches(x + w - 0.1), Inches(yn)); ln.line.color.rgb = rgb('E3E6EC'); ln.line.width = Pt(0.5); ln.line.dash_style = MSO_LINE.DASH
+                    texto(s, x + 0.08, yn + 0.02, w - 0.16, y + h - yn - 0.06, [[(m.nombres_en_texto(nota), {'color': '3D4A5C', 'size': 6})]], size=6, min_size=5, espacio=0, margen=0.03)
             pie(s, num(), 'Fuente: análisis de despliegue de cada vendor (8_) · informe de comparativos, hoja 4')
         for d in orden:
             x = IMP['vendors'].get(d['vendor'])

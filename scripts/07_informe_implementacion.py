@@ -376,6 +376,19 @@ VENDOR_PAL = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', 
 VENDOR_INK = ['#ffffff', '#ffffff', '#0b0b0b', '#0b0b0b', '#0b0b0b', '#ffffff', '#ffffff', '#ffffff']
 NOMBRES_VENDOR = {'fis': 'FIS', 'infosys': 'Infosys', 'pismo': 'Pismo', 'sunline': 'Sunline', 'temenos': 'Temenos', 'tm': 'Thought Machine', 'tought-machine': 'Thought Machine', 'thought-machine': 'Thought Machine'}
 def nombre(v): return NOMBRES_VENDOR.get(v.lower(), v.replace('-', ' ').title())
+
+def notas_despliegue():
+    """Nota corta por vendor sobre nubes ofrecidas, compatibilidad declarada y contradicciones (vendors/NOTAS_DESPLIEGUE.md, tabla
+    | Vendor | Nota |, condensada a mano del 8_modelo_despliegue.md de cada vendor). Devuelve {clave normalizada: nota}; la clave es la
+    carpeta del vendor y también su nombre oficial, para buscar por cualquiera. Si el archivo no existe, {}."""
+    f = VENDORS / 'NOTAS_DESPLIEGUE.md'
+    if not f.exists(): return {}
+    hdr, rows = first_table(f.read_text(encoding='utf-8'))
+    out = {}
+    for r in rows:
+        if len(r) >= 2 and r[1].strip():
+            out[_norm(r[0])] = r[1].strip(); out[_norm(nombre(r[0]))] = r[1].strip()
+    return out
 def nombres_en_texto(texto):
     """Pone el nombre real del vendor donde el comparativo usa la carpeta (sunline, tought-machine…)."""
     for slug, real in sorted(NOMBRES_VENDOR.items(), key=lambda kv: -len(kv[0])):

@@ -395,10 +395,10 @@ table.lay{width:100%;border-collapse:separate;border-spacing:14pt 0;margin:0 -14
 .pend3 .box ul{font-size:8pt} .pend3 h4 span{opacity:.75;font-weight:400}
 .nb{border:1px solid #e3e6ec;border-top:4pt solid var(--vc);border-radius:4pt;padding:6pt 8pt 4pt} .nb h4{margin:0 0 4pt;font-size:10.5pt;color:#00205b;letter-spacing:.06em;text-transform:uppercase}
 table.nbt{width:100%;border-collapse:collapse;font-size:8.2pt} table.nbt th{font-size:6.2pt;color:#5f6b7a;text-transform:uppercase;letter-spacing:.03em;padding:2pt 1pt;text-align:center;border-bottom:1px solid #e3e6ec;background:#f6f8fb;font-weight:700} table.nbt th:first-child{text-align:left;padding-left:3pt}
-table.nbt td{padding:5pt 1pt;text-align:center;border-bottom:1px solid #eef1f4} table.nbt td:first-child{text-align:left;font-weight:600;white-space:nowrap;padding-left:3pt}
+table.nbt td{padding:3.5pt 1pt;text-align:center;border-bottom:1px solid #eef1f4} table.nbt td:first-child{text-align:left;font-weight:600;white-space:nowrap;padding-left:3pt}
 .dot{display:inline-block;width:10pt;height:10pt;border-radius:50%;border:1.5pt solid transparent;vertical-align:middle;box-sizing:border-box} .dot.of{background:#2a78d6;border-color:#2a78d6} .dot.cond{border-color:#2a78d6} .dot.no{border-color:#8a8f98;border-style:dashed} .dot.vacio{background:#e3e6ec;width:5pt;height:5pt;border:0}
 .chipm{display:inline-block;padding:1pt 5pt;border-radius:3pt;font-size:6.8pt;font-weight:700;margin-left:4pt;vertical-align:middle;white-space:nowrap} .chipm.si{background:#e8f1f8;color:#00529b} .chipm.no{background:#eef1f4;color:#5f6b7a} .chipm.cond{background:#fbe4cc;color:#9c5700} .chipm.x{background:#eef1f4;color:#5f6b7a}
-.legn{font-size:8pt;color:#5f6b7a;margin:0 0 8pt} .legn .dot{margin:0 3pt 0 8pt}
+.nbn{font-size:6.6pt;color:#3d4a5c;line-height:1.3;margin:4pt 0 0;border-top:1px dashed #e3e6ec;padding-top:3pt} .legn{font-size:8pt;color:#5f6b7a;margin:0 0 8pt} .legn .dot{margin:0 3pt 0 8pt}
 .leg{font-size:8pt;color:#5f6b7a;margin-top:8pt} .leg i{display:inline-block;width:10pt;height:10pt;border-radius:2pt;vertical-align:middle;margin:0 4pt 0 10pt}
 """
 def _data_uri(p):
@@ -536,10 +536,10 @@ def construir_presentacion_coe(V, base, hoy):
             H.append(f'<section class="s">{bar("Lo que cambia entre vendors en la implementación", "Comparación transversal con la fuente documental de cada vendor")}<div class="body"><div class="cg">' + ''.join(f'<div class="ci"><b>{k}</b>{esc(t)}<span class="fuente" style="display:block;color:#5f6b7a;font-size:6.8pt;margin-top:3pt">Fuentes: {esc(f)}.</span></div>' for k, (t, f) in enumerate(g['transversal'], 1)) + '</div></div>' + pie('Fuente: informes de implementación (7_), rúbricas (IMPL) y análisis de despliegue (8_) de cada vendor') + '</section>')
         DESP, PLAT = datos_despliegue(orden)
         if DESP:
-            cards = []
+            cards = []; notas = m.notas_despliegue()
             for vend, i, filas in DESP:
                 trs = ''.join(f'<tr><td>{esc(nm)}<span class="chipm {cls or "x"}">{esc(corto)}</span></td>' + ''.join(f'<td><span class="dot {marcas[pn]}"></span></td>' if pn in marcas else '<td><span class="dot vacio"></span></td>' for pn in PLAT) + '</tr>' for nm, cls, corto, marcas in filas)
-                cards.append(f'<div class="nb" style="--vc:{m.vcolor(i)}"><h4>{esc(m.nombre(vend))}</h4><table class="nbt"><thead><tr><th>Modelo</th>' + ''.join(f'<th>{esc(pn)}</th>' for pn in PLAT) + f'</tr></thead><tbody>{trs}</tbody></table></div>')
+                cards.append(f'<div class="nb" style="--vc:{m.vcolor(i)}"><h4>{esc(m.nombre(vend))}</h4><table class="nbt"><thead><tr><th>Modelo</th>' + ''.join(f'<th>{esc(pn)}</th>' for pn in PLAT) + f'</tr></thead><tbody>{trs}</tbody></table>' + (lambda nt: f'<p class="nbn">{m.inline(esc(m.nombres_en_texto(nt)))}</p>' if nt else '')(notas.get(m._norm(vend))) + '</div>')
             leyenda = '<p class="legn">' + ' · '.join(f'<span class="dot {k}"></span> {t}' for k, t in zip(('of', 'cond', 'no', 'vacio'), LEYENDA_NUBES)) + '. ' + esc(NOTA_NUBES) + '</p>'
             H.append(f'<section class="s">{bar("Modelos de despliegue · plataformas por modelo", "Resumen por vendor: una fila por modelo y una columna por nube o plataforma")}<div class="body"><p class="lead" style="font-size:9pt;margin-bottom:4pt">Solo marca lo que los documentos del vendor asocian a cada modelo de despliegue; la fuente de cada fila está en el análisis de despliegue del vendor.</p>'
                      + leyenda + lay(*cards[:3]) + (lay(*cards[3:6]) if len(cards) > 3 else '') + '</div>' + pie('Fuente: análisis de despliegue de cada vendor (8_) · informe de comparativos, hoja 4') + '</section>')

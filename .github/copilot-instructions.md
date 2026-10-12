@@ -185,6 +185,7 @@ python scripts/10_presentacion_t5.py [--base carpeta]   # COMPARATIVO_SEMAFORO_T
 #   python scripts/13_laminas_correo.py --base carpeta → LAMINA_1_resultado_T5.png y LAMINA_2_implementacion.png (2560×1440) + LAMINAS_CORREO.pdf: dos láminas para adjuntar a un correo (ranking T5 y lectura por vendor; rúbrica de implementación, despliegue y veredictos)
 #   python scripts/14_laminas_correo_pptx.py --base carpeta → LAMINAS_CORREO.pptx (las mismas dos láminas en PowerPoint)
 #   python scripts/15_lamina_despliegue.py --base carpeta → LAMINA_3_despliegue.png/.pdf/.pptx: lámina independiente «Modelos de despliegue y nubes» (tabla por vendor SaaS/PaaS/privada/on-premise/híbrido, nubes ofrecidas, quién opera; conteo de vendors por nube) desde COMPARATIVO_DESPLIEGUE.md y los 8_ de cada vendor
+#   vendors/NOTAS_DESPLIEGUE.md (tabla | Vendor | Nota |, editable a mano; condensa SOLO el 8_modelo_despliegue.md de cada vendor): nota por vendor bajo cada cuadrícula de «plataformas por modelo» (08 hoja 4, 10 y 12 diapositiva); si no existe, no se muestra nada
 # todo lo anterior en un solo paso: agente presentador-t5 (ejecuta 09 y 10, redacta semáforos, fichas (redactor-ficha-t5) y comentarios)
 python scripts/06_validar_verif.py <vendor>       # valida filas, formato, VA y citas de cada verif/T<n>.md
 python scripts/03_consolidar.py <vendor>          # verif/00_consolidado.md
