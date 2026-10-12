@@ -176,6 +176,7 @@ python scripts/04_ingesta.py <vendor>             # 01 PDF→txt, 01a .toc.md, 0
 # revisar NOMBRES.md y los .toc.md; lanzar los 8 agentes verificadores con el vendor (uno por hoja)
 # implementación (si docs/raw trae la rúbrica del Banco, la ingesta genera matriz/IMPL.txt con 02b):
 #   verificador-implementacion → verif/IMPL.md (0–5 por criterio); redactor-implementacion → informes/7_implementacion_pros_contras.md
+#   python scripts/16_informe_bloques_impl.py <vendor>|--todos [--pdf] → informes/11_bloques_impl.md (+pdf): fortalezas (≥4), brechas (≤2) y contradicciones por bloque EI/F/I, solo desde verif/IMPL.md; --todos además vendors/INFORME_BLOQUES_IMPLEMENTACION.pdf
 # comparativos entre vendors: analista-despliegue → vendors/COMPARATIVO_DESPLIEGUE.md;
 #   comparador-implementacion (tras verificar y redactar la implementación de cada vendor) → vendors/COMPARATIVO_IMPLEMENTACION.md;
 #   comparador-t5 (tras el informe ejecutivo de T5 de cada vendor) → vendors/COMPARATIVO_T5.md
