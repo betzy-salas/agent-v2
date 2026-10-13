@@ -334,7 +334,7 @@ header.portada{padding-block:28px 24px;display:grid;gap:18px;page-break-after:al
 .facts{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:.82rem} .facts div{min-width:0} .facts .k{color:var(--ink-3);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;font-family:var(--display);font-weight:700} .facts .v{color:var(--ink);line-height:1.3}
 .mini{display:grid;gap:5px} .mini .row{display:grid;grid-template-columns:92px 1fr 46px;align-items:center;gap:8px;font-size:.78rem} .mini .lab{color:var(--ink-2)} .mini .bar{height:9px;background:var(--track);border-radius:4px;overflow:hidden} .mini .bar i{display:block;height:100%;background:var(--vc);border-radius:4px} .mini .num{font-family:var(--mono);text-align:right;font-size:.78rem}
 .chips{display:flex;gap:6px;flex-wrap:wrap} .chip{display:inline-flex;align-items:center;gap:6px;min-height:22px;border-radius:5px;padding:0 8px;font-size:.74rem;font-weight:700;font-family:var(--display);background:var(--bg-2);color:var(--ink-2);border:1px solid var(--line);letter-spacing:.02em;white-space:nowrap}
-.chip.si{background:var(--accent-soft);color:var(--accent);border-color:transparent} .chip.no{color:var(--ink-3)} .chip.cond{border-color:var(--line-2)}
+.chip.si{background:var(--accent-soft);color:var(--accent);border-color:transparent} .chip.no{color:var(--ink-3)} .chip.cond{border-color:var(--line-2)} .chip.tiene{background:transparent;color:#8a4b00;border:1px dashed #c97a1a}
 .chip.sc{min-width:28px;justify-content:center;font-family:var(--mono);border:0}
 .toc{margin-top:4px} .toc ol{columns:3;column-gap:28px;padding-left:1.1rem;margin:0;font-size:.88rem} .toc li{margin:.1rem 0;break-inside:avoid} .toc a{color:var(--ink);text-decoration:none} .toc a:hover,.toc a:focus-visible{color:var(--accent);outline:none}
 @media(max-width:760px){.toc ol{columns:1}}
@@ -494,10 +494,18 @@ def tabla_criterios(items, con_impl=False, con_resp=False):
         out.append('<tr>' + ''.join(f'<td>{x}</td>' for x in cells) + '</tr>')
     out.append('</tbody></table></div>'); return '\n'.join(out)
 
-def chip_modelo(txt):
+TIENE_NO_OFRECE = r'solo (para |a |en )?(clientes|asia|europa|africa|otras? regi|otros? pa[ií]s|fuera)|otros clientes|otras regiones|otras geograf|otros mercados|en asia|no para el banco|no (lo |la )?ofrece (al|para el) banco'
+def chip_modelo(txt, condicion='', nubes=''):
+    """Estado del modelo de despliegue para el Banco, desde la tabla «Modelos» del 8_: si (ofrecido), cond (condicionado), tiene (el vendor
+    lo tiene en su documentación —otros clientes, regiones o nubes— pero NO lo ofrece al Banco), no (excluido y sin evidencia de que lo tenga), '' (N/E).
+    «tiene» solo se marca con texto explícito: Ofrecido empieza por «No» y la condición o el propio texto dicen a quién sí (p. ej. «solo para clientes en Asia»),
+    o la columna «Nubes para ese modelo» nombra una nube (no «no aplica»)."""
     t = (txt or '').strip(); tl = _norm(t)
     cls = 'si' if tl.startswith('si') or tl.startswith('sí') else 'no' if tl.startswith('no (') or tl == 'no' or tl.startswith('no ') and 'especific' not in tl else 'cond' if 'condicion' in tl else ''
     corto = re.split(r'[(:;]', t)[0].strip()[:18] or '—'
+    if cls == 'no':
+        nl = _norm(nubes); nube_nombrada = bool(nl) and not nl.startswith('no aplica') and not nl.startswith('no especific') and nl not in ('—', '-')
+        if re.search(TIENE_NO_OFRECE, tl + ' ' + _norm(condicion)) or nube_nombrada: cls, corto = 'tiene', 'Tiene, no ofrece'
     return cls, corto
 
 def svg_barras_vendor(vendors_data, key, maxv=100, ancho=720):
@@ -592,7 +600,7 @@ def despliegue_cards(d):
     out = ['<div class="desp">']
     for r in rows:
         r = r + [''] * (len(hdr) - len(r)); g = lambda i: r[i] if i is not None else ''
-        cls, corto = chip_modelo(g(iO))
+        cls, corto = chip_modelo(g(iO), g(iC), g(iN))
         out.append(f'<div class="d"><div class="top"><span class="m">{inline(g(iM))}</span><span class="chip {cls}">{html.escape(corto)}</span>' + (f'<span class="chip">{html.escape(g(iCf))}</span>' if g(iCf) else '') + '</div>'
                    + (f'<div class="t"><b>Condición:</b> {inline(g(iC))}</div>' if g(iC) and g(iC) != '—' else '')
                    + (f'<div class="t"><b>Nubes:</b> {inline(g(iN))}</div>' if g(iN) else '') + (f'<div class="t"><b>Opera:</b> {inline(g(iQ))}</div>' if g(iQ) else '')
@@ -750,11 +758,11 @@ def despliegue_filas(d):
             for i, c in enumerate(hdr):
                 if _norm(c).startswith(_norm(q)): return i
         return None
-    iM, iO, iN, iF = ix('Modelo'), ix('Ofrecido'), ix('Nubes'), ix('Fuente')
+    iM, iO, iN, iF, iC = ix('Modelo'), ix('Ofrecido'), ix('Nubes'), ix('Fuente'), ix('Condici')
     out = ['<div class="desp-row">']
     for r in rows:
         r = r + [''] * (len(hdr) - len(r)); g = lambda i: r[i] if i is not None else ''
-        cls, corto = chip_modelo(g(iO))
+        cls, corto = chip_modelo(g(iO), g(iC), g(iN))
         out.append(f'<div class="r"><div class="m"><span class="chip {cls}">{html.escape(corto)}</span>{inline(recorta(g(iM), 26))}</div><div><div class="small">{inline(recorta(g(iN), 90))}</div><div class="fuente">{inline(g(iF))}</div></div></div>')
     out.append('</div>'); return '\n'.join(out)
 

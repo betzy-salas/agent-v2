@@ -342,17 +342,18 @@ def datos_despliegue(V):
         lines = [l for l in str(x.get('desp_modelos', '')).split('\n') if l.strip().startswith('|')]
         hdr, rows = m.parse_table(lines) if lines else ([], [])
         if not hdr: continue
-        col = {m._norm(h)[:6]: i for i, h in enumerate(hdr)}; i_of, i_nu = col.get('ofreci'), col.get('nubes ')
+        col = {m._norm(h)[:6]: i for i, h in enumerate(hdr)}; i_of, i_nu, i_co = col.get('ofreci'), col.get('nubes '), col.get('condic')
         filas = []
         for clave, nombre_m in p08.MODELOS_ORDEN:
             r = next((r for r in rows if clave in m._norm(r[0])), None)
             marcas = p08.marcas_nubes(r[i_of], r[i_nu]) if r and i_of is not None and i_nu is not None else {}
-            cls, corto = m.chip_modelo(r[i_of]) if r else ('', '—')
+            cls, corto = m.chip_modelo(r[i_of], r[i_co] if i_co is not None else '', r[i_nu] if i_nu is not None else '') if r else ('', '—')
             filas.append((nombre_m.split(' / ')[0], cls, corto, marcas))
         out.append((d['vendor'], d.get('_i', 0), filas))
     return out, [pn for pn, _ in p08.PLATAFORMAS_GRID]
 
-LEYENDA_NUBES = ('ofrecida para ese modelo', 'condicionada o solo compatibilidad declarada', 'mencionada, pero el modelo no se ofrece', 'no la asocia a ese modelo')
+LEYENDA_NUBES = ('ofrecida al Banco para ese modelo', 'condicionada o solo compatibilidad declarada', 'la tiene, pero no la ofrece al Banco para ese modelo', 'no la asocia a ese modelo')
+LEYENDA_CHIPS = (('si', 'Sí', 'ofrecido al Banco'), ('cond', 'Condicionado', 'con condiciones o solo compatibilidad declarada'), ('tiene', 'Tiene, no ofrece', 'lo tiene en su documentación (otros clientes, regiones o nubes), pero no lo ofrece al Banco'), ('no', 'No', 'excluido, sin evidencia de que lo tenga'), ('x', 'N/E', 'no lo especifica'))
 NOTA_NUBES = 'La fila «Nube privada» (del vendor, p. ej. FIS Private Cloud, o del cliente) no lleva columna propia: el modelo ya la implica; sus puntos muestran la plataforma sobre la que se ofrece.'
 
 # ----------------------------------------------------------------------------- estilo CoE (deck corporativo 16:9: barra azul, numerales naranja, pie «Datos elaborados por BCP para uso Interno»)
@@ -397,8 +398,8 @@ table.lay{width:100%;border-collapse:separate;border-spacing:14pt 0;margin:0 -14
 table.nbt{width:100%;border-collapse:collapse;font-size:8.2pt} table.nbt th{font-size:6.2pt;color:#5f6b7a;text-transform:uppercase;letter-spacing:.03em;padding:2pt 1pt;text-align:center;border-bottom:1px solid #e3e6ec;background:#f6f8fb;font-weight:700} table.nbt th:first-child{text-align:left;padding-left:3pt}
 table.nbt td{padding:3.5pt 1pt;text-align:center;border-bottom:1px solid #eef1f4} table.nbt td:first-child{text-align:left;font-weight:600;white-space:nowrap;padding-left:3pt}
 .dot{display:inline-block;width:10pt;height:10pt;border-radius:50%;border:1.5pt solid transparent;vertical-align:middle;box-sizing:border-box} .dot.of{background:#2a78d6;border-color:#2a78d6} .dot.cond{border-color:#2a78d6} .dot.no{border-color:#8a8f98;border-style:dashed} .dot.vacio{background:#e3e6ec;width:5pt;height:5pt;border:0}
-.chipm{display:inline-block;padding:1pt 5pt;border-radius:3pt;font-size:6.8pt;font-weight:700;margin-left:4pt;vertical-align:middle;white-space:nowrap} .chipm.si{background:#e8f1f8;color:#00529b} .chipm.no{background:#eef1f4;color:#5f6b7a} .chipm.cond{background:#fbe4cc;color:#9c5700} .chipm.x{background:#eef1f4;color:#5f6b7a}
-.nbn{font-size:6.6pt;color:#3d4a5c;line-height:1.3;margin:4pt 0 0;border-top:1px dashed #e3e6ec;padding-top:3pt} .legn{font-size:8pt;color:#5f6b7a;margin:0 0 8pt} .legn .dot{margin:0 3pt 0 8pt}
+.chipm{display:inline-block;padding:1pt 5pt;border-radius:3pt;font-size:6.8pt;font-weight:700;margin-left:4pt;vertical-align:middle;white-space:nowrap} .chipm.si{background:#e8f1f8;color:#00529b} .chipm.no{background:#eef1f4;color:#5f6b7a} .chipm.cond{background:#fbe4cc;color:#9c5700} .chipm.tiene{background:#fff;color:#8a4b00;border:1px dashed #c97a1a;padding:0 4pt} .chipm.x{background:#eef1f4;color:#5f6b7a}
+.nbn{font-size:6.6pt;color:#3d4a5c;line-height:1.3;margin:4pt 0 0;border-top:1px dashed #e3e6ec;padding-top:3pt} .legn{font-size:7.3pt;color:#5f6b7a;margin:0 0 6pt;line-height:1.5} .legn .dot{margin:0 3pt 0 6pt;width:11px;height:11px} .legn .chipm{font-size:6.4pt}
 .leg{font-size:8pt;color:#5f6b7a;margin-top:8pt} .leg i{display:inline-block;width:10pt;height:10pt;border-radius:2pt;vertical-align:middle;margin:0 4pt 0 10pt}
 """
 def _data_uri(p):
@@ -540,8 +541,9 @@ def construir_presentacion_coe(V, base, hoy):
             for vend, i, filas in DESP:
                 trs = ''.join(f'<tr><td>{esc(nm)}<span class="chipm {cls or "x"}">{esc(corto)}</span></td>' + ''.join(f'<td><span class="dot {marcas[pn]}"></span></td>' if pn in marcas else '<td><span class="dot vacio"></span></td>' for pn in PLAT) + '</tr>' for nm, cls, corto, marcas in filas)
                 cards.append(f'<div class="nb" style="--vc:{m.vcolor(i)}"><h4>{esc(m.nombre(vend))}</h4><table class="nbt"><thead><tr><th>Modelo</th>' + ''.join(f'<th>{esc(pn)}</th>' for pn in PLAT) + f'</tr></thead><tbody>{trs}</tbody></table>' + (lambda nt: f'<p class="nbn">{m.inline(esc(m.nombres_en_texto(nt)))}</p>' if nt else '')(notas.get(m._norm(vend))) + '</div>')
-            leyenda = '<p class="legn">' + ' · '.join(f'<span class="dot {k}"></span> {t}' for k, t in zip(('of', 'cond', 'no', 'vacio'), LEYENDA_NUBES)) + '. ' + esc(NOTA_NUBES) + '</p>'
-            H.append(f'<section class="s">{bar("Modelos de despliegue · plataformas por modelo", "Resumen por vendor: una fila por modelo y una columna por nube o plataforma")}<div class="body"><p class="lead" style="font-size:9pt;margin-bottom:4pt">Solo marca lo que los documentos del vendor asocian a cada modelo de despliegue; la fuente de cada fila está en el análisis de despliegue del vendor.</p>'
+            leyenda = ('<p class="legn" style="margin-bottom:3pt"><b>Modelo:</b> ' + ' · '.join(f'<span class="chipm {k}" style="margin-left:0">{esc(c)}</span> {esc(t)}' for k, c, t in LEYENDA_CHIPS) + '</p>'
+                       '<p class="legn"><b>Nube:</b> ' + ' · '.join(f'<span class="dot {k}"></span> {t}' for k, t in zip(('of', 'cond', 'no', 'vacio'), LEYENDA_NUBES)) + '. ' + esc(NOTA_NUBES) + '</p>')
+            H.append(f'<section class="s">{bar("Modelos de despliegue · plataformas por modelo", "Resumen por vendor: una fila por modelo y una columna por nube o plataforma")}<div class="body">'
                      + leyenda + lay(*cards[:3]) + (lay(*cards[3:6]) if len(cards) > 3 else '') + '</div>' + pie('Fuente: análisis de despliegue de cada vendor (8_) · informe de comparativos, hoja 4') + '</section>')
         for d in orden:
             x = IMP['vendors'].get(d['vendor'])

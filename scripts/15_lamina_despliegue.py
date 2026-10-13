@@ -12,7 +12,7 @@ Uso:  python scripts/15_lamina_despliegue.py [--base carpeta]
    → <base>/LAMINA_3_despliegue.html, .pdf, LAMINA_3_despliegue.png (2560×1440) y LAMINA_3_despliegue.pptx
 Requiere: Chrome (PDF), PyMuPDF (PNG) y python-pptx (PPTX); si falta alguno, genera lo que pueda y lo avisa.
 """
-import datetime, html, importlib.util, sys
+import datetime, html, importlib.util, re, sys
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent; RAIZ = AQUI.parent
@@ -23,7 +23,7 @@ esc = html.escape
 
 CSS = p13.CSS + """
 .l3 table.t{font-size:8.4pt} .l3 table.t td{padding:5pt 6pt;line-height:1.32;vertical-align:top} .l3 table.t th{padding:5pt 6pt;font-size:8.2pt}
-.l3 .chipm{margin-left:0;font-size:7.8pt;padding:1.5pt 7pt} .l3 .resto{display:block;color:#5f6b7a;font-size:7.2pt;line-height:1.3;margin-top:2pt}
+.l3 .chipm{margin-left:0;font-size:7.8pt;padding:1.5pt 7pt} .l3 .chipm.tiene{padding:0.5pt 6pt} .l3 .resto{display:block;color:#5f6b7a;font-size:7.2pt;line-height:1.3;margin-top:2pt}
 .cnt{display:flex;gap:12pt;margin-top:8pt} .cnt .ct{flex:1;background:#eef1f4;border-radius:8pt;padding:11pt 14pt;min-width:0}
 .cnt .ct b{display:block;font-family:"JetBrains Mono",Consolas,monospace;font-size:24pt;font-weight:800;color:#00205b;line-height:1.1} .cnt .ct b small{font-family:inherit;font-size:10pt;font-weight:700;color:#5f6b7a}
 .cnt .ct span{display:block;font-size:9.4pt;font-weight:700;color:#00529b;text-transform:uppercase;letter-spacing:.04em;margin-top:2pt}
@@ -56,13 +56,14 @@ def datos(base):
 def chip_partes(txt):
     cls, corto = m.chip_modelo(txt); t = (txt or '').strip()
     resto = t[len(corto):].strip(' ():;') if t.lower().startswith(corto.lower()) else t
-    corto = {'si': 'Sí', 'no': 'No', 'cond': 'Condicionado'}.get(cls, corto if corto != '—' else 'N/E')
+    if cls == 'tiene': resto = re.sub(r'^no\s*\(?', '', t, flags=re.I).strip(' ():;')
+    corto = {'si': 'Sí', 'no': 'No', 'cond': 'Condicionado', 'tiene': 'Tiene, no ofrece'}.get(cls, corto if corto != '—' else 'N/E')
     if m._norm(t) in ('n/e', 'ne', '—', '-', ''): corto, cls, resto = 'N/E', '', ''
     return cls, corto, resto
 
 MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 TITULO = 'Revisión Técnica Resultados T5 · Modelos de despliegue y nubes'
-LEYENDA = ('Sí = el vendor ofrece el modelo; Condicionado = lo ofrece con condiciones o solo declara compatibilidad; No = lo excluye; N/E = no lo especifica en sus documentos. '
+LEYENDA = ('Sí = ofrecido al Banco; Condicionado = con condiciones o solo compatibilidad declarada; Tiene, no ofrece = lo tiene en su documentación (otros clientes, regiones o nubes) pero no lo ofrece al Banco; No = excluido y sin evidencia de que lo tenga; N/E = no lo especifica. '
            'Cada celda tiene su cita documental en el análisis de despliegue del vendor; «en firme» = ofrecida al Banco para al menos un modelo.')
 FUENTE = 'Fuente: comparativo y análisis de despliegue (8_) de cada vendor, sobre su propuesta y anexos'
 
@@ -100,7 +101,7 @@ def construir_pptx(base, filas, conteo, n, salida):
     t = datetime.date.today(); mes = f'{MESES[t.month - 1].capitalize()} {t.year}'
     prs = Presentation(); prs.slide_width = Inches(W); prs.slide_height = Inches(H); s = prs.slides.add_slide(prs.slide_layouts[6])
     p12.barra(s, TITULO, 'Qué modelo ofrece cada vendor y en qué nubes · ' + mes)
-    COLOR = {'si': BLUE, 'no': GREY, 'cond': '9C5700', '': GREY}
+    COLOR = {'si': BLUE, 'no': GREY, 'cond': '9C5700', 'tiene': '8A4B00', '': GREY}
     def celda_chip(txt):
         cls, corto, resto = chip_partes(txt)
         return [(corto, {'bold': True, 'color': COLOR[cls]})] + ([(' ' + resto, {'color': GREY, 'size': 6.4})] if resto else [])
