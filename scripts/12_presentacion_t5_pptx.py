@@ -342,13 +342,13 @@ def construir(base, salida):
                 if est == 'no': o.line.dash_style = MSO_LINE.DASH
                 return o
             partes = [('Modelo: ', {'bold': True, 'color': GREY, 'size': 7})]
-            for k, c, t in p10.LEYENDA_CHIPS: partes += [(c, {'bold': True, 'color': {'si': BLUE, 'cond': '9C5700', 'tiene': '8A4B00'}.get(k, GREY), 'size': 7}), (f' = {t} · ', {'color': GREY, 'size': 7})]
+            for k, c, t in p10.LEYENDA_CHIPS: partes += [(c, {'bold': True, 'color': {'si': BLUE, 'cond': '9C5700', 'tiene': '8A4B00', 'decl': '2A5D9F'}.get(k, GREY), 'size': 6.6}), (f' = {t} · ', {'color': GREY, 'size': 6.6})]
             texto(s, 0.42, 0.9, 12.5, 0.22, [partes], anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
             xl = 0.42
             for k, t in zip(('of', 'cond', 'no', 'vacio'), p10.LEYENDA_NUBES):
                 punto(s, xl + 0.07, 1.26, k); texto(s, xl + 0.17, 1.12, 4.0, 0.28, [[(t, {'color': GREY, 'size': 7})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0); xl += 0.26 + len(t) * 0.048
             texto(s, xl + 0.1, 1.12, 12.9 - xl, 0.28, [[(p10.NOTA_NUBES, {'color': GREY, 'size': 6.4})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
-            CHIP = {'si': ('E8F1F8', BLUE), 'no': ('EEF1F4', GREY), 'cond': ('FBE4CC', '9C5700'), 'tiene': ('FFFFFF', '8A4B00'), '': ('EEF1F4', GREY)}; notas = m.notas_despliegue()
+            CHIP = {'si': ('E8F1F8', BLUE), 'no': ('EEF1F4', GREY), 'cond': ('FBE4CC', '9C5700'), 'tiene': ('FFFFFF', '8A4B00'), 'decl': ('FFFFFF', '2A5D9F'), '': ('EEF1F4', GREY)}; notas = m.notas_despliegue()
             for q, (vend, i, filas) in enumerate(DESP[:6]):
                 colm, fila = q % 3, q // 3; x = 0.42 + colm * 4.2; y = 1.42 + fila * 2.8; w, h = 4.0, 2.72; nota = notas.get(m._norm(vend), '')
                 rect(s, x, y, w, h, None, 'E3E6EC'); rect(s, x, y, w, 0.06, m.vcolor(i).lstrip('#'))
@@ -358,22 +358,23 @@ def construir(base, salida):
                 texto(s, x + 0.12, yh, wl, 0.22, [[('MODELO', {'bold': True, 'color': GREY, 'size': 5.6})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
                 for j, pn in enumerate(PLAT): texto(s, x + 0.1 + wl + j * wc - 0.05, yh, wc + 0.1, 0.22, [[(pn.upper(), {'bold': True, 'color': GREY, 'size': 5.4})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
                 texto(s, x + 0.1 + wl + len(PLAT) * wc, yh, wo, 0.22, [[('OTRAS', {'bold': True, 'color': GREY, 'size': 5.4})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
-                rh = (h - 0.72 - (0.52 if nota else 0)) / len(filas)
+                rh = (h - 0.72 - (0.5 if nota else 0)) / len(filas); cp_ = len(filas) > 5   # 6 filas (con «Declaradas»): nombre y chip más compactos
+                nh, chy, chh, nsz, csz = (0.125, 0.125, 0.1, 6.4, 4.9) if cp_ else (0.17, 0.18, 0.15, 7, 5.6)
                 for r_i, (nm, cls, corto, marcas, otras) in enumerate(filas):
                     ry = yh + 0.24 + r_i * rh
-                    texto(s, x + 0.12, ry, wl, 0.17, [[(nm, {'bold': True, 'size': 7})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
-                    fill, colr = CHIP.get(cls, CHIP['']); wchip = min(wl - 0.05, 0.16 + len(corto) * 0.045)
-                    ch = rect(s, x + 0.12, ry + 0.18, wchip, 0.15, fill, 'C97A1A' if cls == 'tiene' else None, shape=MSO_SHAPE.ROUNDED_RECTANGLE, line_w=0.75)
+                    texto(s, x + 0.12, ry, wl, nh, [[(nm, {'bold': True, 'size': nsz})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
+                    fill, colr = CHIP.get(cls, CHIP['']); wchip = min(wl - 0.05, 0.16 + len(corto) * (0.04 if cp_ else 0.045))
+                    ch = rect(s, x + 0.12, ry + chy, wchip, chh, fill, 'C97A1A' if cls == 'tiene' else '9BB8DC' if cls == 'decl' else None, shape=MSO_SHAPE.ROUNDED_RECTANGLE, line_w=0.75)
                     if cls == 'tiene': ch.line.dash_style = MSO_LINE.DASH
-                    texto(s, x + 0.12, ry + 0.18, wchip, 0.15, [[(corto, {'bold': True, 'color': colr, 'size': 5.6})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
+                    texto(s, x + 0.12, ry + chy, wchip, chh, [[(corto, {'bold': True, 'color': colr, 'size': csz})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
                     for j, pn in enumerate(PLAT): punto(s, x + 0.1 + wl + j * wc + wc / 2, ry + rh / 2 - 0.01, marcas.get(pn, 'vacio'))
                     xo = x + 0.1 + wl + len(PLAT) * wc + 0.03
                     if otras:
-                        ho = 0.13; yo = ry + rh / 2 - ho * len(otras[:2]) / 2
-                        for k_o, (_, cp, est) in enumerate(otras[:2]):
-                            tg = rect(s, xo, yo + k_o * ho, wo - 0.06, ho - 0.02, '2A78D6' if est == 'of' else 'FFFFFF', '2A78D6' if est in ('of', 'cond') else '8A8F98', shape=MSO_SHAPE.ROUNDED_RECTANGLE, line_w=0.75)
-                            if est == 'no': tg.line.dash_style = MSO_LINE.DASH
-                            texto(s, xo, yo + k_o * ho, wo - 0.06, ho - 0.02, [[(cp, {'bold': True, 'color': 'FFFFFF' if est == 'of' else '2A78D6' if est == 'cond' else GREY, 'size': 4.8})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
+                        runs = []
+                        for k_o, (_, cp, est) in enumerate(otras):
+                            if k_o: runs.append((' · ', {'color': GREY, 'size': 4.6}))
+                            runs.append((cp, {'bold': est == 'of', 'color': GREY if est == 'no' else '2A78D6', 'size': 4.6}))
+                        texto(s, xo, ry + 0.01, wo - 0.06, rh - 0.03, [runs], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
                     else: punto(s, xo + (wo - 0.06) / 2, ry + rh / 2 - 0.01, 'vacio')
                     if r_i < len(filas) - 1:
                         ln = s.shapes.add_connector(1, Inches(x + 0.1), Inches(ry + rh - 0.01), Inches(x + w - 0.1), Inches(ry + rh - 0.01)); ln.line.color.rgb = rgb('EEF1F4'); ln.line.width = Pt(0.5)

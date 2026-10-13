@@ -344,8 +344,9 @@ def datos_despliegue(V):
         if not hdr: continue
         col = {m._norm(h)[:6]: i for i, h in enumerate(hdr)}; i_of, i_nu, i_co = col.get('ofreci'), col.get('nubes '), col.get('condic')
         filas = []
-        for clave, nombre_m in p08.MODELOS_ORDEN:
+        for clave, nombre_m in p08.MODELOS_ORDEN + p08.FILA_DECLARADA:
             r = next((r for r in rows if clave in m._norm(r[0])), None)
+            if clave == 'declarad' and not r: continue
             marcas = p08.marcas_nubes(r[i_of], r[i_nu]) if r and i_of is not None and i_nu is not None else {}
             cls, corto = m.chip_modelo(r[i_of], r[i_co] if i_co is not None else '', r[i_nu] if i_nu is not None else '') if r else ('', '—')
             otras = p08.marcas_otras(r[i_of], r[i_nu]) if r and i_of is not None and i_nu is not None else []
@@ -354,8 +355,8 @@ def datos_despliegue(V):
     return out, [pn for pn, _ in p08.PLATAFORMAS_GRID]
 
 LEYENDA_NUBES = ('ofrecida al Banco para ese modelo', 'condicionada o solo compatibilidad declarada', 'la tiene, pero no la ofrece al Banco para ese modelo', 'no la asocia a ese modelo')
-LEYENDA_CHIPS = (('si', 'Sí', 'ofrecido al Banco'), ('cond', 'Condicionado', 'con condiciones o solo compatibilidad declarada'), ('tiene', 'Tiene, no ofrece', 'lo tiene en su documentación (otros clientes, regiones o nubes), pero no lo ofrece al Banco'), ('no', 'No', 'excluido, sin evidencia de que lo tenga'), ('x', 'N/E', 'no lo especifica'))
-NOTA_NUBES = 'Otras = nube o plataforma nombrada para ese modelo sin columna propia (Alibaba, FIS Private Cloud, Kyndryl…), mismo código. La fila «Nube privada» no lleva columna propia: el modelo ya la implica; sus puntos muestran la plataforma sobre la que se ofrece.'
+LEYENDA_CHIPS = (('si', 'Sí', 'ofrecido al Banco'), ('cond', 'Condicionado', 'con condiciones o solo compatibilidad declarada'), ('tiene', 'Tiene, no ofrece', 'lo tiene en su documentación (otros clientes, regiones o nubes), pero no lo ofrece al Banco'), ('no', 'No', 'excluido, sin evidencia de que lo tenga'), ('x', 'N/E', 'no lo especifica'), ('decl', 'Declaradas', 'fila con las plataformas que el vendor nombra en general, con cita, sin atarlas a un modelo'))
+NOTA_NUBES = 'Otras = nubes o herramientas sin columna propia (Kubernetes, EKS/AKS/GKE, CCE, VMware, Alibaba, IBM Cloud…): negrita ofrecida, normal declarada o condicionada, gris no ofrecida. La fila «Nube privada» no lleva columna propia: el modelo ya la implica.'
 
 # ----------------------------------------------------------------------------- estilo CoE (deck corporativo 16:9: barra azul, numerales naranja, pie «Datos elaborados por BCP para uso Interno»)
 import base64, mimetypes
@@ -395,12 +396,12 @@ table.lay{width:100%;border-collapse:separate;border-spacing:14pt 0;margin:0 -14
 .cover img.l{position:absolute;right:27pt;bottom:17pt;width:119pt}
 .svgbox{border:1px solid #e3e6ec;border-radius:4pt;padding:8pt}
 .pend3 .box ul{font-size:8pt} .pend3 h4 span{opacity:.75;font-weight:400}
-.nb{border:1px solid #e3e6ec;border-top:4pt solid var(--vc);border-radius:4pt;padding:6pt 8pt 4pt} .nb h4{margin:0 0 4pt;font-size:10.5pt;color:#00205b;letter-spacing:.06em;text-transform:uppercase}
+.nb{border:1px solid #e3e6ec;border-top:3pt solid var(--vc);border-radius:4pt;padding:4pt 7pt 3pt} .nb h4{margin:0 0 2pt;font-size:9.5pt;color:#00205b;letter-spacing:.06em;text-transform:uppercase}
 table.nbt{width:100%;border-collapse:collapse;font-size:8.2pt} table.nbt th{font-size:6.2pt;color:#5f6b7a;text-transform:uppercase;letter-spacing:.03em;padding:2pt 1pt;text-align:center;border-bottom:1px solid #e3e6ec;background:#f6f8fb;font-weight:700} table.nbt th:first-child{text-align:left;padding-left:3pt}
-table.nbt td{padding:3.5pt 1pt;text-align:center;border-bottom:1px solid #eef1f4} table.nbt td:first-child{text-align:left;font-weight:600;white-space:nowrap;padding-left:3pt}
+table.nbt td{padding:1.6pt 1pt;text-align:center;border-bottom:1px solid #eef1f4;line-height:1.15} table.nbt td:first-child{text-align:left;font-weight:600;white-space:nowrap;padding-left:3pt}
 .dot{display:inline-block;width:10pt;height:10pt;border-radius:50%;border:1.5pt solid transparent;vertical-align:middle;box-sizing:border-box} .dot.of{background:#2a78d6;border-color:#2a78d6} .dot.cond{border-color:#2a78d6} .dot.no{border-color:#8a8f98;border-style:dashed} .dot.vacio{background:#e3e6ec;width:5pt;height:5pt;border:0}
 .chipm{display:inline-block;padding:1pt 5pt;border-radius:3pt;font-size:6.8pt;font-weight:700;margin-left:4pt;vertical-align:middle;white-space:nowrap} .chipm.si{background:#e8f1f8;color:#00529b} .chipm.no{background:#eef1f4;color:#5f6b7a} .chipm.cond{background:#fbe4cc;color:#9c5700} .chipm.tiene{background:#fff;color:#8a4b00;border:1px dashed #c97a1a;padding:0 4pt} .chipm.x{background:#eef1f4;color:#5f6b7a}
-.otg{display:inline-block;font-size:5.2pt;font-weight:700;line-height:1.2;padding:0.5pt 3pt;border-radius:2.5pt;border:1pt solid #2a78d6;color:#2a78d6;white-space:nowrap;margin:0.5pt 0} .otg.of{background:#2a78d6;color:#fff} .otg.no{border-style:dashed;border-color:#8a8f98;color:#5f6b7a} table.nbt td.ot{padding-left:1pt;padding-right:1pt;max-width:46pt} .nbn{font-size:6.6pt;color:#3d4a5c;line-height:1.3;margin:4pt 0 0;border-top:1px dashed #e3e6ec;padding-top:3pt} .legn{font-size:7.3pt;color:#5f6b7a;margin:0 0 6pt;line-height:1.5} .legn .dot{margin:0 3pt 0 6pt;width:11px;height:11px} .legn .chipm{font-size:6.4pt}
+.otg{font-size:4.8pt;line-height:1.1;color:#2a78d6;white-space:nowrap} .otg.of{font-weight:700} .otg.no{color:#8a8f98} table.nbt td.ot{padding-left:1pt;padding-right:1pt;max-width:58pt;white-space:normal;line-height:1.1} .chipm.decl{background:#fff;color:#2a5d9f;border:1px solid #9bb8dc;padding:0 4pt} .nbn{font-size:6pt;color:#3d4a5c;line-height:1.25;margin:2pt 0 0;border-top:1px dashed #e3e6ec;padding-top:2pt} .legn{font-size:7pt;color:#5f6b7a;margin:0 0 4pt;line-height:1.45} .legn .dot{margin:0 3pt 0 6pt;width:11px;height:11px} .legn .chipm{font-size:6.4pt}
 .leg{font-size:8pt;color:#5f6b7a;margin-top:8pt} .leg i{display:inline-block;width:10pt;height:10pt;border-radius:2pt;vertical-align:middle;margin:0 4pt 0 10pt}
 """
 def _data_uri(p):
@@ -540,7 +541,7 @@ def construir_presentacion_coe(V, base, hoy):
         if DESP:
             cards = []; notas = m.notas_despliegue()
             for vend, i, filas in DESP:
-                trs = ''.join(f'<tr><td>{esc(nm)}<span class="chipm {cls or "x"}">{esc(corto)}</span></td>' + ''.join(f'<td><span class="dot {marcas[pn]}"></span></td>' if pn in marcas else '<td><span class="dot vacio"></span></td>' for pn in PLAT) + '<td class="ot">' + (''.join(f'<span class="otg {est}">{esc(cp)}</span>' for _, cp, est in otras) or '<span class="dot vacio"></span>') + '</td></tr>' for nm, cls, corto, marcas, otras in filas)
+                trs = ''.join(f'<tr><td>{esc(nm)}<span class="chipm {cls or "x"}">{esc(corto)}</span></td>' + ''.join(f'<td><span class="dot {marcas[pn]}"></span></td>' if pn in marcas else '<td><span class="dot vacio"></span></td>' for pn in PLAT) + '<td class="ot">' + (' · '.join(f'<span class="otg {est}">{esc(cp)}</span>' for _, cp, est in otras) or '<span class="dot vacio"></span>') + '</td></tr>' for nm, cls, corto, marcas, otras in filas)
                 cards.append(f'<div class="nb" style="--vc:{m.vcolor(i)}"><h4>{esc(m.nombre(vend))}</h4><table class="nbt"><thead><tr><th>Modelo</th>' + ''.join(f'<th>{esc(pn)}</th>' for pn in PLAT) + f'<th>Otras</th></tr></thead><tbody>{trs}</tbody></table>' + (lambda nt: f'<p class="nbn">{m.inline(esc(m.nombres_en_texto(nt)))}</p>' if nt else '')(notas.get(m._norm(vend))) + '</div>')
             leyenda = ('<p class="legn" style="margin-bottom:3pt"><b>Modelo:</b> ' + ' · '.join(f'<span class="chipm {k}" style="margin-left:0">{esc(c)}</span> {esc(t)}' for k, c, t in LEYENDA_CHIPS) + '</p>'
                        '<p class="legn"><b>Nube:</b> ' + ' · '.join(f'<span class="dot {k}"></span> {t}' for k, t in zip(('of', 'cond', 'no', 'vacio'), LEYENDA_NUBES)) + '. ' + esc(NOTA_NUBES) + '</p>')
