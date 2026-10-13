@@ -358,7 +358,8 @@ def construir(base, salida):
                 texto(s, x + 0.12, yh, wl, 0.22, [[('MODELO', {'bold': True, 'color': GREY, 'size': 5.6})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
                 for j, pn in enumerate(PLAT): texto(s, x + 0.1 + wl + j * wc - 0.05, yh, wc + 0.1, 0.22, [[(pn.upper(), {'bold': True, 'color': GREY, 'size': 5.4})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
                 texto(s, x + 0.1 + wl + len(PLAT) * wc, yh, wo, 0.22, [[('OTRAS', {'bold': True, 'color': GREY, 'size': 5.4})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
-                rh = (h - 0.72 - (0.5 if nota else 0)) / len(filas); cp_ = len(filas) > 5   # 6 filas (con «Declaradas»): nombre y chip más compactos
+                decl = next((' · '.join(t for t, _, _ in o) for nm_, _, _, _, o in filas if nm_ == 'Declaradas' and o), '')
+                rh = (h - 0.72 - (0.5 if nota else 0) - (0.2 if decl else 0)) / len(filas); cp_ = len(filas) > 5   # 6 filas (con «Declaradas»): nombre y chip más compactos
                 nh, chy, chh, nsz, csz = (0.125, 0.125, 0.1, 6.4, 4.9) if cp_ else (0.17, 0.18, 0.15, 7, 5.6)
                 for r_i, (nm, cls, corto, marcas, otras) in enumerate(filas):
                     ry = yh + 0.24 + r_i * rh
@@ -369,17 +370,21 @@ def construir(base, salida):
                     texto(s, x + 0.12, ry + chy, wchip, chh, [[(corto, {'bold': True, 'color': colr, 'size': csz})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
                     for j, pn in enumerate(PLAT): punto(s, x + 0.1 + wl + j * wc + wc / 2, ry + rh / 2 - 0.01, marcas.get(pn, 'vacio'))
                     xo = x + 0.1 + wl + len(PLAT) * wc + 0.03
-                    if otras:
+                    if nm == 'Declaradas': texto(s, xo, ry + 0.01, wo - 0.06, rh - 0.03, [[('ver ↓', {'color': GREY, 'size': 4.6})]], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
+                    elif otras:
                         runs = []
                         for k_o, (_, cp, est) in enumerate(otras):
                             if k_o: runs.append((' · ', {'color': GREY, 'size': 4.6}))
                             runs.append((cp, {'bold': est == 'of', 'color': GREY if est == 'no' else '2A78D6', 'size': 4.6}))
-                        texto(s, xo, ry + 0.01, wo - 0.06, rh - 0.03, [runs], align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
+                        lit = nm == 'Declaradas'
+                        texto(s, xo - (0.5 if lit else 0), ry + 0.01, wo - 0.06 + (0.5 if lit else 0), rh - 0.03, [[(t, dict(st, size=4.2 if lit else 4.6)) for t, st in runs]], align=PP_ALIGN.LEFT if lit else PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0)
                     else: punto(s, xo + (wo - 0.06) / 2, ry + rh / 2 - 0.01, 'vacio')
                     if r_i < len(filas) - 1:
                         ln = s.shapes.add_connector(1, Inches(x + 0.1), Inches(ry + rh - 0.01), Inches(x + w - 0.1), Inches(ry + rh - 0.01)); ln.line.color.rgb = rgb('EEF1F4'); ln.line.width = Pt(0.5)
+                if decl:
+                    texto(s, x + 0.08, yh + 0.24 + len(filas) * rh, w - 0.16, 0.2, [[('Declaradas, otras plataformas: ', {'bold': True, 'color': '2A5D9F', 'size': 5.2}), (decl, {'color': '2A5D9F', 'size': 5.2})]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False, margen=0.03)
                 if nota:   # nota del vendor (vendors/NOTAS_DESPLIEGUE.md): nubes en firme, compatibilidad declarada y contradicciones
-                    yn = yh + 0.24 + len(filas) * rh + 0.02
+                    yn = yh + 0.24 + len(filas) * rh + 0.02 + (0.2 if decl else 0)
                     ln = s.shapes.add_connector(1, Inches(x + 0.1), Inches(yn), Inches(x + w - 0.1), Inches(yn)); ln.line.color.rgb = rgb('E3E6EC'); ln.line.width = Pt(0.5); ln.line.dash_style = MSO_LINE.DASH
                     texto(s, x + 0.08, yn + 0.02, w - 0.16, y + h - yn - 0.06, [[(m.nombres_en_texto(nota), {'color': '3D4A5C', 'size': 6})]], size=6, min_size=5, espacio=0, margen=0.03)
             pie(s, num(), 'Fuente: análisis de despliegue de cada vendor (8_) · informe de comparativos, hoja 4')
