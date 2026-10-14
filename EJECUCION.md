@@ -169,7 +169,7 @@ Ruta manual, paso a paso, si se prefiere controlar cada etapa:
 
 # Resumen de la matriz técnica por hoja y categoría, calificaciones tal cual (cualquier conjunto de hojas):
 .venv\Scripts\python scripts\18_resumen_matriz.py <vendor> [ruta\al\xlsx]   # → vendors\<vendor>\informes\12_resumen_matriz.md + matriz\<hoja>.txt; después /resumen-matriz (agente) redacta los párrafos
-.venv\Scripts\python scripts\19_resumen_matriz_pptx.py <vendor> --completo   # → informes\RESUMEN_MATRIZ_<vendor>.pdf y .pptx (el agente /resumen-matriz lo ejecuta al final; a mano si solo cambiaste el diseño)
+.venv\Scripts\python scripts\19_resumen_matriz_pptx.py --todos --completo   # → vendors\RESUMEN_MATRIZ_TODOS.pdf y .pptx (todos los vendors: comparativa vendors × hojas + cada vendor); con <vendor> en lugar de --todos: informes\RESUMEN_MATRIZ_<vendor>.pdf y .pptx (el agente /resumen-matriz lo ejecuta al final; a mano si solo cambiaste el diseño)
 # Todo lo de despliegue de una vez (08, 10, 12, 17 y 15), sin redactar nada: prompt /generar-despliegue (agente generador-despliegue)
 .venv\Scripts\python scripts\16_informe_bloques_impl.py --todos --pdf     # informes/11_bloques_impl.md/.pdf por vendor + vendors\INFORME_BLOQUES_IMPLEMENTACION.pdf (fortalezas, brechas y contradicciones por bloque EI/F/I)
 ```

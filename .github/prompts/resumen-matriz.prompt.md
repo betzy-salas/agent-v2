@@ -4,11 +4,11 @@ agent: 'resumen-matriz'
 description: 'Resumen por hoja y por categoría de la matriz técnica de un vendor, con las calificaciones del Banco tal cual (cualquier conjunto de hojas); ejecuta 18_resumen_matriz y redacta los resúmenes'
 tools: ['codebase', 'search', 'editFiles', 'runCommands']
 ---
-Resume la matriz técnica del vendor ${input:vendor} por hoja y por categoría, con las calificaciones del Banco tal como están.
+Resume la matriz técnica de ${input:vendor:todos (uno por uno) o un vendor} por hoja y por categoría, con las calificaciones del Banco tal como están.
 Matriz: ${input:matriz:«automática» (busca el xlsx en vendors/<vendor>/docs/raw o vendors/<vendor>/) o la ruta del Excel nuevo}.
 
 Sigue .github/copilot-instructions.md y tu definición de agente: ejecuta con runCommands `.venv\Scripts\python scripts\18_resumen_matriz.py <vendor> [ruta]`,
 lee solo vendors/<vendor>/informes/12_resumen_matriz.md y vendors/<vendor>/matriz/<hoja>.txt, y sustituye cada marcador
 `<!-- resumen: hoja | categoría -->` y `<!-- resumen-hoja: hoja -->` por su párrafo. Sin recalificar, sin verificar contra documentos,
-sin opinión. Al final ejecuta `.venv\Scripts\python scripts\19_resumen_matriz_pptx.py <vendor> --completo` (PDF y PowerPoint ejecutivos).
+sin opinión. Al final ejecuta `.venv\Scripts\python scripts\19_resumen_matriz_pptx.py <vendor> --completo` por vendor y, con «todos», `--todos --completo` (vendors\RESUMEN_MATRIZ_TODOS.pdf y .pptx, con la lámina comparativa vendors × hojas).
 Reporta solo: rutas (.md, .pdf, .pptx), hojas con puntaje y nivel y categorías con fundamento.

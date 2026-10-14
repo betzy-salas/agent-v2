@@ -6,8 +6,10 @@ nada nuevo: copia los puntajes, niveles y fundamentos ya escritos.
 Diapositivas: 1) resultado por hoja; 2) una por hoja: tabla de categorías (puntaje, nivel, Indispensables con 0 o 1) y el fundamento
 de la hoja; 3) con --completo, además el fundamento de cada categoría (dos por diapositiva).
 
-Uso:  python scripts/19_resumen_matriz_pptx.py <vendor> [--completo] [--base carpeta] [--logo ruta]
+Uso:  python scripts/19_resumen_matriz_pptx.py <vendor>|--todos [--completo] [--base carpeta] [--logo ruta]
    → <base>/RESUMEN_MATRIZ_<vendor>.html, .pdf y .pptx   (base por defecto: vendors/<vendor>/informes; logo: presentacion_t5*/assets/logo.png si existe)
+   --todos: todos los vendors con informes/12_resumen_matriz.md → vendors/RESUMEN_MATRIZ_TODOS.html, .pdf y .pptx: primero una lámina
+   comparativa vendors × hojas (puntaje y nivel, calificaciones del Banco tal cual, sin ranking) y después las láminas de cada vendor.
 Requiere Chrome (PDF) y python-pptx (PPTX); si falta alguno, genera lo que pueda y lo avisa.
 """
 import datetime, html, importlib.util, re, sys
@@ -64,7 +66,7 @@ def ix(hdr, *pref):
     return None
 
 # ------------------------------------------------------------------ HTML / PDF
-def construir_html(d, logo, completo):
+def secciones_html(d, logo, completo):
     t = datetime.date.today(); mes = f'{MESES[t.month - 1].capitalize()} {t.year}'
     def bar(titulo, derecha=''): return f'<div class="bar"><h2>{esc(titulo)}</h2><span class="r">{esc(derecha)}</span></div>'
     def pie(fuente): return f'<div class="pie"><span>{esc(fuente)}</span><span class="c">Datos elaborados por BCP para uso Interno</span>' + (f'<img src="{logo}" alt="">' if logo else '') + '</div>'
@@ -94,7 +96,35 @@ def construir_html(d, logo, completo):
                 par = cats[k:k + 2]
                 cuerpo = ''.join(f'<div class="cat"><h4>{esc(c["nombre"])} <span class="pt" style="margin-left:6pt">{esc(c["punt"])}</span> {niv(c["nivel"])}</h4><p class="fund{" chico" if len(c["fund"]) > 800 else ""}">{esc(c["fund"])}</p></div>' for c in par)
                 S.append(f'<section class="s rm">{bar("Hoja " + hj + " · fundamento por categoría", dim + " · " + str(k // 2 + 1) + " de " + str((len(cats) + 1) // 2))}<div class="body">{cuerpo}</div>{pie(fuente)}</section>')
-    return f'<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Resumen matriz · {esc(d["nombre"])}</title><style>{CSS}</style></head><body>' + ''.join(S) + '</body></html>'
+    return S
+
+def envolver(titulo, S): return f'<!doctype html><html lang="es"><head><meta charset="utf-8"><title>{esc(titulo)}</title><style>{CSS}</style></head><body>' + ''.join(S) + '</body></html>'
+def construir_html(d, logo, completo): return envolver('Resumen matriz · ' + d['nombre'], secciones_html(d, logo, completo))
+
+def hojas_union(DS):
+    out = []
+    for d in DS:
+        for r in d['rows']:
+            if r[0] not in out: out.append(r[0])
+    return out
+
+def seccion_comparativa_html(DS, logo):
+    t = datetime.date.today(); mes = f'{MESES[t.month - 1].capitalize()} {t.year}'; hojas = hojas_union(DS)
+    def niv(n): return f'<span class="niv" style="background:#{color_nivel(n)}">{esc(n)}</span>'
+    th = ''.join(f'<th class="c">{esc(h)}</th>' for h in hojas); trs = ''
+    for d in DS:
+        H = d['hdr']; iP, iN = ix(H, 'puntaje'), ix(H, 'nivel'); por = {r[0]: r for r in d['rows']}
+        trs += f'<tr><td class="k">{esc(d["nombre"])}</td>' + ''.join((f'<td class="c"><span class="pt">{esc(por[h][iP])}</span><br>{niv(por[h][iN])}</td>' if h in por else '<td class="c">—</td>') for h in hojas) + '</tr>'
+    dims = {}
+    for d in DS:
+        H = d['hdr']; iD = ix(H, 'dimensi')
+        for r in d['rows']:
+            if iD is not None and r[iD] and r[0] not in dims: dims[r[0]] = r[iD]
+    leyenda = ' · '.join(f'<b>{esc(h)}</b> {esc(dims[h])}' for h in hojas if h in dims)
+    return (f'<section class="s rm"><div class="bar"><h2>Resumen ejecutivo de la matriz técnica · todos los proveedores</h2><span class="r">Calificaciones del Banco tal cual · {esc(mes)}</span></div><div class="body">'
+            f'<p class="sub">Puntaje por hoja = media de las calificaciones del Banco (0–4) sobre 4, ponderada por criticidad (Indispensable/Killer 3, Deseable/No killer 1). Nivel: ≥ 85 Cumple plenamente · 70–84 Cumple · 50–69 Parcial · &lt; 50 No cumple. Sin recalificación ni ranking; cada vendor sale de su propia matriz.</p>'
+            f'<table class="t" style="font-size:9pt"><thead><tr><th>Vendor</th>{th}</tr></thead><tbody>{trs}</tbody></table>' + (f'<p class="sub" style="margin-top:8pt">{leyenda}</p>' if leyenda else '') +
+            f'</div><div class="pie"><span>Fuente: matriz técnica del Banco de cada vendor (informes/12_resumen_matriz.md de cada uno)</span><span class="c">Datos elaborados por BCP para uso Interno</span>' + (f'<img src="{logo}" alt="">' if logo else '') + '</div></section>')
 
 # ------------------------------------------------------------------ PPTX
 def construir_pptx(d, logo_path, completo, salida):
@@ -107,50 +137,74 @@ def construir_pptx(d, logo_path, completo, salida):
         print('AVISO: sin python-pptx no se genera el .pptx (pip install python-pptx)'); return 0
     NAVY_T, GREY = p12.NAVY_T, p12.GREY
     t = datetime.date.today(); mes = f'{MESES[t.month - 1].capitalize()} {t.year}'
-    fuente = f'Fuente: matriz técnica del Banco ({d["matriz"]}), calificaciones tal cual; resumen por categorías (informes/12_resumen_matriz.md)'
     prs = Presentation(); prs.slide_width = Inches(p12.W); prs.slide_height = Inches(p12.H)
+    DS = d if isinstance(d, list) else [d]
     def nueva(): return prs.slides.add_slide(prs.slide_layouts[6])
     def niv_run(n): return (n, {'bold': True, 'color': color_nivel(n)})
-    s = nueva(); p12.barra(s, f'Resumen ejecutivo de la matriz técnica · {d["nombre"]}', 'Calificaciones del Banco tal cual · ' + mes)
-    p12.texto(s, 0.42, 0.72, 12.5, 0.4, [[('Puntaje = media de las calificaciones (0–4) sobre 4, ponderada por criticidad (Indispensable/Killer 3, Deseable/No killer 1). Nivel: ≥ 85 Cumple plenamente · 70–84 Cumple · 50–69 Parcial · < 50 No cumple. Sin recalificación.', {'color': GREY, 'size': 8.5})]], ajustar=False)
-    H = d['hdr']; iH, iD, iI, iP, iN, iS, iInc = ix(H, 'hoja'), ix(H, 'dimensi'), ix(H, 'items', 'ítems'), ix(H, 'puntaje'), ix(H, 'nivel'), ix(H, 'sin calificar'), ix(H, 'incoheren')
-    cuerpo = [[r[iH], r[iD] if iD is not None else '', r[iI], [(r[iP], {'bold': True, 'font': p12.MONO, 'color': NAVY_T})], [niv_run(r[iN])], r[iS], r[iInc] if iInc is not None else ''] for r in d['rows']]
-    p12.tabla(s, 0.42, 1.2, 12.5, [0.8, 3.6, 0.8, 1.0, 1.9, 1.2, 1.6], ['Hoja', 'Dimensión', 'Ítems', 'Puntaje', 'Nivel', 'Sin calificar', 'Incoherencias Eval/VA'], cuerpo, size=9, head_size=9, center_cols=(2, 3, 5, 6))
-    p14.pie(s, fuente, logo_path)
-    for h in d['hojas']:
-        C = h['chdr']; iC, iIt, iPc, iNc, iB = ix(C, 'categor'), ix(C, 'items', 'ítems'), ix(C, 'puntaje'), ix(C, 'nivel'), ix(C, 'indispens')
-        filas = [c['fila'] for c in h['cats'] if c['fila']]; n = len(filas); sz = 8 if n <= 11 else 7 if n <= 16 else 6
-        s = nueva(); p12.barra(s, f'Hoja {h["hoja"]} · {h["dim"] or d["nombre"]}', f'Puntaje {h["punt"]} / 100 · {h["nivel"]}')
-        cuerpo = [[r[iC], r[iIt], [(r[iPc], {'bold': True, 'font': p12.MONO, 'color': NAVY_T})], [niv_run(r[iNc])], r[iB] if iB is not None else ''] for r in filas]
-        p12.tabla(s, 0.42, 0.8, 6.5, [2.6, 0.6, 0.8, 1.4, 1.1], ['Categoría', 'Ítems', 'Puntaje', 'Nivel', 'Indisp. 0/1'], cuerpo, size=sz, head_size=sz, center_cols=(1, 2), row_h=0.26 if n > 16 else None)
-        p14.h3(s, 7.2, 0.8, 5.7, 'En qué se fundamenta el resultado de la hoja', size=12)
-        p12.texto(s, 7.2, 1.2, 5.7, 5.7, [[(h['fund'], {'size': 9})]], size=9, min_size=6.5)
-        p14.pie(s, fuente, logo_path)
-        if completo:
-            cats = h['cats']
-            for k in range(0, len(cats), 2):
-                s = nueva(); p12.barra(s, f'Hoja {h["hoja"]} · fundamento por categoría', f'{h["dim"] or d["nombre"]} · {k // 2 + 1} de {(len(cats) + 1) // 2}')
-                y = 0.8
-                for c in cats[k:k + 2]:
-                    p12.texto(s, 0.42, y, 12.5, 0.32, [[(c['nombre'], {'bold': True, 'color': NAVY_T, 'size': 12}), (f'   {c["punt"]}  ', {'bold': True, 'font': p12.MONO, 'color': NAVY_T, 'size': 11}), niv_run(c['nivel'])]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
-                    p12.texto(s, 0.42, y + 0.36, 12.5, 2.6, [[(c['fund'], {'size': 9.5})]], size=9.5, min_size=7)
-                    y += 3.1
-                p14.pie(s, fuente, logo_path)
+    if isinstance(d, list):   # lámina comparativa vendors × hojas
+        hojas = hojas_union(DS); s = nueva(); p12.barra(s, 'Resumen ejecutivo de la matriz técnica · todos los proveedores', 'Calificaciones del Banco tal cual · ' + mes)
+        p12.texto(s, 0.42, 0.72, 12.5, 0.4, [[('Puntaje por hoja = media de las calificaciones del Banco (0–4) sobre 4, ponderada por criticidad. Nivel: ≥ 85 Cumple plenamente · 70–84 Cumple · 50–69 Parcial · < 50 No cumple. Sin recalificación ni ranking.', {'color': GREY, 'size': 8.5})]], ajustar=False)
+        cuerpo = []
+        for dv in DS:
+            H = dv['hdr']; iP, iN = ix(H, 'puntaje'), ix(H, 'nivel'); por = {r[0]: r for r in dv['rows']}
+            cuerpo.append([dv['nombre']] + [([(por[h][iP] + '  ', {'bold': True, 'font': p12.MONO, 'color': NAVY_T}), (por[h][iN], {'bold': True, 'color': color_nivel(por[h][iN]), 'size': 7})] if h in por else '—') for h in hojas])
+        wv = 1.9; wc = (12.5 - wv) / max(1, len(hojas))
+        p12.tabla(s, 0.42, 1.2, 12.5, [wv] + [wc] * len(hojas), ['Vendor'] + hojas, cuerpo, size=8.5, head_size=9, center_cols=tuple(range(1, len(hojas) + 1)))
+        p14.pie(s, 'Fuente: matriz técnica del Banco de cada vendor (informes/12_resumen_matriz.md de cada uno)', logo_path)
+    for d in DS:
+      fuente = f'Fuente: matriz técnica del Banco ({d["matriz"]}), calificaciones tal cual; resumen por categorías (informes/12_resumen_matriz.md)'
+      s = nueva(); p12.barra(s, f'Resumen ejecutivo de la matriz técnica · {d["nombre"]}', 'Calificaciones del Banco tal cual · ' + mes)
+      p12.texto(s, 0.42, 0.72, 12.5, 0.4, [[('Puntaje = media de las calificaciones (0–4) sobre 4, ponderada por criticidad (Indispensable/Killer 3, Deseable/No killer 1). Nivel: ≥ 85 Cumple plenamente · 70–84 Cumple · 50–69 Parcial · < 50 No cumple. Sin recalificación.', {'color': GREY, 'size': 8.5})]], ajustar=False)
+      H = d['hdr']; iH, iD, iI, iP, iN, iS, iInc = ix(H, 'hoja'), ix(H, 'dimensi'), ix(H, 'items', 'ítems'), ix(H, 'puntaje'), ix(H, 'nivel'), ix(H, 'sin calificar'), ix(H, 'incoheren')
+      cuerpo = [[r[iH], r[iD] if iD is not None else '', r[iI], [(r[iP], {'bold': True, 'font': p12.MONO, 'color': NAVY_T})], [niv_run(r[iN])], r[iS], r[iInc] if iInc is not None else ''] for r in d['rows']]
+      p12.tabla(s, 0.42, 1.2, 12.5, [0.8, 3.6, 0.8, 1.0, 1.9, 1.2, 1.6], ['Hoja', 'Dimensión', 'Ítems', 'Puntaje', 'Nivel', 'Sin calificar', 'Incoherencias Eval/VA'], cuerpo, size=9, head_size=9, center_cols=(2, 3, 5, 6))
+      p14.pie(s, fuente, logo_path)
+      for h in d['hojas']:
+          C = h['chdr']; iC, iIt, iPc, iNc, iB = ix(C, 'categor'), ix(C, 'items', 'ítems'), ix(C, 'puntaje'), ix(C, 'nivel'), ix(C, 'indispens')
+          filas = [c['fila'] for c in h['cats'] if c['fila']]; n = len(filas); sz = 8 if n <= 11 else 7 if n <= 16 else 6
+          s = nueva(); p12.barra(s, f'Hoja {h["hoja"]} · {h["dim"] or d["nombre"]}', f'Puntaje {h["punt"]} / 100 · {h["nivel"]}')
+          cuerpo = [[r[iC], r[iIt], [(r[iPc], {'bold': True, 'font': p12.MONO, 'color': NAVY_T})], [niv_run(r[iNc])], r[iB] if iB is not None else ''] for r in filas]
+          p12.tabla(s, 0.42, 0.8, 6.5, [2.6, 0.6, 0.8, 1.4, 1.1], ['Categoría', 'Ítems', 'Puntaje', 'Nivel', 'Indisp. 0/1'], cuerpo, size=sz, head_size=sz, center_cols=(1, 2), row_h=0.26 if n > 16 else None)
+          p14.h3(s, 7.2, 0.8, 5.7, 'En qué se fundamenta el resultado de la hoja', size=12)
+          p12.texto(s, 7.2, 1.2, 5.7, 5.7, [[(h['fund'], {'size': 9})]], size=9, min_size=6.5)
+          p14.pie(s, fuente, logo_path)
+          if completo:
+              cats = h['cats']
+              for k in range(0, len(cats), 2):
+                  s = nueva(); p12.barra(s, f'Hoja {h["hoja"]} · fundamento por categoría', f'{h["dim"] or d["nombre"]} · {k // 2 + 1} de {(len(cats) + 1) // 2}')
+                  y = 0.8
+                  for c in cats[k:k + 2]:
+                      p12.texto(s, 0.42, y, 12.5, 0.32, [[(c['nombre'], {'bold': True, 'color': NAVY_T, 'size': 12}), (f'   {c["punt"]}  ', {'bold': True, 'font': p12.MONO, 'color': NAVY_T, 'size': 11}), niv_run(c['nivel'])]], anchor=MSO_ANCHOR.MIDDLE, ajustar=False)
+                      p12.texto(s, 0.42, y + 0.36, 12.5, 2.6, [[(c['fund'], {'size': 9.5})]], size=9.5, min_size=7)
+                      y += 3.1
+                  p14.pie(s, fuente, logo_path)
     prs.save(salida); return 1
 
 def main():
-    args = sys.argv[1:]
-    if not args or args[0].startswith('-'): sys.exit('Uso: python scripts/19_resumen_matriz_pptx.py <vendor> [--completo] [--base carpeta] [--logo ruta]')
-    vendor = args[0]; completo = '--completo' in args
-    base = Path(args[args.index('--base') + 1]) if '--base' in args else m.VENDORS / vendor / 'informes'
-    if not base.is_absolute(): base = RAIZ / base
-    base.mkdir(parents=True, exist_ok=True)
+    args = sys.argv[1:]; completo = '--completo' in args; todos = '--todos' in args
+    if not todos and (not args or args[0].startswith('-')): sys.exit('Uso: python scripts/19_resumen_matriz_pptx.py <vendor>|--todos [--completo] [--base carpeta] [--logo ruta]')
     logo_path = Path(args[args.index('--logo') + 1]) if '--logo' in args else next((p for p in sorted(RAIZ.glob('presentacion_t5*/assets/logo.png'))), None)
-    d = leer(vendor)
-    out = base / f'RESUMEN_MATRIZ_{vendor}.html'; out.write_text(construir_html(d, p10._data_uri(logo_path) if logo_path and logo_path.exists() else '', completo), encoding='utf-8'); print(f'HTML: {out}')
+    logo = p10._data_uri(logo_path) if logo_path and logo_path.exists() else ''
+    if todos:
+        vendors = sorted(p.name for p in m.VENDORS.iterdir() if (p / 'informes' / '12_resumen_matriz.md').exists())
+        if not vendors: sys.exit('Ningún vendor tiene informes/12_resumen_matriz.md (scripts/18 + agente resumen-matriz).')
+        DS = [leer(v) for v in vendors]; print('Vendors:', ', '.join(vendors))
+        base = Path(args[args.index('--base') + 1]) if '--base' in args else m.VENDORS
+        if not base.is_absolute(): base = RAIZ / base
+        S = [seccion_comparativa_html(DS, logo)]
+        for d in DS: S += secciones_html(d, logo, completo)
+        out = base / 'RESUMEN_MATRIZ_TODOS.html'; out.write_text(envolver('Resumen matriz · todos los proveedores', S), encoding='utf-8'); print(f'HTML: {out}')
+        d = DS; esperadas = 1 + sum(1 + len(x['hojas']) + (sum((len(h['cats']) + 1) // 2 for h in x['hojas']) if completo else 0) for x in DS)
+    else:
+        vendor = args[0]; d = leer(vendor)
+        base = Path(args[args.index('--base') + 1]) if '--base' in args else m.VENDORS / vendor / 'informes'
+        if not base.is_absolute(): base = RAIZ / base
+        base.mkdir(parents=True, exist_ok=True)
+        out = base / f'RESUMEN_MATRIZ_{vendor}.html'; out.write_text(construir_html(d, logo, completo), encoding='utf-8'); print(f'HTML: {out}')
+        esperadas = 1 + len(d['hojas']) + (sum((len(h['cats']) + 1) // 2 for h in d['hojas']) if completo else 0)
     pdf = out.with_suffix('.pdf'); m.a_pdf(out, pdf)
     try:
-        import fitz; n = fitz.open(pdf).page_count; esperadas = 1 + len(d['hojas']) + (sum((len(h['cats']) + 1) // 2 for h in d['hojas']) if completo else 0)
+        import fitz; n = fitz.open(pdf).page_count
         print(f'PDF: {pdf} · {n} páginas' + ('' if n == esperadas else f' (AVISO: se esperaban {esperadas}; alguna diapositiva se desbordó)'))
     except ImportError: pass
     if construir_pptx(d, logo_path, completo, out.with_suffix('.pptx')): print(f'PPTX: {out.with_suffix(".pptx")}')
