@@ -180,6 +180,7 @@ python scripts/04_ingesta.py <vendor>             # 01 PDF→txt, 01a .toc.md, 0
 # comparativos entre vendors: analista-despliegue → vendors/COMPARATIVO_DESPLIEGUE.md;
 #   comparador-implementacion (tras verificar y redactar la implementación de cada vendor) → vendors/COMPARATIVO_IMPLEMENTACION.md;
 #   comparador-t5 (tras el informe ejecutivo de T5 de cada vendor) → vendors/COMPARATIVO_T5.md
+python scripts/18_resumen_matriz.py <vendor> [xlsx]   # informes/12_resumen_matriz.md: puntaje y nivel por hoja y por categoría con la calificación del Banco tal cual, para CUALQUIER hoja con columnas N° y VA (T1–T8 o un documento nuevo); escribe matriz/<hoja>.txt; luego el agente resumen-matriz redacta los resúmenes (sin recalificar). En Copilot: /resumen-matriz
 python scripts/09_semaforo_t5.py <vendor>     # informes/9_semaforo_T5.md: color por categoría (media de la calificación del Banco en T5 y niveles oficiales); luego el agente semaforo-t5 redacta el detalle
 python scripts/10_presentacion_t5.py [--base carpeta]   # COMPARATIVO_SEMAFORO_T5.md (tablas) → agente comparador-semaforo-t5 (comentarios) → --pdf: PRESENTACION_T5.pdf
 #   --pdf --estilo coe: PRESENTACION_T5_COE.pdf con el diseño del deck corporativo (16:9); python scripts/12_presentacion_t5_pptx.py --base carpeta → PRESENTACION_T5.pptx (PowerPoint, mismo diseño; requiere python-pptx)
