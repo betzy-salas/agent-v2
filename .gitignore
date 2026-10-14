@@ -4,3 +4,7 @@ __pycache__/
 # Documentos originales de cada vendor: confidenciales, no versionar
 vendors/*/docs/raw/*
 !vendors/*/docs/raw/.gitkeep
+
+# Matrices técnicas calificadas (confidenciales): solo el README
+matrices/*
+!matrices/README.md

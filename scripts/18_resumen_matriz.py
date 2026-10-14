@@ -13,7 +13,7 @@ Por cada hoja detectada:
 Salida: vendors/<vendor>/informes/12_resumen_matriz.md (o --salida).
 
 Uso:  python scripts/18_resumen_matriz.py <vendor> [ruta_al_xlsx] [--hojas A,B,C] [--salida archivo.md]
-      Sin ruta, busca la matriz en vendors/<vendor>/docs/raw y, si no está, en vendors/<vendor>/ (p. ej. «Evaluacion <vendor>.xlsx»).
+      Sin ruta, busca la matriz en matrices/*<vendor>*.xlsx (la más reciente), luego en vendors/<vendor>/docs/raw y por último en vendors/<vendor>/.
 """
 import datetime, re, sys
 from collections import OrderedDict
@@ -35,6 +35,19 @@ def nivel(p):
 def norm(s): return re.sub(r'\s+', ' ', str(s or '')).strip()
 def corta(t, n): t = norm(t); return t if len(t) <= n else t[:n - 1].rstrip() + '…'
 def celda(t): return norm(t).replace('|', '/')
+
+def en_matrices(v):
+    """matrices/<algo con el vendor>.xlsx: carpeta del vendor o su nombre oficial en el nombre del archivo; si hay varios, el más reciente."""
+    carpeta = RAIZ / 'matrices'
+    if not carpeta.exists(): return None
+    import importlib.util as _iu
+    spec = _iu.spec_from_file_location('m07', Path(__file__).resolve().parent / '07_informe_implementacion.py'); m07 = _iu.module_from_spec(spec); spec.loader.exec_module(m07)
+    claves = {re.sub(r'[^a-z0-9]', '', v.lower()), re.sub(r'[^a-z0-9]', '', m07.nombre(v).lower())}
+    cands = [p for p in carpeta.glob('*.xls*') if not p.name.startswith('~$') and any(k and k in re.sub(r'[^a-z0-9]', '', p.stem.lower()) for k in claves)]
+    if not cands: return None
+    cands.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    if len(cands) > 1: print(f'⚠ Varias matrices para {v} en matrices/: uso la más reciente, {cands[0].name}')
+    return cands[0]
 
 def hojas_matriz(wb):
     """Hojas con cabecera N° y columna VA, en el orden del libro; devuelve [(nombre, filas, índice de cabecera)]."""
@@ -88,11 +101,13 @@ def main():
     hojas_pedidas = opc('--hojas'); salida = opc('--salida')
     if args and not args[0].startswith('-'): xlsx = Path(args[0])
     else:
+        xlsx = en_matrices(v)
+    if xlsx is None:
         cands = [p for p in archivos_raw(d / 'docs' / 'raw') + sorted(d.glob('*.xls*')) if p.suffix.lower() in ('.xlsx', '.xlsm') and es_matriz_evaluacion(p)]
         if not cands:   # sin hoja de método ni T1–T8: cualquier xlsx del vendor con alguna hoja de matriz
             for p in archivos_raw(d / 'docs' / 'raw') + sorted(d.glob('*.xls*')):
                 if p.suffix.lower() in ('.xlsx', '.xlsm') and hojas_matriz(openpyxl.load_workbook(p, read_only=True, data_only=True)): cands.append(p)
-        if not cands: sys.exit(f'No encontré una matriz (xlsx con columnas N° y VA) en vendors/{v}/docs/raw ni en vendors/{v}/. Pásala como segundo argumento.')
+        if not cands: sys.exit(f'No encontré una matriz (xlsx con columnas N° y VA) en matrices/ (nombre con «{v}»), vendors/{v}/docs/raw ni vendors/{v}/. Pásala como segundo argumento.')
         if len(cands) > 1: print('⚠ Varias matrices candidatas, uso la primera:', [c.name for c in cands])
         xlsx = cands[0]
     print('Matriz:', xlsx)

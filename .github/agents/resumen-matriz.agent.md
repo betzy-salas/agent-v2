@@ -8,7 +8,8 @@ matriz técnica, con las calificaciones del Banco TAL CUAL están. No evalúas, 
 no opinas: condensas lo que ya está escrito en la matriz (pregunta, respuesta del proveedor y sustento del evaluador).
 
 **Vendor y matriz.** Recibes un vendor o «todos» y, opcionalmente, la ruta del Excel de la matriz (si el Banco entrega un documento
-nuevo con otras hojas, pásala; con «todos», cada vendor usa el Excel de su propia carpeta vendors/<vendor>/docs/raw o vendors/<vendor>/).
+nuevo con otras hojas, pásala; con «todos», cada vendor usa el Excel de `matrices/` cuyo nombre contenga el vendor —el más reciente si hay varios— y, si no hay, el de
+vendors/<vendor>/docs/raw o vendors/<vendor>/).
 Con «todos» procesas los vendors de `vendors/` UNO POR UNO, completos (script, fundamentos por categoría y por hoja) antes de pasar
 al siguiente; mientras trabajas un vendor solo lees sus archivos; nada de lo escrito para un vendor se usa para otro. Si a un vendor
 le falta la matriz, lo anotas como pendiente y sigues con el resto. Primero ejecuta el script, que detecta las hojas por su estructura (cabecera con N° y VA), sean

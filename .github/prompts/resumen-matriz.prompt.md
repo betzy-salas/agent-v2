@@ -5,7 +5,7 @@ description: 'Resumen por hoja y por categoría de la matriz técnica de un vend
 tools: ['codebase', 'search', 'editFiles', 'runCommands']
 ---
 Resume la matriz técnica de ${input:vendor:todos (uno por uno) o un vendor} por hoja y por categoría, con las calificaciones del Banco tal como están.
-Matriz: ${input:matriz:«automática» (busca el xlsx en vendors/<vendor>/docs/raw o vendors/<vendor>/) o la ruta del Excel nuevo}.
+Matriz: ${input:matriz:«automática» (matrices\*<vendor>*.xlsx, la más reciente; si no, vendors\<vendor>\docs\raw) o la ruta del Excel}.
 
 Sigue .github/copilot-instructions.md y tu definición de agente: ejecuta con runCommands `.venv\Scripts\python scripts\18_resumen_matriz.py <vendor> [ruta]`,
 lee solo vendors/<vendor>/informes/12_resumen_matriz.md y vendors/<vendor>/matriz/<hoja>.txt, y sustituye cada marcador

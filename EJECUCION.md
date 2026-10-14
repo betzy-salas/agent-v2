@@ -168,6 +168,7 @@ Ruta manual, paso a paso, si se prefiere controlar cada etapa:
 .venv\Scripts\python scripts\17_imagenes_despliegue.py --base presentacion_t5   # HOJA_4_plataformas_por_modelo.png y DIAPOSITIVA_plataformas_por_modelo.png (cuadrícula como imagen; antes: 08 --pdf y 10 --pdf --estilo coe)
 
 # Resumen de la matriz técnica por hoja y categoría, calificaciones tal cual (cualquier conjunto de hojas):
+# Deja cada Excel en matrices\ con el nombre del vendor en el archivo (p. ej. matrices\tm.xlsx); el script lo encuentra solo.
 .venv\Scripts\python scripts\18_resumen_matriz.py <vendor> [ruta\al\xlsx]   # → vendors\<vendor>\informes\12_resumen_matriz.md + matriz\<hoja>.txt; después /resumen-matriz (agente) redacta los párrafos
 .venv\Scripts\python scripts\19_resumen_matriz_pptx.py --todos --completo   # → vendors\RESUMEN_MATRIZ_TODOS.pdf y .pptx (todos los vendors: comparativa vendors × hojas + cada vendor); con <vendor> en lugar de --todos: informes\RESUMEN_MATRIZ_<vendor>.pdf y .pptx (el agente /resumen-matriz lo ejecuta al final; a mano si solo cambiaste el diseño)
 # Todo lo de despliegue de una vez (08, 10, 12, 17 y 15), sin redactar nada: prompt /generar-despliegue (agente generador-despliegue)
