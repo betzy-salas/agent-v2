@@ -106,7 +106,7 @@ def main():
          '- Calificaciones: las del Banco (columna VA, 0–4) tal como están en la matriz; este documento no recalifica ni propone calificaciones.',
          '- Puntaje de hoja y de categoría: media de las calificaciones (0–4) sobre 4, ponderada por criticidad (Indispensable/Killer 3, Deseable/No killer 1), en 0–100; los ítems sin calificar no entran.',
          '- Nivel: escala oficial de CLAUDE.md («Niveles de cumplimiento»): ≥ 85 Cumple plenamente · 70–84 Cumple · 50–69 Parcial · < 50 No cumple.',
-         '- Resumen por hoja y por categoría: lo escribe el agente resumen-matriz a partir de la pregunta, la respuesta del proveedor y el sustento del evaluador (matriz/<hoja>.txt), sin añadir hechos.', '',
+         '- Fundamento por hoja y por categoría (en qué se basa el resultado: qué pide el Banco, qué ofrece el proveedor, qué le faltó según el evaluador): lo escribe el agente resumen-matriz a partir de la pregunta, la respuesta del proveedor y el sustento del evaluador (matriz/<hoja>.txt), sin añadir hechos ni repetir conteos.', '',
          '## Resultado por hoja', '', '| Hoja | Dimensión | Ítems | Calificados | Puntaje | Nivel | 4 | 3 | 2 | 1 | 0 | Sin calificar | Incoherencias Eval/VA |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|']
     detalle = []
     for hoja, rows, h in hojas:
@@ -124,7 +124,7 @@ def main():
             pc = puntaje(its); dc = {k: sum(1 for i in its if i['va'] == k) for k in range(5)}; scc = sum(1 for i in its if i['va'] is None)
             bajos = [i['n'] for i in its if i['va'] in (0, 1) and peso(i) == 3]
             D.append(f'| {celda(c)} | {len(its)} | {pc if pc is not None else "—"} | {nivel(pc)} | {dc[4]} | {dc[3]} | {dc[2]} | {dc[1]} | {dc[0]} | {scc} | {", ".join(bajos) or "—"} |')
-        D += ['', '### Resumen por categoría', '']
+        D += ['', '### Fundamento por categoría', '']
         for c, its in cats.items():
             pc = puntaje(its)
             D += [f'#### {c} — {pc if pc is not None else "—"} / 100 · {nivel(pc)}', '', f'<!-- resumen: {hoja} | {c} -->', '',
