@@ -166,6 +166,7 @@ Ruta manual, paso a paso, si se prefiere controlar cada etapa:
 .venv\Scripts\python scripts\14_laminas_correo_pptx.py --base presentacion_t5                # las mismas dos láminas en PowerPoint
 .venv\Scripts\python scripts\15_lamina_despliegue.py --base presentacion_t5     # LAMINA_3_despliegue.png / .pdf / .pptx (resumen de modelos de despliegue y nubes)
 .venv\Scripts\python scripts\17_imagenes_despliegue.py --base presentacion_t5   # HOJA_4_plataformas_por_modelo.png y DIAPOSITIVA_plataformas_por_modelo.png (cuadrícula como imagen; antes: 08 --pdf y 10 --pdf --estilo coe)
+# Todo lo de despliegue de una vez (08, 10, 12, 17 y 15), sin redactar nada: prompt /generar-despliegue (agente generador-despliegue)
 .venv\Scripts\python scripts\16_informe_bloques_impl.py --todos --pdf     # informes/11_bloques_impl.md/.pdf por vendor + vendors\INFORME_BLOQUES_IMPLEMENTACION.pdf (fortalezas, brechas y contradicciones por bloque EI/F/I)
 ```
 
