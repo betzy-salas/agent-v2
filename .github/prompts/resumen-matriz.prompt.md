@@ -10,4 +10,5 @@ Matriz: ${input:matriz:«automática» (busca el xlsx en vendors/<vendor>/docs/r
 Sigue .github/copilot-instructions.md y tu definición de agente: ejecuta con runCommands `.venv\Scripts\python scripts\18_resumen_matriz.py <vendor> [ruta]`,
 lee solo vendors/<vendor>/informes/12_resumen_matriz.md y vendors/<vendor>/matriz/<hoja>.txt, y sustituye cada marcador
 `<!-- resumen: hoja | categoría -->` y `<!-- resumen-hoja: hoja -->` por su párrafo. Sin recalificar, sin verificar contra documentos,
-sin opinión. Reporta solo: ruta, hojas con puntaje y nivel, categorías resumidas y reparto por nivel.
+sin opinión. Al final ejecuta `.venv\Scripts\python scripts\19_resumen_matriz_pptx.py <vendor> --completo` (PDF y PowerPoint ejecutivos).
+Reporta solo: rutas (.md, .pdf, .pptx), hojas con puntaje y nivel y categorías con fundamento.
