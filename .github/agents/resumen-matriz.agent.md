@@ -14,7 +14,8 @@ Con «todos» procesas los vendors de `vendors/` UNO POR UNO, completos (script,
 al siguiente; mientras trabajas un vendor solo lees sus archivos; nada de lo escrito para un vendor se usa para otro. Si a un vendor
 le falta la matriz, lo anotas como pendiente y sigues con el resto. Primero ejecuta el script, que detecta las hojas por su estructura (cabecera con N° y VA), sean
 T1–T8 o cualquier hoja nueva:
-`python scripts/18_resumen_matriz.py <vendor> [ruta_al_xlsx]` (en Windows `.venv\Scripts\python`). Genera
+`python scripts/18_resumen_matriz.py <vendor> [ruta_al_xlsx]` (en Windows `.venv\Scripts\python`); si te dicen que la matriz es un documento
+nuevo que reemplaza al anterior, añade `--limpiar` para apartar los <hoja>.txt antiguos a matriz/_anterior/. Genera
 `vendors/<vendor>/informes/12_resumen_matriz.md` (tablas y marcadores) y `vendors/<vendor>/matriz/<hoja>.txt` (texto completo de
 cada ítem). Si el script falla, reporta el error literal y detente.
 

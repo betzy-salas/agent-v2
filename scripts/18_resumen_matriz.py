@@ -12,7 +12,8 @@ Por cada hoja detectada:
   - deja marcadores <!-- resumen-hoja: <hoja> --> y <!-- resumen: <hoja> | <categoría> --> que completa el agente resumen-matriz.
 Salida: vendors/<vendor>/informes/12_resumen_matriz.md (o --salida).
 
-Uso:  python scripts/18_resumen_matriz.py <vendor> [ruta_al_xlsx] [--hojas A,B,C] [--salida archivo.md]
+Uso:  python scripts/18_resumen_matriz.py <vendor> [ruta_al_xlsx] [--hojas A,B,C] [--salida archivo.md] [--limpiar]
+      --limpiar: aparta a matriz/_anterior/ los <hoja>.txt que no correspondan a hojas de esta matriz (p. ej. los T1..T8 de la matriz anterior); IMPL.txt no se toca.
       Sin ruta, busca la matriz en matrices/*<vendor>*.xlsx (la más reciente), luego en vendors/<vendor>/docs/raw y por último en vendors/<vendor>/.
 """
 import datetime, re, sys
@@ -111,7 +112,8 @@ def main():
     v = arg_vendor(); d = vendor_dir(v); args = sys.argv[2:]
     def opc(n):
         if n in args: i = args.index(n); val = args[i + 1]; del args[i:i + 2]; return val
-    hojas_pedidas = opc('--hojas'); salida = opc('--salida')
+    hojas_pedidas = opc('--hojas'); salida = opc('--salida'); limpiar = '--limpiar' in args
+    if limpiar: args.remove('--limpiar')
     if args and not args[0].startswith('-'): xlsx = Path(args[0])
     else:
         xlsx = en_matrices(v)
@@ -165,6 +167,13 @@ def main():
                 D.append(f'| {it["n"]} | {celda(it["crit"]) or "—"} | {cal} | {celda(corta(it["q"], 160))} | {celda(corta(it["sus"], 200)) or "—"} |')
             D.append('')
         detalle += D
+    if limpiar:   # archivos de hojas de una matriz anterior: se apartan a matriz/_anterior/ (no se borran); IMPL.txt y los .txt de la rúbrica no se tocan
+        import shutil
+        detectadas = {h for h, _, _ in hojas}; aparte = d / 'matriz' / '_anterior'; movidos = []
+        for f in sorted((d / 'matriz').glob('*.txt')):
+            if f.stem in detectadas or f.stem.upper().startswith('IMPL'): continue
+            aparte.mkdir(exist_ok=True); shutil.move(str(f), str(aparte / f.name)); movidos.append(f.name)
+        print('Apartados a matriz/_anterior/:', ', '.join(movidos) if movidos else 'ninguno')
     L += [''] + detalle + ['## Nota', '', 'Generado por scripts/18_resumen_matriz.py desde la matriz del Banco; sin ranking, sin recomendación y sin recalificación. Las verificaciones documentales (verif/) no intervienen.']
     out = Path(salida) if salida else d / 'informes' / '12_resumen_matriz.md'; out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text('\n'.join(L) + '\n', encoding='utf-8'); print('Resumen:', out.relative_to(RAIZ) if str(out).startswith(str(RAIZ)) else out)
