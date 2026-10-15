@@ -14,6 +14,7 @@ Puntaje de dimensión y de categoría: media de las calificaciones (0–4) sobre
 Deseable/No killer 1), en 0–100. Nivel oficial: ≥ 85 Cumple plenamente · 70–84 Cumple · 50–69 Parcial · < 50 No cumple.
 
 Uso:  python scripts/20_evaluacion_dimensiones.py [--vendor nombre] [--carpeta matrices]
+      python scripts/20_evaluacion_dimensiones.py --validar [--vendor nombre]   # señala conteos, puntajes o listas telegráficas en las evaluaciones escritas
 """
 import datetime, importlib.util, re, sys
 from collections import OrderedDict
@@ -52,8 +53,35 @@ def md_hoja(vendor, hoja, dim, items):
                   f'- Pregunta: {it["q"]}', f'- Respuesta del proveedor: {it["resp"] or "(vacía)"}', f'- Sustento del evaluador: {it["sus"] or "(sin sustento)"}', '']
     return '\n'.join(L) + '\n', p
 
+PATRONES = [(r'\b\d+\s*(criterios?|[ií]tems?|preguntas?|requerimientos?|categor[ií]as?)\b', 'conteo de ítems o criterios'),
+            (r'\b\d+\s*(de|sobre)\s*\d+\b', 'conteo «n de m»'),
+            (r'\b\d{1,3}([.,]\d)?\s*/\s*100\b|\bpuntaje\b|\bpuntuaci[oó]n\b', 'puntaje en la prosa'),
+            (r'\b(la mayor[ií]a|todos|ninguno|varios|muchos)\s+(de\s+los\s+)?(criterios|[ií]tems)\s+(est[aá]n|obtuv|con\s+\d)', 'conteo encubierto'),
+            (r'\b(porque|ya que|dado que)\s+\d+\s', 'justificación numérica'),
+            (r'\b(est[aá]n|quedan|quedaron|obtuvieron)\s+en\s+(no cumple|parcial|cumple)', 'nivel usado como conteo'),
+            (r'^\s*\*?\*?E\d+\*?\*?\s*[:·-]', 'lista telegráfica que empieza por el código'),
+            (r'(E\d+\s*:\s*[^;.]{3,40};\s*){2,}', 'lista telegráfica E<n>: …; E<n>: …')]
+def validar(carpeta, solo=None):
+    """Señala, en las evaluaciones ya escritas, frases con conteos, puntajes o estilo de lista (prohibidos en la prosa)."""
+    hallazgos = 0
+    for f in sorted((carpeta / 'evaluacion').glob('*/EVALUACION_*.md')):
+        if solo and f.parent.name != solo: continue
+        en_prosa = False
+        for n, linea in enumerate(f.read_text(encoding='utf-8').splitlines(), 1):
+            if linea.startswith('## Dimensión') or linea.startswith('## Evaluación general'): en_prosa = True; continue
+            if linea.startswith('## ') or linea.startswith('|') or linea.startswith('**') and '/ 100' in linea or linea.startswith('<!--') or not linea.strip(): continue
+            if not en_prosa: continue
+            for pat, que in PATRONES:
+                mm = re.search(pat, linea, re.I | re.M)
+                if mm: hallazgos += 1; print(f'{f.relative_to(RAIZ)}:{n}: {que}: «…{linea[max(0, mm.start() - 50):mm.end() + 50].strip()}…»')
+    print('Validación:', 'sin hallazgos' if not hallazgos else f'{hallazgos} frases por reescribir (sin conteos ni puntajes en la prosa; frases completas con el E<n> al final)')
+    return hallazgos
+
 def main():
     args = sys.argv[1:]
+    if '--validar' in args:
+        carpeta = RAIZ / (args[args.index('--carpeta') + 1] if '--carpeta' in args else 'matrices')
+        sys.exit(1 if validar(carpeta, args[args.index('--vendor') + 1] if '--vendor' in args else None) else 0)
     carpeta = RAIZ / (args[args.index('--carpeta') + 1] if '--carpeta' in args else 'matrices')
     solo = args[args.index('--vendor') + 1] if '--vendor' in args else None
     archivos = [p for p in sorted(carpeta.glob('*.xls*')) if not p.name.startswith('~$')]

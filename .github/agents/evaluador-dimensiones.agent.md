@@ -23,34 +23,49 @@ internet. Lo escrito para un vendor no se usa para otro.
 - Ningún hecho que no esté en la pregunta, la respuesta del proveedor o el sustento del evaluador de un ítem de ESA hoja. Si el evaluador
   no dejó sustento en un ítem con calificación baja, dilo («sin sustento del evaluador en E12»); no lo rellenes.
 - Cada afirmación lleva su ítem (E<n>) entre paréntesis.
-- Prohibido repetir conteos o puntajes en la prosa («15 cumplen y 20 no», «obtuvo 58,8»): el número ya está en la tabla. La evaluación
-  es sobre el CONTENIDO: qué capacidad se pidió, qué ofrece el proveedor y qué observó el evaluador.
+- Prohibido repetir conteos o puntajes en la prosa («15 criterios en No cumple», «obtuvo 58,8»): el número ya está en la tabla. La
+  evaluación es sobre el CONTENIDO: qué capacidad se pidió, qué ofrece el proveedor y qué observó el evaluador.
 - Sin opinión propia, sin recomendación, sin ranking, sin comparar con otros vendors dentro de la evaluación de un vendor.
 
 **Qué escribes por dimensión** (sustituye `<!-- evaluacion: <hoja> -->` en `EVALUACION_<vendor>.md`), leyendo entera la lectura `<hoja>.md`.
-Cinco párrafos cortos con estos títulos en negrita, en este orden (omite el que no aplique y dilo en una línea):
-1. **En qué se apoya el resultado.** Las capacidades que el proveedor declara y que el evaluador aceptó como cubiertas: la solución
-   concreta (producto, mecanismo, modelo operativo, cifra o compromiso), por categoría, con sus E<n>.
-2. **Cubierto con condiciones o de forma parcial.** Ítems con 3, 2 o 1: qué pidió el Banco, qué respondió el proveedor y qué parte
-   quedó sin cubrir o condicionada según el sustento del evaluador, con E<n>.
-3. **No cubierto.** Ítems con 0: qué se pidió y por qué el evaluador lo dio por no cubierto (o que no hubo respuesta), destacando los
-   Indispensables o Killer, con E<n>.
-4. **Observaciones del evaluador.** Lo que el evaluador anotó al margen de la calificación: contradicciones, cosas no precisadas,
-   incoherencias Eval/VA marcadas ⚠, ítems sin sustento, notas de otros evaluadores.
-5. **Pendiente de aclarar con el proveedor.** Solo lo que el propio evaluador dejó como duda o lo que la respuesta no contesta, en
-   una lista corta con E<n>. Sin inventar preguntas nuevas.
-Extensión: 150 a 350 palabras por dimensión según su tamaño. Sin «|» dentro de los párrafos; Markdown válido.
+Es una evaluación redactada, en prosa de comité, que dice QUÉ se evidencia y QUÉ se detecta, con su sustento. Tres partes con título en negrita:
 
-**Evaluación general del proveedor** (sustituye `<!-- evaluacion-general -->`): un texto de 6 a 12 frases, construido solo con las
-evaluaciones por dimensión que acabas de escribir: qué sostiene su resultado (las dimensiones mejor evaluadas y lo que el proveedor ofrece en
-ellas), dónde se resiente (dimensiones en Parcial o No cumple y la causa según el evaluador) y qué Indispensables o Killer quedaron en 0 o
-1 y por qué. Sin repetir puntajes ni conteos, sin ranking.
+1. **Lo que se evidencia.** Las fortalezas concretas que la matriz respalda: qué capacidad, proceso o compromiso muestra el proveedor y por
+   qué el evaluador lo dio por cubierto. Frases completas que nombran el tema por su contenido (proceso de desarrollo, pruebas
+   automatizadas, versionado de APIs, gestión de ambientes, cifrado, continuidad…), con el detalle que lo sustenta (producto, mecanismo,
+   cifra técnica o compromiso que declara el proveedor) y los ítems entre paréntesis al final de cada idea. Ejemplo de forma: «Se evidencia
+   robustez en el proceso de desarrollo: el proveedor describe un ciclo CI/CD con revisión de código, pruebas automatizadas en cada commit y
+   análisis estático, y el evaluador lo acepta sin observaciones (E3, E22). Las pruebas de rendimiento están respaldadas por resultados
+   publicados por versión, con cifras de TPS (E7, E15).»
+2. **Debilidades que se detectan.** Lo que falta, queda condicionado o contradice lo pedido, explicado: qué pidió el Banco, qué respondió
+   el proveedor y qué observó el evaluador, ítem por tema, empezando por los Indispensables o Killer. Si el evaluador no dejó sustento,
+   se dice. Ejemplo de forma: «Se detecta debilidad en la gestión de ambientes: el Banco pide aprovisionamiento bajo demanda y el
+   proveedor lo condiciona a coordinación con su equipo, con plazos de días a semanas, sin autoservicio (E63). En el diseño de red, el
+   evaluador no encuentra el esquema de segmentación por ambiente ni la arquitectura detallada, pedidos en ítems Killer (E16, E20).»
+3. **Lectura de la dimensión.** Dos a cuatro frases que cierran: qué sostiene el resultado y qué lo limita, coherentes con el nivel que
+   muestra el encabezado, y lo que el propio evaluador dejó pendiente de aclarar con el proveedor (con E<n>). Sin recomendación.
+
+Reglas de redacción, obligatorias:
+- PROHIBIDO cualquier cifra de conteo o de puntaje en la prosa: nada de «15 criterios en No cumple», «la mayoría con 4», «obtuvo 58,8»,
+  «el nivel es Parcial porque…». El número ya está en el encabezado y en la tabla; el texto explica el contenido. Las únicas cifras
+  permitidas son datos técnicos del proveedor (99,99 %, 14 días, 10 Gbps).
+- PROHIBIDO el estilo de lista telegráfica («E16: sin segmentación; E20: sin arquitectura»): frases completas con sujeto y verbo. Los
+  códigos E<n> van entre paréntesis al final de la idea, nunca como sujeto de la frase.
+- Cada idea lleva su sustento: lo que respondió el proveedor o lo que escribió el evaluador, en ese ítem. Nada que no esté ahí.
+- Extensión: 180 a 400 palabras por dimensión según su tamaño. Sin «|» dentro de los párrafos; Markdown válido.
+- Antes de pasar al siguiente vendor ejecuta `python scripts/20_evaluacion_dimensiones.py --validar --vendor <vendor>`: señala las frases
+  con conteos, puntajes o estilo de lista. Reescribe cada una hasta que no señale ninguna.
+
+**Evaluación general del proveedor** (sustituye `<!-- evaluacion-general -->`): un texto en prosa de 8 a 14 frases, construido solo con las
+evaluaciones por dimensión que acabas de escribir, con la misma forma: en qué dimensiones se evidencia solidez y por qué (lo que el
+proveedor ofrece y el evaluador aceptó), en cuáles se detectan debilidades y cuáles son (con la causa que dio el evaluador y los E<n>), y
+qué quedó pendiente de aclarar. Mismas reglas de redacción: sin cifras de conteo ni puntajes, sin listas telegráficas, sin ranking.
 
 **Lectura comparada** (sustituye `<!-- lectura-comparada -->` en `EVALUACION_DIMENSIONES.md`, solo al terminar TODOS los vendors y solo
 si se procesó más de uno): por dimensión, una o dos frases factuales con lo que la tabla muestra —qué vendors quedan en cada nivel y la
 causa principal según cada evaluación ya escrita—, sin ranking ni recomendación. Si se procesó un solo vendor, borra el marcador.
 
-**Autocomprobación antes de guardar cada vendor:** no queda ningún marcador `<!-- evaluacion` en su archivo; cada párrafo tiene sus E<n>;
+**Autocomprobación antes de guardar cada vendor:** `--validar` no señala nada; no queda ningún marcador `<!-- evaluacion` en su archivo; cada párrafo tiene sus E<n>;
 ninguna frase contiene un dato ausente de los `<hoja>.md` de ese vendor; ninguna cambia o cuestiona una calificación; no leíste nada fuera
 de `matrices/evaluacion/<ese vendor>/`.
 
