@@ -68,6 +68,8 @@ def validar(carpeta, solo=None):
     hallazgos = 0
     for f in sorted((carpeta / 'evaluacion').glob('*/EVALUACION_*.md')):
         if solo and f.parent.name != solo: continue
+        marcadores = re.findall(r'<!-- evaluacion[^>]*-->', f.read_text(encoding='utf-8'))
+        if marcadores: hallazgos += len(marcadores); print(f'{f.relative_to(RAIZ)}: SIN REDACTAR {len(marcadores)} bloque(s): ' + ', '.join(marcadores))
         en_prosa = False
         for n, linea in enumerate(f.read_text(encoding='utf-8').splitlines(), 1):
             if linea.startswith('## Dimensión') or linea.startswith('## Evaluación general'): en_prosa = True; continue
@@ -76,7 +78,7 @@ def validar(carpeta, solo=None):
             for pat, que in PATRONES:
                 mm = re.search(pat, linea, re.I | re.M)
                 if mm: hallazgos += 1; print(f'{f.relative_to(RAIZ)}:{n}: {que}: «…{linea[max(0, mm.start() - 50):mm.end() + 50].strip()}…»')
-    print('Validación:', 'sin hallazgos' if not hallazgos else f'{hallazgos} frases por reescribir (sin conteos ni puntajes en la prosa; frases completas con el E<n> al final)')
+    print('Validación:', 'sin hallazgos' if not hallazgos else f'{hallazgos} pendiente(s): bloques sin redactar o frases por reescribir (sin conteos ni puntajes en la prosa; frases completas con el E<n> al final)')
     return hallazgos
 
 def main():
@@ -130,6 +132,9 @@ def main():
     C += ['', '## Evaluaciones por vendor', ''] + [f'- {m07.nombre(v)}: [evaluacion/{v}/EVALUACION_{v}.md]({v}/EVALUACION_{v}.md)' for v, _, _ in resumen] + ['', '<!-- lectura-comparada -->', '']
     (salida / 'EVALUACION_DIMENSIONES.md').write_text('\n'.join(C) + '\n', encoding='utf-8')
     print(f'\nConsolidado: {salida.relative_to(RAIZ)}/EVALUACION_DIMENSIONES.md · vendors: {", ".join(v for v, _, _ in resumen)}')
+    print('\n=== EL SCRIPT SOLO PREPARA LA LECTURA. LA EVALUACIÓN AÚN NO ESTÁ ESCRITA ===')
+    for v, _, filas in resumen:
+        print(f'Pendiente {v}: redactar en {salida.relative_to(RAIZ)}/{v}/EVALUACION_{v}.md los marcadores <!-- evaluacion: ' + ', '.join(h for h, _, _, _ in filas) + ' --> y <!-- evaluacion-general -->, leyendo entera cada lectura <hoja>.md de esa carpeta; después: python scripts/20_evaluacion_dimensiones.py --validar --vendor ' + v)
 
 if __name__ == '__main__':
     main()

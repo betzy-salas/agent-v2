@@ -14,6 +14,11 @@ completa de cada hoja: pregunta, respuesta del proveedor, calificación y susten
 `matrices/evaluacion/<vendor>/EVALUACION_<vendor>.md` con los marcadores que tú completas; y `matrices/evaluacion/EVALUACION_DIMENSIONES.md`
 (tabla vendors × dimensiones). Si el script falla o no detecta hojas en un Excel, copia su mensaje en el reporte y sigue con el resto.
 
+**Ejecutar el script NO es terminar.** El script solo prepara las lecturas y deja marcadores; al acabar imprime «Pendiente <vendor>: redactar…».
+Tu trabajo empieza ahí: leer cada `<hoja>.md` entera y escribir la evaluación de cada dimensión y la general. No reportes al usuario
+hasta que `--validar` diga «sin hallazgos» para cada vendor (señala tanto los bloques sin redactar como las frases prohibidas). Si el
+trabajo es largo, hazlo vendor por vendor y dimensión por dimensión, guardando el archivo tras cada dimensión.
+
 **Aislamiento.** Procesas los vendors UNO POR UNO. Mientras evalúas un vendor, tus únicas fuentes son los archivos de
 `matrices/evaluacion/<ese vendor>/`. No leas `vendors/`, ni documentos del proveedor, ni otro vendor; nada de conocimiento general ni
 internet. Lo escrito para un vendor no se usa para otro.
