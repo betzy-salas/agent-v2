@@ -198,6 +198,13 @@ vendor. Sin ranking ni recomendación.
 ```
 
 
+## Matrices nuevas: evaluación por dimensión (flujo independiente)
+
+1. Deja el Excel nuevo de cada vendor en `matrices\` con el vendor en el nombre (p. ej. `matrices\tm.xlsx`).
+2. En Copilot: `/evaluar-dimensiones vendor: todos`. El agente ejecuta `scripts\20_evaluacion_dimensiones.py` y escribe las evaluaciones.
+3. Resultado en `matrices\evaluacion\`: por vendor `EVALUACION_<vendor>.md` (evaluación por dimensión + general) y la lectura completa de cada hoja (`<hoja>.md`); consolidado `EVALUACION_DIMENSIONES.md`.
+A mano, solo el cálculo: `.venv\Scripts\python scripts\20_evaluacion_dimensiones.py [--vendor tm]`.
+
 ## Regla actual: los agentes no generan PDF
 
 El PDF es opcional (`--pdf`) en todos los scripts y los agentes no lo piden. El análisis produce Markdown, HTML y PowerPoint; los PDF y los PNG
