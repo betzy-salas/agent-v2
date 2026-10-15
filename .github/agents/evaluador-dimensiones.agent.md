@@ -61,6 +61,18 @@ Es una evaluación redactada, en prosa de comité, que dice QUÉ se evidencia y 
 - Si una hoja no tiene ningún sustento del evaluador, se dice al inicio de la evaluación y se evalúa solo respuesta frente a pregunta.
 
 Reglas de redacción, obligatorias:
+- PROHIBIDO hablar del método, de la matriz o de la propia evaluación. Cada frase habla del PROVEEDOR (qué ofrece, con qué producto,
+  mecanismo, cifra o compromiso) o de la BRECHA (qué pidió el Banco y qué falta, con las palabras del evaluador). Están prohibidas, y el
+  validador las señala, frases como: «el evaluador dejó sustento directo y verificable», «consistencia/coherencia entre pregunta, respuesta
+  y sustento», «trazabilidad», «sin necesidad de inferencias», «esta lectura mantiene íntegra la calificación», «por consistencia de
+  comité», «argumento de cierre», «texto verificable en la propia hoja», «cuando el sustento está completo», «limita la trazabilidad».
+  Prueba de cada frase: si se puede aplicar a cualquier proveedor sin cambiar una palabra, está prohibida.
+- Las citas del evaluador van completas hasta un punto o una coma natural (ajusta el límite a 30 palabras si hace falta); nunca cortadas
+  a mitad de frase («…qué datos gobierna el»).
+- Los temas se nombran por su contenido real, tomado de la pregunta y la respuesta: «roadmap del producto», «latencia máxima requerida»,
+  «diagrama de arquitectura de datos», «software de terceros con versiones»; nunca «requerimientos donde la cobertura queda condicionada».
+- En la evaluación general, cada afirmación nombra la dimensión por su nombre y repite los E<n> ya usados en su evaluación; no se citan
+  ítems que no aparezcan en las evaluaciones por dimensión.
 - PROHIBIDO cualquier cifra de conteo o de puntaje en la prosa: nada de «15 criterios en No cumple», «la mayoría con 4», «obtuvo 58,8»,
   «el nivel es Parcial porque…». El número ya está en el encabezado y en la tabla; el texto explica el contenido. Las únicas cifras
   permitidas son datos técnicos del proveedor (99,99 %, 14 días, 10 Gbps).
