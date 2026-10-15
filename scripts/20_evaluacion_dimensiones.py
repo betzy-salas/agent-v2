@@ -60,7 +60,9 @@ PATRONES = [(r'\b\d+\s*(criterios?|[ií]tems?|preguntas?|requerimientos?|categor
             (r'\b(porque|ya que|dado que)\s+\d+\s', 'justificación numérica'),
             (r'\b(est[aá]n|quedan|quedaron|obtuvieron)\s+en\s+(no cumple|parcial|cumple)', 'nivel usado como conteo'),
             (r'^\s*\*?\*?E\d+\*?\*?\s*[:·-]', 'lista telegráfica que empieza por el código'),
-            (r'(E\d+\s*:\s*[^;.]{3,40};\s*){2,}', 'lista telegráfica E<n>: …; E<n>: …')]
+            (r'(E\d+\s*:\s*[^;.]{3,40};\s*){2,}', 'lista telegráfica E<n>: …; E<n>: …'),
+            (r'(\bE\d+(,\s*E\d+)*(\s+y\s+E\d+)?\s*:\s*[^.;]{3,80}[.;]\s*){2,}', 'lista telegráfica «E<n>: …. E<n>: ….» (el código va al final de la frase, entre paréntesis)'),
+            (r'(\([^)]*E\d+[^)]*\);\s*[^;.]{3,80}){2,}', 'fragmentos separados por «;» con el código en cada uno: redactar frases completas')]
 def validar(carpeta, solo=None):
     """Señala, en las evaluaciones ya escritas, frases con conteos, puntajes o estilo de lista (prohibidos en la prosa)."""
     hallazgos = 0
