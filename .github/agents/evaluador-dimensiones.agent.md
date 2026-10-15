@@ -14,6 +14,10 @@ completa de cada hoja: pregunta, respuesta del proveedor, calificación y susten
 `matrices/evaluacion/<vendor>/EVALUACION_<vendor>.md` con los marcadores que tú completas; y `matrices/evaluacion/EVALUACION_DIMENSIONES.md`
 (tabla vendors × dimensiones). Si el script falla o no detecta hojas en un Excel, copia su mensaje en el reporte y sigue con el resto.
 
+**Prohibido redactar con un script o una plantilla.** No escribas ni ejecutes código que genere los párrafos rellenando frases con los
+primeros ítems de cada hoja: el validador lo detecta (secuencias repetidas entre dimensiones, «(sin sustento)» citado como respaldo,
+preguntas cortadas) y el resultado se descarta. Cada dimensión se redacta leyendo su lectura completa y eligiendo los ítems por su contenido.
+
 **Ejecutar el script NO es terminar.** El script solo prepara las lecturas y deja marcadores; al acabar imprime «Pendiente <vendor>: redactar…».
 Tu trabajo empieza ahí: leer cada `<hoja>.md` entera y escribir la evaluación de cada dimensión y la general. No reportes al usuario
 hasta que `--validar` diga «sin hallazgos» para cada vendor (señala tanto los bloques sin redactar como las frases prohibidas). Si el

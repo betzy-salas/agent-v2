@@ -66,7 +66,11 @@ PATRONES = [(r'\b\d+\s*(criterios?|[ií]tems?|preguntas?|requerimientos?|categor
             (r'trazabilidad|coherencia interna|consistencia (interna|entre)|sin necesidad de inferencias|mantiene [ií]ntegra|por consistencia de comit[eé]|argumento de cierre|texto verificable|cuando el sustento est[aá] completo|dej[oó] sustento (directo|verificable)|lectura integral|se centra en explicar|no modifica ninguna calificaci[oó]n|calificaci[oó]n registrada', 'lenguaje de método (habla de la evaluación, no del proveedor)'),
             (r'“[^”]*\b(el|la|los|las|de|del|y|o|que|para|por|con|sin|un|una|necesita|al|en)”', 'cita del evaluador cortada a mitad de frase'),
             (r'(dimensiones|requerimientos|[ií]tems|temas|puntos) (donde|en los que|en las que) (la|el) (respuesta|sustento|cobertura|evaluador)', 'generalidad: nombrar el tema concreto (producto, capacidad, brecha)'),
-            (r'\bT\d+-E\d+\b', 'cita «T<n>-E<m>»: en la general, nombra la dimensión y usa los E<n> de su evaluación')]
+            (r'\bT\d+-E\d+\b', 'cita «T<n>-E<m>»: en la general, nombra la dimensión y usa los E<n> de su evaluación'),
+            (r'[“"]\s*\(sin sustento\)\s*[”"]', 'cita «(sin sustento)» presentada como sustento del evaluador'),
+            (r'\((E\d+)(?:, [^)]*)?, \1\)', 'el mismo ítem repetido en la lista'),
+            (r'describe una capacidad concreta y el evaluador la respalda|aporta mecanismo operativo|evidencia de implementaci[oó]n o control que el evaluador da por cubierta|falta cierre de alcance o dato verificable|reducen la cobertura esperada|definici[oó]n operativa no queda completamente detallada|criterio usado para cerrar plenamente|conserva capacidades respaldadas', 'frase de plantilla (no sale de la lectura)'),
+            (r'\b[a-záéíóú]+\s*\((?:por|de|en|la|el|los|las)?,', 'pregunta copiada y cortada a mitad')]
 def validar(carpeta, solo=None):
     """Señala, en las evaluaciones ya escritas, frases con conteos, puntajes o estilo de lista (prohibidos en la prosa)."""
     hallazgos = 0
@@ -82,6 +86,17 @@ def validar(carpeta, solo=None):
             for pat, que in PATRONES:
                 mm = re.search(pat, linea, re.I | re.M)
                 if mm: hallazgos += 1; print(f'{f.relative_to(RAIZ)}:{n}: {que}: «…{linea[max(0, mm.start() - 50):mm.end() + 50].strip()}…»')
+    # plantilla: una misma secuencia de 8 palabras en 3 o más bloques de dimensión del mismo archivo
+    for f in sorted((carpeta / 'evaluacion').glob('*/EVALUACION_*.md')):
+        if solo and f.parent.name != solo: continue
+        bloques = re.split(r'\n## Dimensión ', f.read_text(encoding='utf-8'))[1:]
+        vistos = {}
+        for k, b in enumerate(bloques):
+            pal = re.findall(r'[a-záéíóúñ]+', b.lower()); grams = {' '.join(pal[x:x + 8]) for x in range(len(pal) - 7)}
+            for g in grams: vistos.setdefault(g, set()).add(k)
+        rep = [g for g, ks in vistos.items() if len(ks) >= 3]
+        if rep:
+            hallazgos += 1; print(f'{f.relative_to(RAIZ)}: TEXTO DE PLANTILLA: {len(rep)} secuencias de 8 palabras repetidas en 3+ dimensiones, p. ej. «{sorted(rep, key=len)[-1]}». Cada dimensión se redacta leyendo su hoja, no con un script.')
     print('Validación:', 'sin hallazgos' if not hallazgos else f'{hallazgos} pendiente(s): bloques sin redactar o frases por reescribir (sin conteos ni puntajes en la prosa; frases completas con el E<n> al final)')
     return hallazgos
 

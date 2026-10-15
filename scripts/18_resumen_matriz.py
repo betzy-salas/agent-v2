@@ -59,6 +59,9 @@ def hojas_matriz(wb, informar=False):
     libro; devuelve [(nombre, filas, índice de cabecera)]. Con informar=True imprime por qué se descarta cada hoja no reconocida."""
     out = []
     for name in wb.sheetnames:
+        if re.search(r'consolid|resumen|total|^listas?$|m[eé]todo|^[ií]ndice$', name, re.I):
+            if informar: print(f'  hoja «{name}»: excluida (hoja de consolidado, resumen o apoyo, no una dimensión)')
+            continue
         rows = list(wb[name].iter_rows(values_only=True)); hallado = None; tiene_n = tiene_va = False
         for h, r in enumerate(rows[:40]):
             cells = [c for c in r if c is not None and str(c).strip()]
