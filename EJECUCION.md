@@ -196,3 +196,18 @@ vendor. Sin ranking ni recomendación.
 ```
 .venv\Scripts\python scripts\08_comparativos_pdf.py --pdf
 ```
+
+
+## Si el PDF no se genera (el navegador «intenta abrirse» o falla)
+
+Los PDF se producen con Edge o Chrome en modo sin ventana. Los scripts prueban cuatro modos (con perfil temporal y sin él) y, si ninguno
+funciona, muestran el error real del navegador y dejan el HTML. Para diagnosticar, en PowerShell (ajusta la ruta del HTML):
+
+    & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --print-to-pdf="$env:TEMP\prueba.pdf" "file:///C:/ruta/al/archivo.html"
+    Test-Path "$env:TEMP\prueba.pdf"
+
+- Si devuelve True, el problema es el perfil o el lanzamiento desde Copilot: vuelve a ejecutar el script desde una terminal normal (no desde Copilot).
+- Si la política corporativa impide Edge sin ventana, hay tres salidas: 1) `set RFP_SIN_PDF=1` y usar los HTML (Imprimir → Guardar como PDF, horizontal,
+  gráficos de fondo activados); 2) usar las salidas PowerPoint, que no necesitan navegador: 12 (deck), 14 (láminas de correo), 15 (lámina 3), 19 (resumen de matriz);
+  3) si Chrome o Edge están en otra ruta, `set RFP_PDF_NAVEGADOR=C:\ruta\al\msedge.exe`.
+- Copia en el chat las líneas «No se pudo generar el PDF … Último intento: …» que imprime el script: dicen el código de salida y el error.

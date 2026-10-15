@@ -846,36 +846,41 @@ def construir_vendor(d, hoy, idx=0, artefacto=False):
 
 # ----------------------------------------------------------------------------- PDF
 def a_pdf(html_path: Path, pdf_path: Path):
-    """HTML → PDF con Edge o Chrome sin cabeza. Usa un perfil temporal (si el navegador está abierto con el perfil normal, el
-    modo sin cabeza se queda bloqueado) y un tiempo máximo; si falla, deja el HTML y explica cómo imprimirlo a PDF."""
-    import tempfile
-    cands = []
+    """HTML → PDF con Edge o Chrome sin cabeza. Prueba varios modos (perfil temporal y sin perfil, por si una política corporativa bloquea
+    --user-data-dir) con tiempo máximo; si todo falla, muestra el error real del navegador y deja el HTML (imprimible a PDF a mano).
+    Variables de entorno: RFP_PDF_NAVEGADOR = ruta del ejecutable a usar; RFP_SIN_PDF=1 = no intentar el PDF (solo HTML)."""
+    import os, tempfile
+    if os.environ.get('RFP_SIN_PDF'): print(f'RFP_SIN_PDF activo: no se genera PDF. HTML listo: {html_path}'); return False
+    cands = [os.environ.get('RFP_PDF_NAVEGADOR')]
     if platform.system() == 'Windows':
         cands += [r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe', r'C:\Program Files\Microsoft\Edge\Application\msedge.exe',
-                  r'C:\Program Files\Google\Chrome\Application\chrome.exe', r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe']
-        import os; cands += [os.path.expandvars(r'%LOCALAPPDATA%\Microsoft\Edge\Application\msedge.exe'), os.path.expandvars(r'%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe')]
+                  r'C:\Program Files\Google\Chrome\Application\chrome.exe', r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
+                  os.path.expandvars(r'%LOCALAPPDATA%\Microsoft\Edge\Application\msedge.exe'), os.path.expandvars(r'%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe')]
     elif platform.system() == 'Darwin':
         cands += ['/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/Applications/Chromium.app/Contents/MacOS/Chromium']
     cands += [shutil.which(x) for x in ('msedge', 'microsoft-edge', 'google-chrome', 'chromium', 'chromium-browser', 'chrome') if shutil.which(x)]
     exe = next((c for c in cands if c and Path(c).exists()), None)
     if not exe:
-        print("No encontré Edge ni Chrome para generar el PDF. Abre el HTML en el navegador y usa Imprimir → Guardar como PDF (apaisado)."); return False
+        print("No encontré Edge ni Chrome para generar el PDF (si está en otra ruta: set RFP_PDF_NAVEGADOR=<ruta al .exe>). Abre el HTML en el navegador y usa Imprimir → Guardar como PDF (apaisado)."); return False
     if pdf_path.exists():
         try: pdf_path.unlink()
         except OSError: print(f'No puedo sobrescribir {pdf_path}: ciérralo si está abierto en un visor e inténtalo de nuevo.'); return False
     perfil = Path(tempfile.mkdtemp(prefix='pdf-perfil-'))
-    comunes = ['--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-sync', f'--user-data-dir={perfil}', '--no-pdf-header-footer', f'--print-to-pdf={pdf_path}', html_path.resolve().as_uri()]
-    for modo in ('--headless=new', '--headless'):
+    base = ['--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-sync', '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw', '--virtual-time-budget=20000', f'--print-to-pdf={pdf_path}', html_path.resolve().as_uri()]
+    intentos = [('--headless=new', [f'--user-data-dir={perfil}']), ('--headless', [f'--user-data-dir={perfil}']), ('--headless=new', []), ('--headless', [])]
+    ultimo = ''
+    for modo, extra in intentos:
         try:
-            subprocess.run([exe, modo] + comunes, capture_output=True, text=True, timeout=240)
+            r = subprocess.run([exe, modo] + extra + base, capture_output=True, text=True, timeout=240)
+            ultimo = f'código de salida {r.returncode}; stderr: ' + ' | '.join((r.stderr or '').strip().splitlines()[-4:])
         except subprocess.TimeoutExpired:
-            print(f'El navegador tardó más de 4 minutos ({modo}); reintento con otro modo…'); continue
+            ultimo = f'{modo}{" sin perfil" if not extra else ""}: más de 4 minutos sin terminar'; print(f'El navegador tardó demasiado ({modo}); reintento con otro modo…'); continue
         except OSError as e:
-            print(f'No pude lanzar el navegador: {e}'); break
+            ultimo = f'no se pudo lanzar: {e}'; print(f'No pude lanzar el navegador: {e}'); break
         if pdf_path.exists() and pdf_path.stat().st_size > 1000:
             shutil.rmtree(perfil, ignore_errors=True); print(f'PDF: {pdf_path}'); return True
     shutil.rmtree(perfil, ignore_errors=True)
-    print(f'No se pudo generar el PDF con {exe}. El HTML sí está listo: {html_path}\nÁbrelo en Edge o Chrome y usa Imprimir → Guardar como PDF, orientación horizontal, márgenes predeterminados, con gráficos de fondo activados.')
+    print(f'No se pudo generar el PDF con {exe}. Último intento: {ultimo}\nEl HTML sí está listo: {html_path}\nÁbrelo en Edge o Chrome y usa Imprimir → Guardar como PDF, orientación horizontal, márgenes predeterminados, con gráficos de fondo activados.\nSi en tu equipo el navegador no puede ejecutarse sin ventana (política corporativa), usa las salidas PowerPoint (scripts 12, 14, 15, 19) o define RFP_SIN_PDF=1 para omitir el PDF.')
     return False
 
 def main():
