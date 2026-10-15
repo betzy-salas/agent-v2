@@ -90,7 +90,7 @@ def construir(base, salida):
             fi = {e: q for e, q, _, _ in p10.ficha_impl_filas(x)}; fl = desp.get(d['vendor'], [])
             ofrec = [nm for nm, cls, _, _ in fl if cls == 'si']; cond = [nm for nm, cls, _, _ in fl if cls == 'cond']
             nubes = []
-            for _, _, _, marcas in fl:
+            for _, _, _, marcas, *_ in fl:
                 for pn, est in marcas.items():
                     if est == 'of' and pn not in nubes and pn != 'Nube privada': nubes.append(pn)
             dcel = [('Ofrece: ', {'bold': True}), (', '.join(ofrec) if ofrec else '—', {})]

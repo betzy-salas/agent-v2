@@ -50,7 +50,7 @@ def datos(base):
         celdas = {clave: (m.nombres_en_texto(r[idx[clave]]).strip() if r and idx[clave] is not None and idx[clave] < len(r) else '—') for clave, _ in COLS}
         filas.append((d['vendor'], pos[d['vendor']], celdas))
     DESP, _ = p10.datos_despliegue(orden)
-    conteo = [(pn, sum(1 for _, _, fl in DESP if any(marcas.get(pn) == 'of' for _, _, _, marcas in fl))) for pn, _ in p08.PLATAFORMAS]
+    conteo = [(pn, sum(1 for _, _, fl in DESP if any(marcas.get(pn) == 'of' for _, _, _, marcas, *_ in fl))) for pn, _ in p08.PLATAFORMAS]
     return filas, conteo, len(DESP)
 
 def chip_partes(txt):

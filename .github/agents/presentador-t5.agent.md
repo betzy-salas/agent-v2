@@ -55,7 +55,8 @@ el chat.
    vendor ni resumas de memoria.
 4. Arma el comparativo: `.venv\Scripts\python scripts/10_presentacion_t5.py --base <base>`. Luego completa `<base>/COMPARATIVO_SEMAFORO_T5.md`
    como lo haría `comparador-semaforo-t5`: comentario por categoría, por vendor y final, leyendo los semáforos uno por uno.
-5. Genera la presentación: `.venv\Scripts\python scripts/10_presentacion_t5.py --base <base> --pdf`. Comprueba que el PDF existe y cuántas
+5. Genera la presentación: `.venv\Scripts\python scripts/10_presentacion_t5.py --base <base>` (sin `--pdf`: el PDF se genera después, aparte;
+   si te lo piden expresamente con «pdf: sí», añade `--pdf`). Comprueba que el HTML existe y, si hubo PDF, cuántas
    páginas tiene.
 6. Autocomprobación: cada vendor tiene verif/T5.md validado; en cada ficha, las fortalezas y contradicciones citan documento y
    página de verif/T5.md (confianza ALTA) y lo que solo viene de la matriz está marcado como declarado; ningún marcador `<!-- ` queda en los archivos de `<base>`; las fichas tienen las 16 categorías en su

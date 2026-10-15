@@ -198,6 +198,11 @@ vendor. Sin ranking ni recomendación.
 ```
 
 
+## Regla actual: los agentes no generan PDF
+
+El PDF es opcional (`--pdf`) en todos los scripts y los agentes no lo piden. El análisis produce Markdown, HTML y PowerPoint; los PDF y los PNG
+se generan después, aparte, ejecutando el script correspondiente con `--pdf` (y 17 para los PNG) cuando el navegador sin ventana funcione.
+
 ## Si el PDF no se genera (el navegador «intenta abrirse» o falla)
 
 Los PDF se producen con Edge o Chrome en modo sin ventana. Los scripts prueban cuatro modos (con perfil temporal y sin él) y, si ninguno
