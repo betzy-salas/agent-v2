@@ -50,7 +50,7 @@ def md_hoja(vendor, hoja, dim, items):
             cal = f'{p18.ESCALA[it["va"]]} ({it["va"]})' if it['va'] is not None else 'Sin calificar (—)'
             if p18.incoherente(it): cal += f' ⚠ clasificación textual «{it["eval"]}» no coincide con el VA'
             L += [f'**{it["n"]}** · {it["crit"] or "sin criticidad"} · **{cal}**' + (f' · evaluador: {it["evaluador"]}' if it['evaluador'] else ''), '',
-                  f'- Pregunta: {it["q"]}', f'- Respuesta del proveedor: {it["resp"] or "(vacía)"}', f'- Sustento del evaluador: {it["sus"] or "(sin sustento)"}', '']
+                  f'- Pregunta: {it["q"]}', f'- Respuesta del proveedor: {it["resp"] or "(vacía)"}', f'- Sustento del evaluador: {it["sus"] or "(sin sustento)"}'] + ([f'- Otros comentarios del evaluador: {it["extra"]}'] if it.get('extra') else []) + ['']
     return '\n'.join(L) + '\n', p
 
 PATRONES = [(r'\b\d+\s*(criterios?|[ií]tems?|preguntas?|requerimientos?|categor[ií]as?)\b', 'conteo de ítems o criterios'),

@@ -45,6 +45,16 @@ Es una evaluación redactada, en prosa de comité, que dice QUÉ se evidencia y 
 3. **Lectura de la dimensión.** Dos a cuatro frases que cierran: qué sostiene el resultado y qué lo limita, coherentes con el nivel que
    muestra el encabezado, y lo que el propio evaluador dejó pendiente de aclarar con el proveedor (con E<n>). Sin recomendación.
 
+**Base principal: lo que escribió el evaluador.** La evaluación se construye sobre el sustento y los comentarios del evaluador de cada
+ítem (campos «Sustento del evaluador» y «Otros comentarios del evaluador» de la lectura), no solo sobre la respuesta del proveedor:
+- Cada debilidad cita lo que anotó el evaluador, con una cita literal corta entre comillas (hasta 20 palabras) y el E<n>: «el evaluador
+  anota que “no se precisa la capacidad mínima/recomendada para el canal dedicado” (E17)».
+- Cada fortaleza dice en qué se apoyó el evaluador para darla por cubierta: lo que escribió en el sustento o, si no dejó sustento, la
+  respuesta del proveedor frente a lo que pedía la pregunta, indicando que no hay sustento del evaluador.
+- Las observaciones del evaluador que no cambian la calificación (dudas, «por verificar», notas de otro evaluador, incoherencias ⚠)
+  se recogen tal cual en «Debilidades que se detectan» o en «Lectura de la dimensión» según corresponda.
+- Si una hoja no tiene ningún sustento del evaluador, se dice al inicio de la evaluación y se evalúa solo respuesta frente a pregunta.
+
 Reglas de redacción, obligatorias:
 - PROHIBIDO cualquier cifra de conteo o de puntaje en la prosa: nada de «15 criterios en No cumple», «la mayoría con 4», «obtuvo 58,8»,
   «el nivel es Parcial porque…». El número ya está en el encabezado y en la tabla; el texto explica el contenido. Las únicas cifras

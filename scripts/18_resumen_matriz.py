@@ -80,6 +80,9 @@ def leer_hoja(rows, h):
     iVA = next((i for i, c in enumerate(hdr) if _es_va(c)), None)
     if iN is None: iN = next((i for i, c in enumerate(hdr) if _es_numero(c)), None)
     iResp = [i for i, c in enumerate(hdr) if c.startswith(K['respuesta'])]
+    # columnas de comentarios del evaluador: toda columna con cabecera situada después de VA que no sea Eval/VA/Evaluador/Sustento
+    # (p. ej. «Observaciones», «Comentarios del evaluador», «Nota», iniciales de otro evaluador); se añaden al sustento con su cabecera
+    iExtra = [i for i, c in enumerate(hdr) if iVA is not None and i > iVA and c and i not in (iEval, iVA, iEvdor, iSus) and not c.startswith(K['respuesta'])]
     g = lambda r, i: (r[i] if i is not None and i < len(r) else None)
     items = []; dimension = ''
     for r in rows[h + 1:]:
@@ -91,8 +94,9 @@ def leer_hoja(rows, h):
         va = g(r, iVA); va = int(va) if isinstance(va, (int, float)) else None
         ev = g(r, iEval); ev = norm(ev) if ev not in (None, '') else None
         if not dimension and g(r, iDim): dimension = norm(g(r, iDim))
+        extra = '; '.join(f'«{hdr[i]}»: {norm(r[i])}' for i in iExtra if i < len(r) and r[i] is not None and norm(r[i]) and norm(r[i]).lower() not in ('none', 'nan', '0', '-', '—'))
         items.append({'n': str(g(r, iN)).strip(), 'cat': norm(g(r, iCat)) or '(sin categoría)', 'crit': norm(crit), 'q': norm(g(r, iQ)), 'resp': resp,
-                      'va': va, 'eval': ev, 'evaluador': norm(g(r, iEvdor)) or None, 'sus': norm(g(r, iSus))})
+                      'va': va, 'eval': ev, 'evaluador': norm(g(r, iEvdor)) or None, 'sus': norm(g(r, iSus)), 'extra': extra})
     return items, dimension
 
 def incoherente(it):
@@ -105,7 +109,7 @@ def escribir_txt(d, hoja, items):
     with open(f, 'w', encoding='utf-8') as o:
         o.write(f'# Hoja {hoja}\n')
         for it in items:
-            o.write(f"\n[{it['n']}] cat={it['cat']} crit={it['crit']} va={it['va']} eval={it['eval']} evaluador={it['evaluador']}\nQ: {it['q']}\nPROVEEDOR: {it['resp']}\nSUSTENTO: {it['sus']}\n")
+            o.write(f"\n[{it['n']}] cat={it['cat']} crit={it['crit']} va={it['va']} eval={it['eval']} evaluador={it['evaluador']}\nQ: {it['q']}\nPROVEEDOR: {it['resp']}\nSUSTENTO: {it['sus']}\n" + (f"COMENTARIOS: {it['extra']}\n" if it.get('extra') else ''))
     return f
 
 def main():
