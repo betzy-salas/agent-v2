@@ -88,9 +88,10 @@ def construir(base, salida):
             x = IMP['vendors'].get(d['vendor'])
             if not x: continue
             fi = {e: q for e, q, _, _ in p10.ficha_impl_filas(x)}; fl = desp.get(d['vendor'], [])
-            ofrec = [nm for nm, cls, _, _ in fl if cls == 'si']; cond = [nm for nm, cls, _, _ in fl if cls == 'cond']
+            ofrec = [nm for nm, cls, *_ in fl if cls == 'si' and nm != 'Declaradas']; cond = [nm for nm, cls, *_ in fl if cls == 'cond' and nm != 'Declaradas']
             nubes = []
-            for _, _, _, marcas, *_ in fl:
+            for nm_, _, _, marcas, *_ in fl:
+                if nm_ == 'Declaradas': continue   # la fila «Declaradas» no es un modelo ofrecido
                 for pn, est in marcas.items():
                     if est == 'of' and pn not in nubes and pn != 'Nube privada': nubes.append(pn)
             dcel = [('Ofrece: ', {'bold': True}), (', '.join(ofrec) if ofrec else '—', {})]
