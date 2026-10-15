@@ -6,8 +6,8 @@ nada nuevo: copia los puntajes, niveles y fundamentos ya escritos.
 Diapositivas: 1) resultado por hoja; 2) una por hoja: tabla de categorías (puntaje, nivel, Indispensables con 0 o 1) y el fundamento
 de la hoja; 3) con --completo, además el fundamento de cada categoría (dos por diapositiva).
 
-Uso:  python scripts/19_resumen_matriz_pptx.py <vendor>|--todos [--completo] [--base carpeta] [--logo ruta]
-   → <base>/RESUMEN_MATRIZ_<vendor>.html, .pdf y .pptx   (base por defecto: vendors/<vendor>/informes; logo: presentacion_t5*/assets/logo.png si existe)
+Uso:  python scripts/19_resumen_matriz_pptx.py <vendor>|--todos [--completo] [--pdf] [--base carpeta] [--logo ruta]
+   → <base>/RESUMEN_MATRIZ_<vendor>.html y .pptx (y .pdf solo con --pdf: requiere Edge/Chrome sin ventana)   (base por defecto: vendors/<vendor>/informes; logo: presentacion_t5*/assets/logo.png si existe)
    --todos: todos los vendors con informes/12_resumen_matriz.md → vendors/RESUMEN_MATRIZ_TODOS.html, .pdf y .pptx: primero una lámina
    comparativa vendors × hojas (puntaje y nivel, calificaciones del Banco tal cual, sin ranking) y después las láminas de cada vendor.
 Requiere Chrome (PDF) y python-pptx (PPTX); si falta alguno, genera lo que pueda y lo avisa.
@@ -182,7 +182,7 @@ def construir_pptx(d, logo_path, completo, salida):
 
 def main():
     args = sys.argv[1:]; completo = '--completo' in args; todos = '--todos' in args
-    if not todos and (not args or args[0].startswith('-')): sys.exit('Uso: python scripts/19_resumen_matriz_pptx.py <vendor>|--todos [--completo] [--base carpeta] [--logo ruta]')
+    if not todos and (not args or args[0].startswith('-')): sys.exit('Uso: python scripts/19_resumen_matriz_pptx.py <vendor>|--todos [--completo] [--pdf] [--base carpeta] [--logo ruta]')
     logo_path = Path(args[args.index('--logo') + 1]) if '--logo' in args else next((p for p in sorted(RAIZ.glob('presentacion_t5*/assets/logo.png'))), None)
     logo = p10._data_uri(logo_path) if logo_path and logo_path.exists() else ''
     if todos:
@@ -202,11 +202,14 @@ def main():
         base.mkdir(parents=True, exist_ok=True)
         out = base / f'RESUMEN_MATRIZ_{vendor}.html'; out.write_text(construir_html(d, logo, completo), encoding='utf-8'); print(f'HTML: {out}')
         esperadas = 1 + len(d['hojas']) + (sum((len(h['cats']) + 1) // 2 for h in d['hojas']) if completo else 0)
-    pdf = out.with_suffix('.pdf'); m.a_pdf(out, pdf)
-    try:
-        import fitz; n = fitz.open(pdf).page_count
-        print(f'PDF: {pdf} · {n} páginas' + ('' if n == esperadas else f' (AVISO: se esperaban {esperadas}; alguna diapositiva se desbordó)'))
-    except ImportError: pass
+    if '--pdf' in args:
+        pdf = out.with_suffix('.pdf')
+        if m.a_pdf(out, pdf):
+            try:
+                import fitz; n = fitz.open(pdf).page_count
+                print(f'PDF: {pdf} · {n} páginas' + ('' if n == esperadas else f' (AVISO: se esperaban {esperadas}; alguna diapositiva se desbordó)'))
+            except ImportError: pass
+    else: print('PDF: omitido (añade --pdf cuando el navegador sin ventana funcione; el HTML se imprime a PDF desde Edge)')
     if construir_pptx(d, logo_path, completo, out.with_suffix('.pptx')): print(f'PPTX: {out.with_suffix(".pptx")}')
 
 if __name__ == '__main__':

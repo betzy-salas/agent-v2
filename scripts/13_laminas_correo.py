@@ -142,7 +142,9 @@ def main():
     base = Path(args[args.index('--base') + 1]) if '--base' in args else RAIZ / 'vendors'
     if not base.is_absolute(): base = RAIZ / base
     out = base / 'LAMINAS_CORREO.html'; out.write_text(construir(base), encoding='utf-8'); print(f'HTML: {out}')
-    pdf = out.with_suffix('.pdf'); m.a_pdf(out, pdf)
+    if '--pdf' not in args: print('PDF y PNG: omitidos (añade --pdf cuando el navegador sin ventana funcione; el PPTX sale con scripts/14)'); return
+    pdf = out.with_suffix('.pdf')
+    if not m.a_pdf(out, pdf): return
     try:
         import fitz
     except ImportError:

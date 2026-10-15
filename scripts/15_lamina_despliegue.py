@@ -8,8 +8,8 @@ Fuentes (nada se redacta ni se calcula de nuevo): vendors/COMPARATIVO_DESPLIEGUE
 agente analista-despliegue) y el análisis de despliegue 8_modelo_despliegue.md de cada vendor (conteo de nubes, igual que la
 hoja 5 del informe de comparativos). Los vendors van en el orden del ranking T5.
 
-Uso:  python scripts/15_lamina_despliegue.py [--base carpeta]
-   → <base>/LAMINA_3_despliegue.html, .pdf, LAMINA_3_despliegue.png (2560×1440) y LAMINA_3_despliegue.pptx
+Uso:  python scripts/15_lamina_despliegue.py [--base carpeta] [--pdf]
+   → <base>/LAMINA_3_despliegue.html y .pptx; con --pdf además .pdf y LAMINA_3_despliegue.png (2560×1440)
 Requiere: Chrome (PDF), PyMuPDF (PNG) y python-pptx (PPTX); si falta alguno, genera lo que pueda y lo avisa.
 """
 import datetime, html, importlib.util, re, sys
@@ -130,13 +130,16 @@ def main():
     if not base.is_absolute(): base = RAIZ / base
     filas, conteo, n = datos(base)
     out = base / 'LAMINA_3_despliegue.html'; out.write_text(construir_html(base, filas, conteo, n), encoding='utf-8'); print(f'HTML: {out}')
-    pdf = out.with_suffix('.pdf'); m.a_pdf(out, pdf)
-    try:
-        import fitz
-        doc = fitz.open(pdf); pix = doc[0].get_pixmap(dpi=192); png = base / 'LAMINA_3_despliegue.png'; pix.save(png); print(f'PNG: {png} · {pix.width}×{pix.height}')
-        if doc.page_count != 1: print(f'AVISO: el PDF tiene {doc.page_count} páginas (se esperaba 1): la lámina se desbordó.')
-    except ImportError:
-        print('AVISO: sin PyMuPDF no se genera el PNG (pip install pymupdf)')
+    pdf = out.with_suffix('.pdf')
+    if '--pdf' not in args: print('PDF y PNG: omitidos (añade --pdf cuando el navegador sin ventana funcione)')
+    elif not m.a_pdf(out, pdf): pass
+    else:
+      try:
+          import fitz
+          doc = fitz.open(pdf); pix = doc[0].get_pixmap(dpi=192); png = base / 'LAMINA_3_despliegue.png'; pix.save(png); print(f'PNG: {png} · {pix.width}×{pix.height}')
+          if doc.page_count != 1: print(f'AVISO: el PDF tiene {doc.page_count} páginas (se esperaba 1): la lámina se desbordó.')
+      except ImportError:
+          print('AVISO: sin PyMuPDF no se genera el PNG (pip install pymupdf)')
     pptx = base / 'LAMINA_3_despliegue.pptx'
     if construir_pptx(base, filas, conteo, n, pptx): print(f'PPTX: {pptx}')
 
