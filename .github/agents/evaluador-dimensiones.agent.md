@@ -62,7 +62,7 @@ Reglas de redacción, obligatorias:
 - PROHIBIDO el estilo de lista telegráfica («E16: sin segmentación; E20: sin arquitectura»): frases completas con sujeto y verbo. Los
   códigos E<n> van entre paréntesis al final de la idea, nunca como sujeto de la frase.
 - Cada idea lleva su sustento: lo que respondió el proveedor o lo que escribió el evaluador, en ese ítem. Nada que no esté ahí.
-- Extensión: 180 a 400 palabras por dimensión según su tamaño. Sin «|» dentro de los párrafos; Markdown válido.
+- Extensión: 200 a 550 palabras por dimensión según su tamaño; antes que recortar citas del evaluador en ítems Indispensables o Killer, excede el máximo. Sin «|» dentro de los párrafos; Markdown válido.
 - Antes de pasar al siguiente vendor ejecuta `python scripts/20_evaluacion_dimensiones.py --validar --vendor <vendor>`: señala las frases
   con conteos, puntajes o estilo de lista. Reescribe cada una hasta que no señale ninguna.
 
