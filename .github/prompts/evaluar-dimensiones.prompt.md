@@ -1,11 +1,21 @@
 ---
 mode: 'agent'
 agent: 'evaluador-dimensiones'
-description: 'Matrices nuevas (matrices\*.xlsx): evaluación por dimensión (hoja) y por vendor del resultado calificado por el Banco, con evaluación general y lectura comparada; sin recalificar'
+description: 'Matrices nuevas (matrices\*.xlsx): evaluación en prosa por dimensión (hoja) y por vendor del resultado calificado por el Banco, basada en los sustentos del evaluador; sin recalificar, sin conteos'
 tools: ['codebase', 'search', 'editFiles', 'runCommands']
 ---
 Evalúa las matrices técnicas nuevas de ${input:vendor:todos (uno por uno) o un vendor}, que están en matrices\ (un Excel por vendor, con el vendor en el nombre del archivo).
 
-Sigue .github/copilot-instructions.md y tu definición de agente: ejecuta con runCommands `.venv\Scripts\python scripts\20_evaluacion_dimensiones.py` (con `--vendor <nombre>` si es uno),
-lee solo matrices\evaluacion\<vendor>\<hoja>.md y completa en matrices\evaluacion\<vendor>\EVALUACION_<vendor>.md cada `<!-- evaluacion: hoja -->` (prosa de evaluación: «Lo que se evidencia», «Debilidades que se detectan», «Lectura de la dimensión», cada idea con su sustento y sus E<n>) y `<!-- evaluacion-general -->`; al final, con más de un vendor, `<!-- lectura-comparada -->` en matrices\evaluacion\EVALUACION_DIMENSIONES.md. Sin recalificar, sin ranking, nada de PDF. PROHIBIDO escribir conteos o puntajes en la prosa («15 criterios en No cumple»): ejecuta `.venv\Scripts\python scripts\20_evaluacion_dimensiones.py --validar --vendor <vendor>` y reescribe lo que señale antes de dar por terminado un vendor.
-Reporta solo: vendors procesados, rutas y, por vendor, dimensiones con su nivel.
+Lee entera tu definición de agente (.github/agents/evaluador-dimensiones.agent.md) y .github/copilot-instructions.md antes de empezar. Pasos:
+
+1. `.venv\Scripts\python scripts\20_evaluacion_dimensiones.py` (con `--vendor <nombre>` si es uno). Genera matrices\evaluacion\<vendor>\<hoja>.md (lectura completa: pregunta, respuesta del proveedor, calificación, sustento y otros comentarios del evaluador de cada ítem) y EVALUACION_<vendor>.md con un marcador por dimensión.
+2. Por cada dimensión, lee ENTERA la lectura <hoja>.md y sustituye `<!-- evaluacion: hoja -->` por tres párrafos en prosa con estos títulos en negrita:
+   - **Lo que se evidencia.** Fortalezas concretas con su sustento: qué ofrece el proveedor y en qué se apoyó el evaluador para darlo por cubierto (cita corta entre comillas de su sustento cuando exista; si no dejó sustento, dilo). Ejemplo de forma: «Se evidencia robustez en el proceso de desarrollo: el proveedor describe CI/CD con revisión de código y pruebas automatizadas en cada commit, y el evaluador lo considera “respuesta sólida y alineada a buenas prácticas” (E3).»
+   - **Debilidades que se detectan.** Qué pidió el Banco, qué respondió el proveedor y qué anotó el evaluador, citando sus palabras entre comillas (hasta 20 palabras) con el ítem, empezando por los Indispensables o Killer. Ejemplo: «Se detecta debilidad en el enmascaramiento de datos: el proveedor no provee herramientas nativas y el evaluador anota que “traslada la responsabilidad al banco si se requieren datos productivos” (E16).»
+   - **Lectura de la dimensión.** Dos a cuatro frases: qué sostiene el resultado, qué lo limita y qué dejó el evaluador pendiente de aclarar con el proveedor.
+3. Sustituye `<!-- evaluacion-general -->` por la evaluación general del vendor en prosa (8 a 14 frases), construida solo con lo anterior.
+4. Ejecuta `.venv\Scripts\python scripts\20_evaluacion_dimensiones.py --validar --vendor <vendor>` y reescribe cada frase que señale hasta que imprima «Validación: sin hallazgos». No des por terminado un vendor sin ese resultado.
+5. Con más de un vendor, al final sustituye `<!-- lectura-comparada -->` en matrices\evaluacion\EVALUACION_DIMENSIONES.md (una o dos frases factuales por dimensión, sin ranking).
+
+PROHIBIDO en la prosa: cualquier conteo o puntaje («15 criterios en No cumple», «la mayoría obtuvo 4», «58,8», «Parcial porque…»), listas telegráficas del tipo «E16: sin segmentación; E20: sin arquitectura», códigos E<n> como sujeto de la frase (van al final, entre paréntesis), opiniones, recomendaciones, ranking, hechos que no estén en la lectura de la hoja y cualquier cambio de calificación. Nada de PDF. Fuentes: solo matrices\evaluacion\<vendor>\.
+Reporta solo: vendors procesados, rutas, dimensiones con su nivel (de la tabla) y la salida literal del validador.
