@@ -49,14 +49,25 @@ def en_matrices(v):
     if len(cands) > 1: print(f'⚠ Varias matrices para {v} en matrices/: uso la más reciente, {cands[0].name}')
     return cands[0]
 
-def hojas_matriz(wb):
-    """Hojas con cabecera N° y columna VA, en el orden del libro; devuelve [(nombre, filas, índice de cabecera)]."""
+def _es_numero(c):
+    t = re.sub(r'[\s.]', '', str(c)).lower()
+    return t in ('n°', 'nº', 'no', 'n', 'num', 'número', 'numero', 'item', 'ítem', 'id') or t == re.sub(r'[\s.]', '', K['numero']).lower()
+def _es_va(c): return str(c).strip().upper() in (K['va'].upper(), 'V.A.', 'V.A', 'VA.', 'VALOR', 'CALIF', 'CALIFICACION', 'CALIFICACIÓN')
+def hojas_matriz(wb, informar=False):
+    """Hojas con una fila de cabecera que tenga la columna N° (o Nº, No., N) y la columna VA (en las primeras 40 filas), en el orden del
+    libro; devuelve [(nombre, filas, índice de cabecera)]. Con informar=True imprime por qué se descarta cada hoja no reconocida."""
     out = []
     for name in wb.sheetnames:
-        rows = list(wb[name].iter_rows(values_only=True))
-        for h, r in enumerate(rows[:15]):
-            cells = [str(c).strip() for c in r if c]
-            if K['numero'] in cells and K['va'] in cells: out.append((name, rows, h)); break
+        rows = list(wb[name].iter_rows(values_only=True)); hallado = None; tiene_n = tiene_va = False
+        for h, r in enumerate(rows[:40]):
+            cells = [c for c in r if c is not None and str(c).strip()]
+            n_ok = any(_es_numero(c) for c in cells); va_ok = any(_es_va(c) for c in cells)
+            tiene_n |= n_ok; tiene_va |= va_ok
+            if n_ok and va_ok: hallado = h; break
+        if hallado is not None: out.append((name, rows, hallado))
+        elif informar:
+            motivo = 'sin columna VA' if tiene_n and not tiene_va else 'sin columna N°' if tiene_va and not tiene_n else 'sin cabecera N° + VA en las primeras 40 filas'
+            print(f'  hoja «{name}»: no es hoja de matriz ({motivo})')
     return out
 
 def leer_hoja(rows, h):
@@ -64,7 +75,9 @@ def leer_hoja(rows, h):
     col = lambda name: next((i for i, c in enumerate(hdr) if c.startswith(name)), None)
     exact = lambda name: next((i for i, c in enumerate(hdr) if c == name), None)
     iN, iCat, iQ, iCrit, iCrit2 = col(K['numero']), col(K['categoria']), col(K['pregunta']), col(K['criticidad']), col(K['criticidad_nueva'])
-    iEst, iSus, iEval, iVA, iEvdor, iDim = col(K['estado']), col(K['sustento']), exact(K['eval_texto']), exact(K['va']), col(K['evaluador']), col('Dimensi')
+    iEst, iSus, iEval, iEvdor, iDim = col(K['estado']), col(K['sustento']), exact(K['eval_texto']), col(K['evaluador']), col('Dimensi')
+    iVA = next((i for i, c in enumerate(hdr) if _es_va(c)), None)
+    if iN is None: iN = next((i for i, c in enumerate(hdr) if _es_numero(c)), None)
     iResp = [i for i, c in enumerate(hdr) if c.startswith(K['respuesta'])]
     g = lambda r, i: (r[i] if i is not None and i < len(r) else None)
     items = []; dimension = ''
@@ -112,7 +125,9 @@ def main():
         xlsx = cands[0]
     print('Matriz:', xlsx)
     wb = openpyxl.load_workbook(xlsx, data_only=True)
-    hojas = hojas_matriz(wb)
+    print('Hojas del libro:', ', '.join(wb.sheetnames))
+    hojas = hojas_matriz(wb, informar=True)
+    print('Hojas de matriz detectadas:', ', '.join(h for h, _, _ in hojas) or 'ninguna')
     if hojas_pedidas: pedidas = [h.strip() for h in hojas_pedidas.split(',')]; hojas = [h for h in hojas if h[0] in pedidas]
     if not hojas: sys.exit('Ninguna hoja del Excel tiene cabecera con N° y VA.')
     hoy = datetime.date.today().strftime('%d-%m-%Y'); rel = xlsx.relative_to(RAIZ) if str(xlsx).startswith(str(RAIZ)) else xlsx
