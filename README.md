@@ -20,12 +20,12 @@ copilot/
     │   ├── verificador-t1-arquitectura … verificador-t8-soporte
     │   ├── redactor-diagnostico, redactor-ejecutivo, redactor-ejecutivo-t5,
     │   │   redactor-pros-contras, redactor-fortalezas-debilidades
-    │   ├── verificador-implementacion (rúbrica corporativa 0–5), redactor-implementacion, analista-despliegue, comparador-implementacion y comparador-t5 (comparativos)
+    │   ├── verificador-implementacion (rúbrica corporativa 0–5), redactor-implementacion, analista-despliegue, analista-plataforma (plataforma propuesta al Banco y más fuerte en la documentación), comparador-implementacion y comparador-t5 (comparativos)
     │   └── revisor-cruzado
     ├── prompts/                       ← prompts reutilizables con parámetros (*.prompt.md), se invocan con /nombre
     │   ├── verificar-t1 … verificar-t8 (T6 → verificar-t6-bloque + unir-t6)
     │   ├── verificar-implementacion (rúbrica EI/F/I), implementacion (resumen pros y contras)
-    │   ├── despliegue (modelos SaaS/PaaS y nubes por vendor, comparativo), comparar-implementacion, comparar-t5 (comparativos)
+    │   ├── despliegue (modelos SaaS/PaaS y nubes por vendor, comparativo), plataforma (propuesta al Banco y más fuerte en la documentación), comparar-implementacion, comparar-t5 (comparativos)
     │   ├── validar, consolidar, top-diferencias
     │   ├── informe-diagnostico, resumen-ejecutivo, pros-contras, informe-ejecutivo-t5, fortalezas-debilidades
     │   └── revision-cruzada, corregir-informes

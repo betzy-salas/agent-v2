@@ -135,7 +135,7 @@ Cada vendor es un expediente independiente. Para una tarea sobre `<vendor>`:
   nombra un documento que está en `vendors/<vendor>/NOMBRES.md`; ninguna afirmación carece de cita o de la marca
   SIN EVIDENCIA / NO ENCONTRADO. Si algo no cumple, corrígelo antes de escribir el archivo.
 
-**Excepción comparativa.** Los agentes `analista-despliegue`, `comparador-implementacion`, `comparador-t5`, `comparador-semaforo-t5` y `presentador-t5` (y cualquier otro declarado
+**Excepción comparativa.** Los agentes `analista-despliegue`, `analista-plataforma`, `comparador-implementacion`, `comparador-t5`, `comparador-semaforo-t5` y `presentador-t5` (y cualquier otro declarado
 explícitamente como comparativo) lee varios vendors. Lo hace uno por uno: mientras analiza un vendor, solo lee `vendors/<ese vendor>/`; nunca
 usa lo concluido de un vendor para inferir o completar a otro; la tabla comparativa final solo agrega lo ya escrito y
 citado en el archivo de cada vendor. Un agente no comparativo sigue limitado a un solo vendor.
@@ -178,6 +178,7 @@ python scripts/04_ingesta.py <vendor>             # 01 PDF→txt, 01a .toc.md, 0
 #   verificador-implementacion → verif/IMPL.md (0–5 por criterio); redactor-implementacion → informes/7_implementacion_pros_contras.md
 #   python scripts/16_informe_bloques_impl.py <vendor>|--todos [--pdf] → informes/11_bloques_impl.md (+pdf): fortalezas (≥4), brechas (≤2) y contradicciones por bloque EI/F/I, solo desde verif/IMPL.md; --todos además vendors/INFORME_BLOQUES_IMPLEMENTACION.pdf
 # comparativos entre vendors: analista-despliegue → vendors/COMPARATIVO_DESPLIEGUE.md;
+#   analista-plataforma (comparativo; recorre TODA la documentación de cada vendor, uno por uno) → informes/13_plataforma_principal.md por vendor y vendors/COMPARATIVO_PLATAFORMA.md: modelos que soporta, plataformas en las que dice poder instalarse (AWS, GCP, Azure, Huawei, OCI, OpenShift/Kubernetes, VMware…), cuál propone al Banco (pasajes P/O) y cuál es la más fuerte en su documentación (nivel P>O>E>C>G, luego evidencia de clientes/arquitectura/certificación/región, luego nº de documentos y pasajes; tabla «Peso documental» + inventario de pasajes), y si coinciden. No recomienda. En Copilot: /plataforma
 #   comparador-implementacion (tras verificar y redactar la implementación de cada vendor) → vendors/COMPARATIVO_IMPLEMENTACION.md;
 #   comparador-t5 (tras el informe ejecutivo de T5 de cada vendor) → vendors/COMPARATIVO_T5.md
 python scripts/18_resumen_matriz.py <vendor> [xlsx] [--limpiar]   # --limpiar aparta a matriz/_anterior/ los <hoja>.txt de una matriz anterior; xlsx por defecto: matrices/*<vendor>*.xlsx (carpeta matrices/, una matriz por vendor, no versionada; ver matrices/README.md). informes/12_resumen_matriz.md: puntaje y nivel por hoja y por categoría con la calificación del Banco tal cual, para CUALQUIER hoja con columnas N° y VA (T1–T8 o un documento nuevo); escribe matriz/<hoja>.txt; luego el agente resumen-matriz redacta el fundamento de cada categoría y hoja (sin recalificar ni contar) y ejecuta 19. En Copilot: /resumen-matriz
